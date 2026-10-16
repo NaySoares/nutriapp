@@ -36,6 +36,11 @@ App web para nutricionistas: cadastrar pacientes, registrar medições com cálc
 ├─ apps/
 │  ├─ web/            # Next.js estático
 │  └─ api/            # Fastify
+│     └─ src/
+│        ├─ controllers/   # HTTP, validação de entrada e respostas
+│        ├─ repositories/  # acesso ao Prisma e persistência
+│        ├─ services/      # regras de negócio e orquestração
+│        └─ types/         # contratos e tipos compartilhados da API
 ├─ packages/
 │  └─ shared/         # schemas Zod, tipos, nutri-calc (fórmulas e totais)
 ├─ scripts/
@@ -47,6 +52,10 @@ App web para nutricionistas: cadastrar pacientes, registrar medições com cálc
 ├─ docker-compose.yml
 └─ AGENTS.md
 ```
+
+### Organização interna da API
+
+As rotas do Fastify são compostas em `src/app.ts`, que não deve concentrar regras de negócio. Controllers cuidam do protocolo HTTP e da validação com Zod; services concentram autenticação, tokens e demais regras de negócio; repositories encapsulam o acesso ao Prisma; e `types` contém contratos de injeção e tipos específicos da API. Novos módulos devem seguir essa separação e manter testes de integração das rotas e testes unitários das regras isoladas quando houver lógica relevante.
 
 ## 3. Arquitetura e infraestrutura
 
@@ -151,13 +160,14 @@ Cada sprint é entregue com os critérios de aceite cumpridos.
 ### S1 — Conta do nutricionista e deploy
 **Tarefas**
 - [x] Cadastro, login, logout, refresh com rotação (cookie httpOnly)
-- [ ] Recuperação de senha por e-mail via SES **[HUMANO: criar identidade verificada e pedir saída do sandbox]**
+- [x] Recuperação de senha por e-mail via SES **[HUMANO: criar identidade verificada e pedir saída do sandbox]**
 - [ ] Verificar no final da S1 as permissões IAM do SES, a identidade remetente verificada e um envio controlado de recuperação de senha
 - [ ] Perfil: nome, CRN, upload de logo (disco da VM, dentro do volume com backup)
 - [ ] Telas de login, cadastro, recuperação e perfil
 - [ ] Provisionar VM, Docker Compose de produção, Caddy com HTTPS **[HUMANO: conta AWS, domínio, DNS]**
 - [ ] Deploy automático pelo CI
 - [ ] Medir memória da VM e registrar em `docs/decisoes.md`
+- [ ] Verificar as permissões da aws para envio de email
 
 **Aceite:** em produção, um nutricionista cria conta, entra, recupera senha e edita perfil.
 
