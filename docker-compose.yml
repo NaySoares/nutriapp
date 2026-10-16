@@ -23,6 +23,8 @@ services:
       SESSION_SECRET: local-development-secret-change-me-please-32
       NODE_ENV: development
       PORT: 3001
+    env_file:
+      - .env
     depends_on:
       db:
         condition: service_healthy

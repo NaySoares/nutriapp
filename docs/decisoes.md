@@ -12,3 +12,4 @@
 
 - A autenticação usa sessão opaca persistida em `sessoes`: o cookie de acesso assinado expira em 15 minutos e o refresh token expira em 30 dias, é armazenado apenas como SHA-256 e é substituído atomicamente a cada refresh. O cadastro e o login usam Argon2id para a senha.
 - O cookie de refresh usa `Path=/api/auth`, que é o caminho público das rotas quando o Caddy encaminha `/api` para o Fastify.
+- A recuperação de senha usa o SES v2, guarda somente o hash SHA-256 do token por uma hora, não revela se um e-mail existe e revoga as sessões após a redefinição.

@@ -7,9 +7,12 @@ import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import {
   apiErrorSchema,
+  forgotPasswordSchema,
   loginSchema,
-  registerSchema
+  registerSchema,
+  resetPasswordSchema
 } from "@nutriapp/shared";
+import { sendPasswordResetEmail, type PasswordResetEmail } from "./email.js";
 
 export type AuthPrisma = {
   nutricionista: {
@@ -26,6 +29,10 @@ export type AuthPrisma = {
       where: { email: string };
       select: { id: true; email: true; nome: true; senhaHash: true };
     }) => Promise<{ id: string; email: string; nome: string; senhaHash: string } | null>;
+    update: (args: {
+      where: { id: string };
+      data: { senhaHash: string };
+    }) => Promise<unknown>;
   };
   sessao: {
     create: (args: {
@@ -42,6 +49,19 @@ export type AuthPrisma = {
     updateMany: (args: {
       where: Record<string, unknown>;
       data: Record<string, unknown>;
+    }) => Promise<{ count: number }>;
+  };
+  resetSenha: {
+    create: (args: {
+      data: { nutricionistaId: string; tokenHash: string; expiraEm: Date };
+    }) => Promise<unknown>;
+    findFirst: (args: {
+      where: { tokenHash: string; usadoEm: null; expiraEm: { gt: Date } };
+      select: { id: true; nutricionistaId: true };
+    }) => Promise<{ id: string; nutricionistaId: string } | null>;
+    updateMany: (args: {
+      where: { id: string; tokenHash: string; usadoEm: null };
+      data: { usadoEm: Date };
     }) => Promise<{ count: number }>;
   };
 };
@@ -116,7 +136,10 @@ function clearAuthCookies(reply: FastifyReply): void {
   reply.clearCookie(REFRESH_COOKIE, { path: "/api/auth" });
 }
 
-export function buildApp(prisma: AuthPrisma = new PrismaClient() as unknown as AuthPrisma): FastifyInstance {
+export function buildApp(
+  prisma: AuthPrisma = new PrismaClient() as unknown as AuthPrisma,
+  sendResetEmail: (email: PasswordResetEmail) => Promise<void> = sendPasswordResetEmail
+): FastifyInstance {
   const app = Fastify({
     logger: {
       transport: process.env.NODE_ENV === "development"
@@ -218,6 +241,77 @@ export function buildApp(prisma: AuthPrisma = new PrismaClient() as unknown as A
         nome: nutricionista.nome
       }
     });
+  });
+
+  app.post("/auth/forgot-password", async (request, reply) => {
+    const input = forgotPasswordSchema.safeParse(request.body);
+    if (!input.success) {
+      return reply.status(400).send({
+        codigo: "VALIDACAO_INVALIDA",
+        mensagem: "Os dados enviados são inválidos.",
+        detalhes: input.error.flatten()
+      });
+    }
+    const genericResponse = {
+      status: "ok",
+      mensagem: "Se o e-mail estiver cadastrado, enviaremos instruções para redefinir a senha."
+    };
+    const nutricionista = await prisma.nutricionista.findUnique({
+      where: { email: input.data.email.toLowerCase() },
+      select: { id: true, email: true, nome: true, senhaHash: true }
+    });
+    if (!nutricionista) return reply.send(genericResponse);
+    const token = randomBytes(32).toString("base64url");
+    await prisma.resetSenha.create({
+      data: {
+        nutricionistaId: nutricionista.id,
+        tokenHash: tokenHash(token),
+        expiraEm: new Date(Date.now() + 60 * 60 * 1000)
+      }
+    });
+    await sendResetEmail({ to: nutricionista.email, token });
+    return reply.send(genericResponse);
+  });
+
+  app.post("/auth/reset-password", async (request, reply) => {
+    const input = resetPasswordSchema.safeParse(request.body);
+    if (!input.success) {
+      return reply.status(400).send({
+        codigo: "VALIDACAO_INVALIDA",
+        mensagem: "Os dados enviados são inválidos.",
+        detalhes: input.error.flatten()
+      });
+    }
+    const reset = await prisma.resetSenha.findFirst({
+      where: { tokenHash: tokenHash(input.data.token), usadoEm: null, expiraEm: { gt: new Date() } },
+      select: { id: true, nutricionistaId: true }
+    });
+    if (!reset) {
+      return reply.status(400).send({
+        codigo: "TOKEN_INVALIDO",
+        mensagem: "O token é inválido ou expirou."
+      });
+    }
+    const claimed = await prisma.resetSenha.updateMany({
+      where: { id: reset.id, tokenHash: tokenHash(input.data.token), usadoEm: null },
+      data: { usadoEm: new Date() }
+    });
+    if (claimed.count !== 1) {
+      return reply.status(400).send({
+        codigo: "TOKEN_INVALIDO",
+        mensagem: "O token é inválido ou expirou."
+      });
+    }
+    const senhaHash = await argon2.hash(input.data.novaSenha, { type: argon2.argon2id });
+    await prisma.nutricionista.update({
+      where: { id: reset.nutricionistaId },
+      data: { senhaHash }
+    });
+    await prisma.sessao.updateMany({
+      where: { nutricionistaId: reset.nutricionistaId, revogadaEm: null },
+      data: { revogadaEm: new Date() }
+    });
+    return reply.send({ status: "ok" });
   });
 
   app.post("/auth/refresh", async (request, reply) => {

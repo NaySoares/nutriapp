@@ -26,8 +26,12 @@ A S1 fornece:
 - `POST /api/auth/login`
 - `POST /api/auth/logout`
 - `POST /api/auth/refresh`
+- `POST /api/auth/forgot-password`
+- `POST /api/auth/reset-password`
 
 O cadastro e o login criam uma sessão. O token de acesso é um cookie `httpOnly` de curta duração; o refresh token também é `httpOnly`, armazenado somente como hash no banco e rotacionado a cada uso. Em produção, os cookies recebem `Secure` e `SameSite=Lax`.
+
+A recuperação responde de forma igual para e-mails existentes e inexistentes. O token enviado por e-mail expira em uma hora, pode ser usado uma única vez e revoga as sessões existentes após a troca da senha.
 
 ## Sprints
 

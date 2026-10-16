@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import argon2 from "argon2";
 import type { FastifyInstance } from "fastify";
 import { buildApp, type AuthPrisma } from "./app.js";
+import type { PasswordResetEmail } from "./email.js";
 
 process.env.SESSION_SECRET = "test-session-secret-with-at-least-32-characters";
 
@@ -20,12 +21,18 @@ function createPrismaMock() {
   const mock = {
     nutricionista: {
       create: vi.fn<AuthPrisma["nutricionista"]["create"]>(),
-      findUnique: vi.fn<AuthPrisma["nutricionista"]["findUnique"]>()
+      findUnique: vi.fn<AuthPrisma["nutricionista"]["findUnique"]>(),
+      update: vi.fn<AuthPrisma["nutricionista"]["update"]>()
     },
     sessao: {
       create: vi.fn<AuthPrisma["sessao"]["create"]>(),
       findFirst: vi.fn<AuthPrisma["sessao"]["findFirst"]>(),
       updateMany: vi.fn<AuthPrisma["sessao"]["updateMany"]>()
+    },
+    resetSenha: {
+      create: vi.fn<AuthPrisma["resetSenha"]["create"]>(),
+      findFirst: vi.fn<AuthPrisma["resetSenha"]["findFirst"]>(),
+      updateMany: vi.fn<AuthPrisma["resetSenha"]["updateMany"]>()
     }
   } satisfies AuthPrisma;
 
@@ -163,5 +170,73 @@ describe("autenticação", () => {
     expect(cookieHeader(rotated)).not.toBe(oldCookies);
     expect(replay.statusCode).toBe(401);
     expect(replay.json().codigo).toBe("SESSAO_INVALIDA");
+  });
+
+  it("solicita recuperação sem revelar se o e-mail existe", async () => {
+    const prisma = createPrismaMock();
+    const sendResetEmail = vi.fn<(email: PasswordResetEmail) => Promise<void>>();
+    prisma.nutricionista.findUnique.mockResolvedValue(null);
+    app = buildApp(prisma, sendResetEmail);
+    await app.ready();
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/auth/forgot-password",
+      payload: { email: "inexistente@example.com" }
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().status).toBe("ok");
+    expect(sendResetEmail).not.toHaveBeenCalled();
+  });
+
+  it("envia recuperação, atualiza a senha e invalida o token depois do uso", async () => {
+    const prisma = createPrismaMock();
+    const sendResetEmail = vi.fn<(email: PasswordResetEmail) => Promise<void>>().mockResolvedValue(undefined);
+    const reset = {
+      id: "33333333-3333-4333-8333-333333333333",
+      nutricionistaId: nutricionista.id
+    };
+    prisma.nutricionista.findUnique.mockResolvedValue({
+      ...nutricionista,
+      senhaHash: "unused"
+    });
+    prisma.resetSenha.findFirst.mockResolvedValue(reset);
+    prisma.resetSenha.updateMany.mockResolvedValueOnce({ count: 1 }).mockResolvedValueOnce({ count: 0 });
+    prisma.nutricionista.update.mockResolvedValue(nutricionista);
+    prisma.sessao.updateMany.mockResolvedValue({ count: 1 });
+    app = buildApp(prisma, sendResetEmail);
+    await app.ready();
+
+    const forgot = await app.inject({
+      method: "POST",
+      url: "/auth/forgot-password",
+      payload: { email: nutricionista.email }
+    });
+    const token = sendResetEmail.mock.calls[0]?.[0].token;
+    const resetResponse = await app.inject({
+      method: "POST",
+      url: "/auth/reset-password",
+      payload: { token, novaSenha: "nova-senha-segura" }
+    });
+    const replay = await app.inject({
+      method: "POST",
+      url: "/auth/reset-password",
+      payload: { token, novaSenha: "outra-senha-segura" }
+    });
+
+    expect(forgot.statusCode).toBe(200);
+    expect(sendResetEmail).toHaveBeenCalledWith({
+      to: nutricionista.email,
+      token: expect.any(String)
+    });
+    expect(resetResponse.statusCode).toBe(200);
+    expect(prisma.nutricionista.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: nutricionista.id },
+      data: { senhaHash: expect.any(String) }
+    }));
+    expect(prisma.sessao.updateMany).toHaveBeenCalled();
+    expect(replay.statusCode).toBe(400);
+    expect(replay.json().codigo).toBe("TOKEN_INVALIDO");
   });
 });
