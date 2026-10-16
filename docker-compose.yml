@@ -20,7 +20,8 @@ services:
       dockerfile: docker/Dockerfile.api
     environment:
       DATABASE_URL: postgresql://nutriapp:nutriapp@db:5432/nutriapp?schema=public
-      NODE_ENV: production
+      SESSION_SECRET: local-development-secret-change-me-please-32
+      NODE_ENV: development
       PORT: 3001
     depends_on:
       db:

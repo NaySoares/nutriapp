@@ -19,3 +19,17 @@ export const apiErrorSchema = z.object({
 export type ApiError = z.infer<typeof apiErrorSchema>;
 
 export const API_BASE_URL = "/api";
+
+export const registerSchema = z.object({
+  email: z.string().trim().email().max(320),
+  senha: z.string().min(12).max(128),
+  nome: z.string().trim().min(1).max(120)
+});
+
+export const loginSchema = z.object({
+  email: z.string().trim().email().max(320),
+  senha: z.string().min(1).max(128)
+});
+
+export type RegisterInput = z.infer<typeof registerSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;

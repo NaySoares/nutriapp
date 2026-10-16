@@ -20,5 +20,6 @@ RUN pnpm install --prod --frozen-lockfile
 COPY --from=build /app/apps/api/dist apps/api/dist
 COPY --from=build /app/apps/api/prisma apps/api/prisma
 COPY --from=build /app/packages/shared/dist packages/shared/dist
+RUN pnpm --filter @nutriapp/api exec prisma generate
 EXPOSE 3001
 CMD ["sh", "-c", "pnpm --filter @nutriapp/api exec prisma migrate deploy && pnpm --filter @nutriapp/api start"]
