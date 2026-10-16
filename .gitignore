@@ -1,0 +1,33 @@
+node_modules
+.next
+out
+dist
+.env
+.env.*
+!.env.example
+coverage
+*.log
+apps/api/prisma/dev.db
+
+# Secrets and private keys
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.csr
+*.jks
+*.keystore
+
+# Local databases, dumps and backups
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.backup
+*.bak
+*.sql.gz
+backups/
+data/
+plano-de-acao.md
+AGENTS.md
