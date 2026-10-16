@@ -128,7 +128,7 @@ export function createAuthRepository(prisma: AuthPrisma): AuthRepository {
       select: { id: true, nutricionistaId: true }
     }),
     findSessionOwner: (sessionId) => prisma.sessao.findUnique({
-      where: { id: sessionId },
+      where: { id: sessionId, revogadaEm: null, expiraEm: { gt: new Date() } },
       select: { nutricionistaId: true }
     }).then((session) => session?.nutricionistaId ?? null),
     rotateSession: (id, refreshTokenHash, newRefreshTokenHash, expiraEm) => prisma.sessao.updateMany({

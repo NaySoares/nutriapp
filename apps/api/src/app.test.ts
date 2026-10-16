@@ -119,6 +119,9 @@ describe("autenticação", () => {
 
       expect(get.statusCode).toBe(200);
       expect(get.json().nutricionista.crn).toBe("CRN-123");
+      expect(prisma.sessao.findUnique).toHaveBeenCalledWith(expect.objectContaining({
+        where: expect.objectContaining({ id: session.id, revogadaEm: null, expiraEm: expect.any(Object) })
+      }));
       expect(patch.statusCode).toBe(200);
       expect(prisma.nutricionista.update).toHaveBeenCalledWith(expect.objectContaining({
         where: { id: nutricionista.id },

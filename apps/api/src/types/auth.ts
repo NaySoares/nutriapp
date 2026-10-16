@@ -31,7 +31,7 @@ export type AuthPrisma = {
       select: { id: true; nutricionistaId: true };
     }) => Promise<{ id: string; nutricionistaId: string } | null>;
     findUnique: (args: {
-      where: { id: string };
+      where: { id: string; revogadaEm: null; expiraEm: { gt: Date } };
       select: { nutricionistaId: true };
     }) => Promise<{ nutricionistaId: string } | null>;
     updateMany: (args: {
