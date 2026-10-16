@@ -27,6 +27,7 @@ function createPrismaMock() {
     sessao: {
       create: vi.fn<AuthPrisma["sessao"]["create"]>(),
       findFirst: vi.fn<AuthPrisma["sessao"]["findFirst"]>(),
+      findUnique: vi.fn<AuthPrisma["sessao"]["findUnique"]>(),
       updateMany: vi.fn<AuthPrisma["sessao"]["updateMany"]>()
     },
     resetSenha: {
@@ -56,6 +57,74 @@ describe("autenticação", () => {
 
   afterEach(async () => {
     await app?.close();
+  });
+
+  describe("perfil", () => {
+    let app: FastifyInstance;
+
+    afterEach(async () => {
+      await app?.close();
+    });
+
+    it("exige sessão para consultar e alterar o perfil", async () => {
+      const prisma = createPrismaMock();
+      app = buildApp(prisma);
+      await app.ready();
+
+      const get = await app.inject({ method: "GET", url: "/me" });
+      const patch = await app.inject({
+        method: "PATCH",
+        url: "/me",
+        payload: { nome: "Novo nome" }
+      });
+
+      expect(get.statusCode).toBe(401);
+      expect(patch.statusCode).toBe(401);
+      expect(prisma.nutricionista.findUnique).not.toHaveBeenCalled();
+    });
+
+    it("consulta e atualiza nome e CRN do nutricionista autenticado", async () => {
+      const prisma = createPrismaMock();
+      prisma.nutricionista.create.mockResolvedValue(nutricionista);
+      prisma.sessao.create.mockResolvedValue(session);
+      prisma.nutricionista.findUnique.mockResolvedValue(Object.assign(
+        { ...nutricionista, senhaHash: "unused" },
+        { crn: "CRN-123", logoPath: null }
+      ));
+      prisma.sessao.findUnique.mockResolvedValue({ nutricionistaId: nutricionista.id });
+      prisma.nutricionista.update.mockResolvedValue({
+        ...nutricionista,
+        crn: "CRN-123",
+        logoPath: null
+      });
+      app = buildApp(prisma);
+      await app.ready();
+
+      const register = await app.inject({
+        method: "POST",
+        url: "/auth/register",
+        payload: { email: nutricionista.email, senha: "senha-segura-com-12", nome: nutricionista.nome }
+      });
+      const get = await app.inject({
+        method: "GET",
+        url: "/me",
+        headers: { cookie: cookieHeader(register) }
+      });
+      const patch = await app.inject({
+        method: "PATCH",
+        url: "/me",
+        headers: { cookie: cookieHeader(register) },
+        payload: { nome: "Novo nome", crn: "CRN-123" }
+      });
+
+      expect(get.statusCode).toBe(200);
+      expect(get.json().nutricionista.crn).toBe("CRN-123");
+      expect(patch.statusCode).toBe(200);
+      expect(prisma.nutricionista.update).toHaveBeenCalledWith(expect.objectContaining({
+        where: { id: nutricionista.id },
+        data: { nome: "Novo nome", crn: "CRN-123" }
+      }));
+    });
   });
 
   it("cadastra nutricionista, cria sessão e define cookies httpOnly", async () => {

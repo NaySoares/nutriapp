@@ -16,6 +16,20 @@ export type AuthRepository = {
   } | null>;
 
   updatePassword: (id: string, senhaHash: string) => Promise<unknown>;
+  findProfile: (id: string) => Promise<{
+    id: string;
+    email: string;
+    nome: string;
+    crn: string | null;
+    logoPath: string | null;
+  } | null>;
+  updateProfile: (id: string, data: { nome?: string; crn?: string | null; logoPath?: string }) => Promise<{
+    id: string;
+    email: string;
+    nome: string;
+    crn: string | null;
+    logoPath: string | null;
+  }>;
 
   createSession: (data: {
     nutricionistaId: string;
@@ -27,6 +41,7 @@ export type AuthRepository = {
     id: string;
     nutricionistaId: string;
   } | null>;
+  findSessionOwner: (sessionId: string) => Promise<string | null>;
 
   rotateSession: (id: string, refreshTokenHash: string, newRefreshTokenHash: string, expiraEm: Date) => Promise<number>;
 
@@ -48,6 +63,32 @@ export type AuthRepository = {
   revokeSessions: (nutricionistaId: string) => Promise<number>;
 };
 
+type ProfileClient = {
+  nutricionista: {
+    findUnique: (args: {
+      where: { id: string };
+      select: { id: true; email: true; nome: true; crn: true; logoPath: true };
+    }) => Promise<{
+      id: string;
+      email: string;
+      nome: string;
+      crn: string | null;
+      logoPath: string | null;
+    } | null>;
+    update: (args: {
+      where: { id: string };
+      data: { nome?: string; crn?: string | null; logoPath?: string };
+      select: { id: true; email: true; nome: true; crn: true; logoPath: true };
+    }) => Promise<{
+      id: string;
+      email: string;
+      nome: string;
+      crn: string | null;
+      logoPath: string | null;
+    }>;
+  };
+};
+
 export function createAuthRepository(prisma: AuthPrisma): AuthRepository {
   return {
     createNutritionist: (data) => prisma.nutricionista.create({
@@ -64,6 +105,15 @@ export function createAuthRepository(prisma: AuthPrisma): AuthRepository {
       where: { id },
       data: { senhaHash }
     }),
+    findProfile: (id) => (prisma as unknown as ProfileClient).nutricionista.findUnique({
+      where: { id },
+      select: { id: true, email: true, nome: true, crn: true, logoPath: true }
+    }),
+    updateProfile: (id, data) => (prisma as unknown as ProfileClient).nutricionista.update({
+      where: { id },
+      data,
+      select: { id: true, email: true, nome: true, crn: true, logoPath: true }
+    }),
 
     createSession: (data) => prisma.sessao.create({
       data
@@ -77,6 +127,10 @@ export function createAuthRepository(prisma: AuthPrisma): AuthRepository {
       },
       select: { id: true, nutricionistaId: true }
     }),
+    findSessionOwner: (sessionId) => prisma.sessao.findUnique({
+      where: { id: sessionId },
+      select: { nutricionistaId: true }
+    }).then((session) => session?.nutricionistaId ?? null),
     rotateSession: (id, refreshTokenHash, newRefreshTokenHash, expiraEm) => prisma.sessao.updateMany({
       where: { id, refreshTokenHash, revogadaEm: null },
       data: { refreshTokenHash: newRefreshTokenHash, expiraEm }

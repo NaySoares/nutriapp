@@ -33,6 +33,14 @@ O cadastro e o login criam uma sessão. O token de acesso é um cookie `httpOnly
 
 A recuperação responde de forma igual para e-mails existentes e inexistentes. O token enviado por e-mail expira em uma hora, pode ser usado uma única vez e revoga as sessões existentes após a troca da senha.
 
+O perfil autenticado usa:
+
+- `GET /api/me`
+- `PATCH /api/me` com `{ "nome": "...", "crn": "..." }`
+- `POST /api/me/logo` como `multipart/form-data`, campo `logo`
+
+Logos aceitas são PNG, JPEG ou WebP com até 5 MB. A API envia o arquivo para o bucket configurado em `S3_BUCKET` e armazena apenas a chave no campo `logoPath`.
+
 ## Sprints
 
 - S0: fundação do monorepo, API, web, banco, Compose e CI.

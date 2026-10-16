@@ -1,6 +1,7 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import cookie from "@fastify/cookie";
 import sensible from "@fastify/sensible";
+import multipart from "@fastify/multipart";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import { apiErrorSchema } from "@nutriapp/shared";
@@ -8,6 +9,8 @@ import { sendPasswordResetEmail, type PasswordResetEmail } from "./email.js";
 import { createAuthController } from "./controllers/authController.js";
 import { createAuthRepository } from "./repositories/authRepository.js";
 import { createAuthService } from "./services/authService.js";
+import { createProfileController } from "./controllers/profileController.js";
+import { createS3LogoStorage, createProfileService } from "./services/profileService.js";
 import type { AuthPrisma } from "./types/auth.js";
 
 export type { AuthPrisma } from "./types/auth.js";
@@ -27,8 +30,11 @@ export function buildApp(
   });
   void app.register(sensible);
   void app.register(cookie);
+  void app.register(multipart, { limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
 
   const auth = createAuthController(createAuthService(createAuthRepository(prisma), sendResetEmail));
+  const repository = createAuthRepository(prisma);
+  const profile = createProfileController(createProfileService(repository, createS3LogoStorage()));
   app.get("/health", async () => healthResponseSchema.parse({ status: "ok", service: "api" }));
   app.post("/auth/register", auth.register);
   app.post("/auth/login", auth.login);
@@ -36,6 +42,9 @@ export function buildApp(
   app.post("/auth/reset-password", auth.resetPassword);
   app.post("/auth/refresh", auth.refresh);
   app.post("/auth/logout", auth.logout);
+  app.get("/me", profile.get);
+  app.patch("/me", profile.update);
+  app.post("/me/logo", profile.uploadLogo);
 
   app.setErrorHandler((error, request, reply) => {
     const details = error as { validation?: unknown; statusCode?: number; message?: string };

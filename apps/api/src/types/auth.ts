@@ -15,7 +15,7 @@ export type AuthPrisma = {
     }) => Promise<{ id: string; email: string; nome: string; senhaHash: string } | null>;
     update: (args: {
       where: { id: string };
-      data: { senhaHash: string };
+      data: { senhaHash: string } | { nome: string; crn: string | null };
     }) => Promise<unknown>;
   };
   sessao: {
@@ -30,6 +30,10 @@ export type AuthPrisma = {
       };
       select: { id: true; nutricionistaId: true };
     }) => Promise<{ id: string; nutricionistaId: string } | null>;
+    findUnique: (args: {
+      where: { id: string };
+      select: { nutricionistaId: true };
+    }) => Promise<{ nutricionistaId: string } | null>;
     updateMany: (args: {
       where: Record<string, unknown>;
       data: Record<string, unknown>;

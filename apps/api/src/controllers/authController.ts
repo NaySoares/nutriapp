@@ -98,7 +98,7 @@ function createAccessToken(sessionId: string): string {
   return `${payload}.${signature}`;
 }
 
-function readAccessToken(token: string | undefined): string | undefined {
+export function readAccessToken(token: string | undefined): string | undefined {
   if (!token) return undefined;
   const [payload, signature] = token.split(".");
 

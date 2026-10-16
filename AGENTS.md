@@ -74,7 +74,7 @@ E-mail: SES      Alimentos externos: USDA API (cache no banco)
 - **Docker Compose** com 3 serviços: `caddy`, `api`, `db`.
 - **Mesma origem** para web e API, então não configure CORS.
 - **Meta de custo:** ~US$ 11–14/mês. Medir uso de memória na S1 e avisar o humano se passar de ~70%.
-- **Variáveis de ambiente:** `DATABASE_URL`, `SESSION_SECRET`, `APP_URL`, `USDA_API_KEY`, `SES_REGION`, `SES_FROM`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `BACKUP_BUCKET`. Nunca versionar segredos. A `USDA_API_KEY` nunca vai para o web.
+- **Variáveis de ambiente:** `DATABASE_URL`, `SESSION_SECRET`, `APP_URL`, `USDA_API_KEY`, `SES_REGION`, `SES_FROM`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `BACKUP_BUCKET`, `S3_BUCKET`. Nunca versionar segredos. A `USDA_API_KEY` nunca vai para o web.
 
 ### Convenção de rotas do web (importante)
 Com export estático, o Next não conhece IDs de pacientes/planos em tempo de build. Use **query string** em vez de segmentos dinâmicos: `/app/paciente?id=<uuid>`, `/app/plano?id=<uuid>`.
@@ -161,13 +161,12 @@ Cada sprint é entregue com os critérios de aceite cumpridos.
 **Tarefas**
 - [x] Cadastro, login, logout, refresh com rotação (cookie httpOnly)
 - [x] Recuperação de senha por e-mail via SES **[HUMANO: criar identidade verificada e pedir saída do sandbox]**
-- [ ] Verificar no final da S1 as permissões IAM do SES, a identidade remetente verificada e um envio controlado de recuperação de senha
-- [ ] Perfil: nome, CRN, upload de logo (disco da VM, dentro do volume com backup)
+- [x] Perfil: nome, CRN, upload de logo (envio para AWS S3)
 - [ ] Telas de login, cadastro, recuperação e perfil
 - [ ] Provisionar VM, Docker Compose de produção, Caddy com HTTPS **[HUMANO: conta AWS, domínio, DNS]**
 - [ ] Deploy automático pelo CI
 - [ ] Medir memória da VM e registrar em `docs/decisoes.md`
-- [ ] Verificar as permissões da aws para envio de email
+- [ ] Verificar no final da S1 as permissões IAM do SES, a identidade remetente verificada e um envio controlado de recuperação de senha
 
 **Aceite:** em produção, um nutricionista cria conta, entra, recupera senha e edita perfil.
 
