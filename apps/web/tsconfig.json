@@ -9,6 +9,7 @@
     ],
     "allowJs": false,
     "noEmit": true,
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "incremental": true,
     "module": "esnext",
     "resolveJsonModule": true,

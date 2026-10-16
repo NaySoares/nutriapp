@@ -41,6 +41,8 @@ O perfil autenticado usa:
 
 Logos aceitas são PNG, JPEG ou WebP com até 5 MB. A API envia o arquivo para o bucket configurado em `S3_BUCKET` e armazena apenas a chave no campo `logoPath`.
 
+As telas estáticas correspondentes estão disponíveis em `/login/`, `/cadastro/`, `/recuperar-senha/`, `/redefinir-senha/` e `/app/perfil/`.
+
 ## Sprints
 
 - S0: fundação do monorepo, API, web, banco, Compose e CI.
