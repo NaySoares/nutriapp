@@ -17,6 +17,17 @@ const session = {
   nutricionistaId: nutricionista.id
 };
 
+const secondNutricionista = {
+  id: "33333333-3333-4333-8333-333333333333",
+  email: "outro@example.com",
+  nome: "Outro Nutricionista"
+};
+
+const secondSession = {
+  id: "66666666-6666-4666-8666-666666666666",
+  nutricionistaId: secondNutricionista.id
+};
+
 function createPrismaMock() {
   const mock = {
     nutricionista: {
@@ -241,6 +252,95 @@ describe("autenticação", () => {
           id: "55555555-5555-4555-8555-555555555555",
           nutricionistaId: nutricionista.id
         }
+      }));
+    });
+
+    it("isola pacientes entre dois nutricionistas em todas as operações", async () => {
+      const prisma = createPrismaMock();
+      const patient = {
+        id: "77777777-7777-4777-8777-777777777777",
+        nutricionistaId: nutricionista.id,
+        nome: "Paciente da primeira nutricionista",
+        dataNascimento: new Date("1990-05-10T00:00:00.000Z"),
+        sexo: "F" as const,
+        contato: null,
+        anamnese: "Dados privados.",
+        arquivadoEm: null,
+        criadoEm: new Date("2026-01-01T00:00:00.000Z"),
+        atualizadoEm: new Date("2026-01-01T00:00:00.000Z")
+      };
+
+      prisma.nutricionista.create.mockResolvedValueOnce(nutricionista).mockResolvedValueOnce(secondNutricionista);
+      prisma.sessao.create.mockResolvedValueOnce(session).mockResolvedValueOnce(secondSession);
+      prisma.sessao.findUnique.mockImplementation(async ({ where }) => {
+        const owners = {
+          [session.id]: { nutricionistaId: nutricionista.id },
+          [secondSession.id]: { nutricionistaId: secondNutricionista.id }
+        };
+        return owners[where.id as keyof typeof owners] ?? null;
+      });
+      prisma.paciente.findMany.mockImplementation(async ({ where }) => (
+        where.nutricionistaId === nutricionista.id ? [patient] : []
+      ));
+      prisma.paciente.findFirst.mockImplementation(async ({ where }) => (
+        where.nutricionistaId === nutricionista.id ? patient : null
+      ));
+      prisma.paciente.updateMany.mockImplementation(async ({ where }) => ({
+        count: where.nutricionistaId === nutricionista.id ? 1 : 0
+      }));
+      app = buildApp(prisma);
+      await app.ready();
+
+      const firstCookies = cookieHeader(await app.inject({
+        method: "POST",
+        url: "/auth/register",
+        payload: { email: nutricionista.email, senha: "senha-segura-com-12", nome: nutricionista.nome }
+      }));
+      const secondCookies = cookieHeader(await app.inject({
+        method: "POST",
+        url: "/auth/register",
+        payload: { email: secondNutricionista.email, senha: "senha-segura-com-12", nome: secondNutricionista.nome }
+      }));
+
+      const firstList = await app.inject({ method: "GET", url: "/patients", headers: { cookie: firstCookies } });
+      const secondList = await app.inject({ method: "GET", url: "/patients", headers: { cookie: secondCookies } });
+      const secondGet = await app.inject({
+        method: "GET",
+        url: `/patients/${patient.id}`,
+        headers: { cookie: secondCookies }
+      });
+      const secondUpdate = await app.inject({
+        method: "PATCH",
+        url: `/patients/${patient.id}`,
+        headers: { cookie: secondCookies },
+        payload: { nome: "Tentativa de acesso" }
+      });
+      const secondArchive = await app.inject({
+        method: "POST",
+        url: `/patients/${patient.id}/archive`,
+        headers: { cookie: secondCookies }
+      });
+
+      expect(firstList.statusCode).toBe(200);
+      expect(firstList.json().pacientes).toEqual([{
+        ...patient,
+        dataNascimento: patient.dataNascimento.toISOString(),
+        criadoEm: patient.criadoEm.toISOString(),
+        atualizadoEm: patient.atualizadoEm.toISOString()
+      }]);
+      expect(secondList.statusCode).toBe(200);
+      expect(secondList.json().pacientes).toEqual([]);
+      expect(secondGet.statusCode).toBe(404);
+      expect(secondUpdate.statusCode).toBe(404);
+      expect(secondArchive.statusCode).toBe(404);
+      expect(prisma.paciente.findMany).toHaveBeenCalledWith(expect.objectContaining({
+        where: expect.objectContaining({ nutricionistaId: secondNutricionista.id })
+      }));
+      expect(prisma.paciente.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+        where: { id: patient.id, nutricionistaId: secondNutricionista.id }
+      }));
+      expect(prisma.paciente.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+        where: { id: patient.id, nutricionistaId: secondNutricionista.id, arquivadoEm: null }
       }));
     });
   });
