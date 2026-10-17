@@ -11,6 +11,8 @@ import { createAuthRepository } from "./repositories/authRepository.js";
 import { createAuthService } from "./services/authService.js";
 import { createProfileController } from "./controllers/profileController.js";
 import { createS3LogoStorage, createProfileService } from "./services/profileService.js";
+import { createPatientController } from "./controllers/patientController.js";
+import { createPatientService } from "./services/patientService.js";
 import type { AuthPrisma } from "./types/auth.js";
 
 export type { AuthPrisma } from "./types/auth.js";
@@ -35,6 +37,7 @@ export function buildApp(
   const auth = createAuthController(createAuthService(createAuthRepository(prisma), sendResetEmail));
   const repository = createAuthRepository(prisma);
   const profile = createProfileController(createProfileService(repository, createS3LogoStorage()));
+  const patients = createPatientController(createPatientService(repository));
   app.get("/health", async () => healthResponseSchema.parse({ status: "ok", service: "api" }));
   app.post("/auth/register", auth.register);
   app.post("/auth/login", auth.login);
@@ -45,6 +48,11 @@ export function buildApp(
   app.get("/me", profile.get);
   app.patch("/me", profile.update);
   app.post("/me/logo", profile.uploadLogo);
+  app.get("/patients", patients.list);
+  app.post("/patients", patients.create);
+  app.get("/patients/:id", patients.get);
+  app.patch("/patients/:id", patients.update);
+  app.post("/patients/:id/archive", patients.archive);
 
   app.setErrorHandler((error, request, reply) => {
     const details = error as { validation?: unknown; statusCode?: number; message?: string };

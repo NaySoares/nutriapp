@@ -15,3 +15,4 @@
 - A recuperação de senha usa o SES v2, guarda somente o hash SHA-256 do token por uma hora, não revela se um e-mail existe e revoga as sessões após a redefinição.
 - O perfil é protegido pela sessão autenticada: o cookie identifica a sessão, e a API resolve o `nutricionista_id` no banco antes de consultar ou alterar os dados.
 - Logos são validadas no backend (PNG, JPEG ou WebP, até 5 MB), enviadas para o S3 no prefixo `logos/{nutricionista_id}/` e apenas a chave do objeto é persistida em `logo_path`. O bucket é separado da configuração de backups por `S3_BUCKET`.
+- Pacientes arquivados são excluídos da listagem padrão por `arquivado_em`, mas não são apagados fisicamente. Todas as operações de paciente resolvem o `nutricionista_id` a partir de uma sessão ativa e filtram por ele.

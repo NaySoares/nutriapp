@@ -45,6 +45,18 @@ Logos aceitas são PNG, JPEG ou WebP com até 5 MB. A API envia o arquivo para o
 
 As telas estáticas correspondentes estão disponíveis em `/login/`, `/cadastro/`, `/recuperar-senha/`, `/redefinir-senha/` e `/app/perfil/`.
 
+## Pacientes
+
+A API autenticada fornece:
+
+- `GET /api/patients?q=&incluirArquivados=true`
+- `POST /api/patients`
+- `GET /api/patients/:id`
+- `PATCH /api/patients/:id`
+- `POST /api/patients/:id/archive`
+
+O cadastro aceita `nome`, `dataNascimento` no formato `YYYY-MM-DD`, `sexo` (`M` ou `F`), `contato` e `anamnese`. O arquivamento é lógico: o paciente não aparece na listagem padrão e permanece no banco.
+
 ## Sprints
 
 - S0: fundação do monorepo, API, web, banco, Compose e CI.

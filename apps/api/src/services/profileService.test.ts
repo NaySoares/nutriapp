@@ -26,7 +26,12 @@ function createRepository(): AuthRepository {
     createPasswordReset: vi.fn(),
     findValidPasswordReset: vi.fn(),
     claimPasswordReset: vi.fn(),
-    revokeSessions: vi.fn()
+    revokeSessions: vi.fn(),
+    createPatient: vi.fn(),
+    listPatients: vi.fn(),
+    findPatient: vi.fn(),
+    updatePatient: vi.fn(),
+    archivePatient: vi.fn()
   };
 }
 

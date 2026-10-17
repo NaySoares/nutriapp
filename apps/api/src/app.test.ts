@@ -34,6 +34,12 @@ function createPrismaMock() {
       create: vi.fn<AuthPrisma["resetSenha"]["create"]>(),
       findFirst: vi.fn<AuthPrisma["resetSenha"]["findFirst"]>(),
       updateMany: vi.fn<AuthPrisma["resetSenha"]["updateMany"]>()
+    },
+    paciente: {
+      create: vi.fn<AuthPrisma["paciente"]["create"]>(),
+      findMany: vi.fn<AuthPrisma["paciente"]["findMany"]>(),
+      findFirst: vi.fn<AuthPrisma["paciente"]["findFirst"]>(),
+      updateMany: vi.fn<AuthPrisma["paciente"]["updateMany"]>()
     }
   } satisfies AuthPrisma;
 
@@ -129,6 +135,118 @@ describe("autenticação", () => {
       }));
     });
   });
+
+  describe("pacientes", () => {
+    let app: FastifyInstance;
+
+    afterEach(async () => {
+      await app?.close();
+    });
+
+    it("exige autenticação para acessar pacientes", async () => {
+      const prisma = createPrismaMock();
+      app = buildApp(prisma);
+      await app.ready();
+
+      const response = await app.inject({ method: "GET", url: "/patients" });
+
+      expect(response.statusCode).toBe(401);
+      expect(prisma.paciente.findMany).not.toHaveBeenCalled();
+    });
+
+    it("cria, lista, atualiza e arquiva paciente sem apagar a anamnese", async () => {
+      const prisma = createPrismaMock();
+      const patient = {
+        id: "44444444-4444-4444-8444-444444444444",
+        nutricionistaId: nutricionista.id,
+        nome: "Maria da Silva",
+        dataNascimento: new Date("1990-05-10T00:00:00.000Z"),
+        sexo: "F" as const,
+        contato: "maria@example.com",
+        anamnese: "Relata rotina sedentária.",
+        arquivadoEm: null,
+        criadoEm: new Date("2026-01-01T00:00:00.000Z"),
+        atualizadoEm: new Date("2026-01-01T00:00:00.000Z")
+      };
+      prisma.sessao.findUnique.mockResolvedValue({ nutricionistaId: nutricionista.id });
+      prisma.paciente.create.mockResolvedValue(patient);
+      prisma.paciente.findMany.mockResolvedValue([patient]);
+      prisma.paciente.findFirst.mockResolvedValue({ ...patient, nome: "Maria Atualizada" });
+      prisma.paciente.updateMany.mockResolvedValue({ count: 1 });
+      app = buildApp(prisma);
+      await app.ready();
+      const cookies = cookieHeader(await loginWithMock(app, prisma));
+
+      const created = await app.inject({
+        method: "POST",
+        url: "/patients",
+        headers: { cookie: cookies },
+        payload: {
+          nome: patient.nome,
+          dataNascimento: "1990-05-10",
+          sexo: "F",
+          contato: patient.contato,
+          anamnese: patient.anamnese
+        }
+      });
+      const listed = await app.inject({ method: "GET", url: "/patients?q=Maria", headers: { cookie: cookies } });
+      const updated = await app.inject({
+        method: "PATCH",
+        url: `/patients/${patient.id}`,
+        headers: { cookie: cookies },
+        payload: { nome: "Maria Atualizada", anamnese: patient.anamnese }
+      });
+      const archived = await app.inject({
+        method: "POST",
+        url: `/patients/${patient.id}/archive`,
+        headers: { cookie: cookies }
+      });
+
+      expect(created.statusCode).toBe(201);
+      expect(prisma.paciente.create).toHaveBeenCalledWith(expect.objectContaining({
+        data: expect.objectContaining({ nutricionistaId: nutricionista.id, dataNascimento: expect.any(Date) })
+      }));
+      expect(listed.statusCode).toBe(200);
+      expect(updated.statusCode).toBe(200);
+      expect(archived.statusCode).toBe(200);
+      expect(prisma.paciente.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+        where: { id: patient.id, nutricionistaId: nutricionista.id, arquivadoEm: null }
+      }));
+    });
+
+    it("não acessa paciente pertencente a outro nutricionista", async () => {
+      const prisma = createPrismaMock();
+      prisma.sessao.findUnique.mockResolvedValue({ nutricionistaId: nutricionista.id });
+      prisma.paciente.findFirst.mockResolvedValue(null);
+      app = buildApp(prisma);
+      await app.ready();
+      const cookies = cookieHeader(await loginWithMock(app, prisma));
+
+      const response = await app.inject({
+        method: "GET",
+        url: "/patients/55555555-5555-4555-8555-555555555555",
+        headers: { cookie: cookies }
+      });
+
+      expect(response.statusCode).toBe(404);
+      expect(prisma.paciente.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+        where: {
+          id: "55555555-5555-4555-8555-555555555555",
+          nutricionistaId: nutricionista.id
+        }
+      }));
+    });
+  });
+
+  async function loginWithMock(app: FastifyInstance, prisma: ReturnType<typeof createPrismaMock>) {
+    prisma.nutricionista.create.mockResolvedValue(nutricionista);
+    prisma.sessao.create.mockResolvedValue(session);
+    return app.inject({
+      method: "POST",
+      url: "/auth/register",
+      payload: { email: nutricionista.email, senha: "senha-segura-com-12", nome: nutricionista.nome }
+    });
+  }
 
   it("cadastra nutricionista, cria sessão e define cookies httpOnly", async () => {
     const prisma = createPrismaMock();

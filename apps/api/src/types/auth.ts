@@ -52,4 +52,56 @@ export type AuthPrisma = {
       data: { usadoEm: Date };
     }) => Promise<{ count: number }>;
   };
+  paciente: {
+    create: (args: {
+      data: {
+        nutricionistaId: string;
+        nome: string;
+        dataNascimento: Date;
+        sexo: "M" | "F";
+        contato?: string;
+        anamnese?: string;
+      };
+      select: PatientSelect;
+    }) => Promise<PatientRecord>;
+    findMany: (args: {
+      where: { nutricionistaId: string; arquivadoEm?: Date | null; nome?: { contains: string; mode: "insensitive" } };
+      orderBy: { nome: "asc" };
+      select: PatientSelect;
+    }) => Promise<PatientRecord[]>;
+    findFirst: (args: {
+      where: { id: string; nutricionistaId: string };
+      select: PatientSelect;
+    }) => Promise<PatientRecord | null>;
+    updateMany: (args: {
+      where: { id: string; nutricionistaId: string; arquivadoEm?: null };
+      data: { nome?: string; dataNascimento?: Date; sexo?: "M" | "F"; contato?: string | null; anamnese?: string | null; arquivadoEm?: Date };
+    }) => Promise<{ count: number }>;
+  };
+};
+
+export type PatientSelect = {
+  id: true;
+  nutricionistaId: true;
+  nome: true;
+  dataNascimento: true;
+  sexo: true;
+  contato: true;
+  anamnese: true;
+  arquivadoEm: true;
+  criadoEm: true;
+  atualizadoEm: true;
+};
+
+export type PatientRecord = {
+  id: string;
+  nutricionistaId: string;
+  nome: string;
+  dataNascimento: Date;
+  sexo: "M" | "F";
+  contato: string | null;
+  anamnese: string | null;
+  arquivadoEm: Date | null;
+  criadoEm: Date;
+  atualizadoEm: Date;
 };
