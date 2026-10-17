@@ -68,6 +68,8 @@ Ao criar ou atualizar uma medição, a API calcula e grava na mesma operação o
 
 No detalhe de um paciente, o painel de medições permite registrar peso, altura e atividade, exibe os indicadores calculados após salvar e mostra a evolução de peso e IMC em um gráfico.
 
+As configurações de cálculo ficam em `/app/configuracoes/`, com edição da fórmula padrão de TMB e dos fatores de atividade.
+
 ## Sprints
 
 - S0: fundação do monorepo, API, web, banco, Compose e CI.

@@ -152,6 +152,49 @@ describe("autenticação", () => {
         data: { nome: "Novo nome", crn: "CRN-123" }
       }));
     });
+
+    it("consulta e atualiza fórmula e fatores de atividade", async () => {
+      const prisma = createPrismaMock();
+      prisma.nutricionista.create.mockResolvedValue(nutricionista);
+      prisma.sessao.create.mockResolvedValue(session);
+      prisma.nutricionista.findUnique.mockImplementation(async () => ({
+        ...nutricionista,
+        senhaHash: "unused",
+        formulaPadrao: "mifflin",
+        fatoresAtividade: { sedentario: 1.2, leve: 1.375, moderado: 1.55, ativo: 1.725, muito_ativo: 1.9 }
+      } as never));
+      prisma.nutricionista.update.mockResolvedValue({});
+      prisma.sessao.findUnique.mockResolvedValue({ nutricionistaId: nutricionista.id });
+      app = buildApp(prisma);
+      await app.ready();
+
+      const register = await app.inject({
+        method: "POST",
+        url: "/auth/register",
+        payload: { email: nutricionista.email, senha: "senha-segura-com-12", nome: nutricionista.nome }
+      });
+      const get = await app.inject({
+        method: "GET",
+        url: "/me/settings",
+        headers: { cookie: cookieHeader(register) }
+      });
+      const patch = await app.inject({
+        method: "PATCH",
+        url: "/me/settings",
+        headers: { cookie: cookieHeader(register) },
+        payload: {
+          formulaPadrao: "harris_benedict",
+          fatoresAtividade: { sedentario: 1.1, leve: 1.3, moderado: 1.5, ativo: 1.7, muito_ativo: 1.9 }
+        }
+      });
+
+      expect(get.statusCode).toBe(200);
+      expect(patch.statusCode).toBe(200);
+      expect(prisma.nutricionista.update).toHaveBeenCalledWith(expect.objectContaining({
+        where: { id: nutricionista.id },
+        data: expect.objectContaining({ formulaPadrao: "harris_benedict" })
+      }));
+    });
   });
 
   describe("pacientes", () => {

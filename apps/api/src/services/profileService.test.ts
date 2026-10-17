@@ -39,6 +39,8 @@ function createRepository(): AuthRepository {
     findMeasurement: vi.fn(),
     updateMeasurement: vi.fn(),
     deleteMeasurement: vi.fn()
+    ,findSettings: vi.fn()
+    ,updateSettings: vi.fn()
   };
 }
 

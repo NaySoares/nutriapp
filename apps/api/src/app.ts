@@ -54,6 +54,8 @@ export function buildApp(
   app.get("/me", profile.get);
   app.patch("/me", profile.update);
   app.post("/me/logo", profile.uploadLogo);
+  app.get("/me/settings", profile.getSettings);
+  app.patch("/me/settings", profile.updateSettings);
 
   app.get("/patients", patients.list);
   app.post("/patients", patients.create);

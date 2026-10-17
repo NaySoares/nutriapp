@@ -55,6 +55,17 @@ export function createProfileService(repository: AuthRepository, storage: LogoSt
       if (!nutritionistId) return null;
       const logoPath = await storage.upload({ ...upload, nutritionistId });
       return repository.updateProfile(nutritionistId, { logoPath });
+    },
+    async getSettings(sessionId: string) {
+      const nutritionistId = await repository.findSessionOwner(sessionId);
+      return nutritionistId ? repository.findSettings(nutritionistId) : null;
+    },
+    async updateSettings(sessionId: string, data: {
+      formulaPadrao: "mifflin" | "harris_benedict";
+      fatoresAtividade: Record<string, number>;
+    }) {
+      const nutritionistId = await repository.findSessionOwner(sessionId);
+      return nutritionistId ? repository.updateSettings(nutritionistId, data) : null;
     }
   };
 }

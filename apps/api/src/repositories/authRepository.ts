@@ -1,4 +1,5 @@
 import type { AuthPrisma, MeasurementRecord, MeasurementSelect, PatientRecord, PatientSelect } from "../types/auth.js";
+import { DEFAULT_ACTIVITY_FACTORS } from "@nutriapp/shared";
 
 export type AuthRepository = {
   createNutritionist: (data: {
@@ -85,6 +86,11 @@ export type AuthRepository = {
   findMeasurement: (nutritionistId: string, measurementId: string) => Promise<MeasurementRecord | null>;
   updateMeasurement: (nutritionistId: string, measurementId: string, data: Record<string, unknown>) => Promise<MeasurementRecord | null>;
   deleteMeasurement: (nutritionistId: string, measurementId: string) => Promise<boolean>;
+  findSettings: (id: string) => Promise<{ formulaPadrao: "mifflin" | "harris_benedict"; fatoresAtividade: Record<string, number> } | null>;
+  updateSettings: (id: string, data: { formulaPadrao: "mifflin" | "harris_benedict"; fatoresAtividade: Record<string, number> }) => Promise<{
+    formulaPadrao: "mifflin" | "harris_benedict";
+    fatoresAtividade: Record<string, number>;
+  }>;
 };
 
 const patientSelect: PatientSelect = {
@@ -135,6 +141,8 @@ type MeasurementClient = {
     nutricionista: {
       findUnique: (args: { where: { id: string }; select: { formulaPadrao: true; fatoresAtividade: true } }) =>
         Promise<{ formulaPadrao: "mifflin" | "harris_benedict"; fatoresAtividade: unknown } | null>;
+      update: (args: { where: { id: string }; data: { formulaPadrao: "mifflin" | "harris_benedict"; fatoresAtividade: Record<string, number> }; select: { formulaPadrao: true; fatoresAtividade: true } }) =>
+        Promise<{ formulaPadrao: "mifflin" | "harris_benedict"; fatoresAtividade: unknown }>;
     };
     paciente: {
       findFirst: (args: { where: { id: string; nutricionistaId: string }; select: { id: true; dataNascimento: true; sexo: true } }) =>
@@ -291,6 +299,21 @@ export function createAuthRepository(prisma: AuthPrisma): AuthRepository {
       if (!owner) return false;
       await (prisma as unknown as MeasurementClient).medicao.delete({ where: { id: measurementId } });
       return true;
-    }
+    },
+    findSettings: (id) => (prisma as unknown as MeasurementClient).nutricionista.findUnique({
+      where: { id },
+      select: { formulaPadrao: true, fatoresAtividade: true }
+    }).then((settings) => settings && {
+      formulaPadrao: settings.formulaPadrao,
+      fatoresAtividade: { ...DEFAULT_ACTIVITY_FACTORS, ...(settings.fatoresAtividade as Record<string, number>) }
+    }),
+    updateSettings: (id, data) => (prisma as unknown as MeasurementClient).nutricionista.update({
+      where: { id },
+      data,
+      select: { formulaPadrao: true, fatoresAtividade: true }
+    }).then((settings) => ({
+      formulaPadrao: settings.formulaPadrao,
+      fatoresAtividade: settings.fatoresAtividade as Record<string, number>
+    }))
   };
 }

@@ -70,12 +70,24 @@ export const measurementUpdateSchema = measurementCreateSchema.partial().refine(
 
 export const measurementIdSchema = z.string().uuid();
 
+export const settingsSchema = z.object({
+  formulaPadrao: formulaSchema,
+  fatoresAtividade: z.object({
+    sedentario: z.number().positive(),
+    leve: z.number().positive(),
+    moderado: z.number().positive(),
+    ativo: z.number().positive(),
+    muito_ativo: z.number().positive()
+  })
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type PatientCreateInput = z.infer<typeof patientCreateSchema>;
 export type PatientUpdateInput = z.infer<typeof patientUpdateSchema>;
 export type MeasurementCreateInput = z.infer<typeof measurementCreateSchema>;
 export type MeasurementUpdateInput = z.infer<typeof measurementUpdateSchema>;
+export type SettingsInput = z.infer<typeof settingsSchema>;
 
 export {
   DEFAULT_ACTIVITY_FACTORS,

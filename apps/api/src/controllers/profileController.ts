@@ -1,5 +1,6 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
+import { settingsSchema } from "@nutriapp/shared";
 import { ACCESS_COOKIE, readAccessToken } from "./authController.js";
 import type { ProfileService } from "../services/profileService.js";
 
@@ -51,6 +52,26 @@ export function createProfileController(service: ProfileService) {
         }
         throw error;
       }
+    },
+    getSettings: async (request: FastifyRequest, reply: FastifyReply) => {
+      const sessionId = authenticatedId(request);
+      if (!sessionId) return unauthorized(reply);
+      const settings = await service.getSettings(sessionId);
+      if (!settings) return unauthorized(reply);
+      return reply.send({ configuracoes: settings });
+    },
+    updateSettings: async (request: FastifyRequest, reply: FastifyReply) => {
+      const sessionId = authenticatedId(request);
+      if (!sessionId) return unauthorized(reply);
+      const input = settingsSchema.safeParse(request.body);
+      if (!input.success) return reply.status(400).send({
+        codigo: "VALIDACAO_INVALIDA",
+        mensagem: "Os dados enviados são inválidos.",
+        detalhes: input.error.flatten()
+      });
+      const settings = await service.updateSettings(sessionId, input.data);
+      if (!settings) return unauthorized(reply);
+      return reply.send({ configuracoes: settings });
     }
   };
 }
