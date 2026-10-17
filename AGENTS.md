@@ -181,7 +181,7 @@ Cada sprint é entregue com os critérios de aceite cumpridos.
 
 ### S3 — Medições e cálculos
 **Tarefas**
-- [ ] `packages/shared/nutri-calc`: TMB (2 fórmulas), GET, IMC, com testes unitários cobrindo homem, mulher e limites
+- [x] `packages/shared/nutri-calc`: TMB (2 fórmulas), GET, IMC, com testes unitários cobrindo homem, mulher e limites
 - [ ] CRUD de medições com snapshot calculado na mesma requisição
 - [ ] Tela de medições: formulário, indicadores (TMB, GET, IMC) exibidos ao salvar, gráfico de peso e IMC no tempo
 - [ ] Tela de configurações (fórmula padrão, fatores de atividade)

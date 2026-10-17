@@ -59,3 +59,18 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type PatientCreateInput = z.infer<typeof patientCreateSchema>;
 export type PatientUpdateInput = z.infer<typeof patientUpdateSchema>;
+
+export {
+  DEFAULT_ACTIVITY_FACTORS,
+  calculateGet,
+  calculateImc,
+  calculateNutritionalMetrics,
+  calculateTmb
+} from "./nutri-calc/index.js";
+export type {
+  GetInput,
+  NutriCalcInput,
+  NutritionalMetrics,
+  Sex,
+  TmbFormula
+} from "./nutri-calc/index.js";
