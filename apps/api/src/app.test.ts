@@ -207,6 +207,13 @@ describe("autenticação", () => {
         data: expect.objectContaining({ nutricionistaId: nutricionista.id, dataNascimento: expect.any(Date) })
       }));
       expect(listed.statusCode).toBe(200);
+      expect(prisma.paciente.findMany).toHaveBeenCalledWith(expect.objectContaining({
+        where: expect.objectContaining({
+          nutricionistaId: nutricionista.id,
+          arquivadoEm: null,
+          nome: { contains: "Maria", mode: "insensitive" }
+        })
+      }));
       expect(updated.statusCode).toBe(200);
       expect(archived.statusCode).toBe(200);
       expect(prisma.paciente.updateMany).toHaveBeenCalledWith(expect.objectContaining({

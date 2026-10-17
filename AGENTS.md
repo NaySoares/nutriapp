@@ -162,7 +162,7 @@ Cada sprint é entregue com os critérios de aceite cumpridos.
 - [x] Cadastro, login, logout, refresh com rotação (cookie httpOnly)
 - [x] Recuperação de senha por e-mail via SES **[HUMANO: criar identidade verificada e pedir saída do sandbox]**
 - [x] Perfil: nome, CRN, upload de logo (envio para AWS S3)
-- [ ] Telas de login, cadastro, recuperação e perfil
+- [x] Telas de login, cadastro, recuperação e perfil
 - [ ] Provisionar VM, Docker Compose de produção, Caddy com HTTPS **[HUMANO: conta AWS, domínio, DNS]**
 - [ ] Deploy automático pelo CI
 - [ ] Medir memória da VM e registrar em `docs/decisoes.md`
@@ -172,8 +172,8 @@ Cada sprint é entregue com os critérios de aceite cumpridos.
 
 ### S2 — Pacientes
 **Tarefas**
-- [x] CRUD de pacientes, anamnese em texto, arquivamento
-- [ ] Filtro por `nutricionista_id` em todas as consultas
+- [ ] CRUD de pacientes, anamnese em texto, arquivamento
+- [x] Filtro por `nutricionista_id` em todas as consultas
 - [ ] Telas: lista com busca, formulário, detalhe
 - [ ] Testes de autorização entre dois nutricionistas
 
