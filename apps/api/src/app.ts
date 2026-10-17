@@ -38,16 +38,20 @@ export function buildApp(
   const repository = createAuthRepository(prisma);
   const profile = createProfileController(createProfileService(repository, createS3LogoStorage()));
   const patients = createPatientController(createPatientService(repository));
+
   app.get("/health", async () => healthResponseSchema.parse({ status: "ok", service: "api" }));
+
   app.post("/auth/register", auth.register);
   app.post("/auth/login", auth.login);
   app.post("/auth/forgot-password", auth.forgotPassword);
   app.post("/auth/reset-password", auth.resetPassword);
   app.post("/auth/refresh", auth.refresh);
   app.post("/auth/logout", auth.logout);
+
   app.get("/me", profile.get);
   app.patch("/me", profile.update);
   app.post("/me/logo", profile.uploadLogo);
+
   app.get("/patients", patients.list);
   app.post("/patients", patients.create);
   app.get("/patients/:id", patients.get);
@@ -56,12 +60,29 @@ export function buildApp(
 
   app.setErrorHandler((error, request, reply) => {
     const details = error as { validation?: unknown; statusCode?: number; message?: string };
+
     request.log.error(error);
-    return reply.status(details.validation ? 400 : details.statusCode ?? 500).send(apiErrorSchema.parse({
-      codigo: details.validation ? "VALIDACAO_INVALIDA" : details.statusCode ? "REQUISICAO_INVALIDA" : "ERRO_INTERNO",
-      mensagem: details.validation ? "Os dados enviados são inválidos." : details.statusCode ? details.message ?? "Requisição inválida." : "Ocorreu um erro interno.",
-      ...(details.validation ? { detalhes: details.validation } : {})
-    }));
+
+    return (
+      reply.status(details.validation
+        ? 400
+        : details.statusCode ?? 500)
+        .send(apiErrorSchema.parse({
+          codigo: details.validation
+            ? "VALIDACAO_INVALIDA"
+            : details.statusCode
+            ? "REQUISICAO_INVALIDA"
+            : "ERRO_INTERNO",
+          mensagem: details.validation
+            ? "Os dados enviados são inválidos."
+            : details.statusCode
+            ? details.message
+            ?? "Requisição inválida."
+            : "Ocorreu um erro interno.",
+          ...(details.validation ? { detalhes: details.validation } : {})
+      }))
+    );
   });
+
   return app;
 }
