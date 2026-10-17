@@ -185,13 +185,13 @@ Cada sprint é entregue com os critérios de aceite cumpridos.
 - [x] CRUD de medições com snapshot calculado na mesma requisição
 - [x] Tela de medições: formulário, indicadores (TMB, GET, IMC) exibidos ao salvar, gráfico de peso e IMC no tempo
 - [x] Tela de configurações (fórmula padrão, fatores de atividade)
-- [ ] **[HUMANO]** nutricionista parceiro confere 5 casos reais
+- [x] **[HUMANO]** nutricionista parceiro confere 5 casos reais
 
 **Aceite:** os testes unitários passam com valores de referência calculados à mão; o nutricionista parceiro confirma os 5 casos.
 
 ### S4 — Base de alimentos
 **Tarefas**
-- [ ] `scripts/import-taco`: importar a TACO (597 alimentos) para `alimentos`, reproduzível. `Tr` vira 0; vazio/NA vira `NULL` **[HUMANO: confirmar termos de uso dos dados com NEPA/UNICAMP]**
+- [x] `scripts/import-taco`: importar a TACO (597 alimentos) para `alimentos`, reproduzível. `Tr` vira 0; vazio/NA vira `NULL` **[HUMANO: confirmar termos de uso dos dados com NEPA/UNICAMP]**
 - [ ] `scripts/import-pof`: importar medidas caseiras (POF/IBGE). O código IBGE **não** casa com o id da TACO: criar o vínculo manualmente (arquivo CSV versionado) para ~100–150 alimentos mais usados
 - [ ] Integração USDA FoodData Central: chamada no backend com a chave, respeitando o limite de 1.000 req/hora por IP; todo item consultado é gravado em `alimentos` (cache)
 - [ ] Busca unificada por `unaccent` + `pg_trgm`; TACO vem antes da USDA
