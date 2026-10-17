@@ -18,6 +18,8 @@ docker compose up --build
 
 A API responde em `http://localhost/api/health` quando acessada pelo Caddy e diretamente em `http://localhost:3001/health`.
 
+Para desenvolvimento separado, mantenha o Compose com o serviço `api` ativo e execute `pnpm --filter @nutriapp/web dev`. O Next em `http://localhost:3000` encaminha internamente `/api/*` para `http://localhost:3001`; por isso o navegador mostra a origem `3000`, mas a API recebe a requisição na porta `3001`. Não configure uma URL absoluta no cliente, pois isso quebraria os cookies de sessão e a mesma origem usada em produção.
+
 ## Autenticação
 
 A S1 fornece:

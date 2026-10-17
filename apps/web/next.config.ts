@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "export",
-  trailingSlash: true
+  trailingSlash: process.env.NODE_ENV !== "development"
 };
 
 if (process.env.NODE_ENV === "development") {
