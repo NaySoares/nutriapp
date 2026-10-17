@@ -174,7 +174,7 @@ Cada sprint é entregue com os critérios de aceite cumpridos.
 **Tarefas**
 - [ ] CRUD de pacientes, anamnese em texto, arquivamento
 - [x] Filtro por `nutricionista_id` em todas as consultas
-- [ ] Telas: lista com busca, formulário, detalhe
+- [x] Telas: lista com busca, formulário, detalhe
 - [ ] Testes de autorização entre dois nutricionistas
 
 **Aceite:** teste automatizado comprova que nutricionista A recebe 404 para paciente do B em todos os endpoints.

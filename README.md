@@ -57,6 +57,8 @@ A API autenticada fornece:
 
 O cadastro aceita `nome`, `dataNascimento` no formato `YYYY-MM-DD`, `sexo` (`M` ou `F`), `contato` e `anamnese`. O arquivamento é lógico: o paciente não aparece na listagem padrão e permanece no banco.
 
+As telas de pacientes estão disponíveis em `/app/pacientes/` (lista e busca) e `/app/paciente/` (cadastro e detalhe). O detalhe usa `?id=<uuid>` para funcionar no export estático.
+
 ## Sprints
 
 - S0: fundação do monorepo, API, web, banco, Compose e CI.
