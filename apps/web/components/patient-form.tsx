@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiFetch } from "../lib/api";
 import { FormMessage } from "./auth-shell";
+import { MeasurementPanel } from "./measurement-panel";
 
 type Patient = {
   id: string;
@@ -109,6 +110,7 @@ export function PatientForm({ patientId }: { patientId?: string }) {
           </form>
           {patient?.arquivadoEm && <p className="mt-5 rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-600">Este paciente está arquivado.</p>}
         </section>
+        {patientId && patient && <MeasurementPanel patientId={patientId} />}
       </div>
     </main>
   );

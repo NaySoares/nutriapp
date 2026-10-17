@@ -66,6 +66,8 @@ Medições usam:
 
 Ao criar ou atualizar uma medição, a API calcula e grava na mesma operação o snapshot de TMB, GET, IMC, fórmula e fator de atividade, usando a configuração do nutricionista e a idade do paciente na data informada.
 
+No detalhe de um paciente, o painel de medições permite registrar peso, altura e atividade, exibe os indicadores calculados após salvar e mostra a evolução de peso e IMC em um gráfico.
+
 ## Sprints
 
 - S0: fundação do monorepo, API, web, banco, Compose e CI.

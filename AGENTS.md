@@ -183,7 +183,7 @@ Cada sprint é entregue com os critérios de aceite cumpridos.
 **Tarefas**
 - [x] `packages/shared/nutri-calc`: TMB (2 fórmulas), GET, IMC, com testes unitários cobrindo homem, mulher e limites
 - [x] CRUD de medições com snapshot calculado na mesma requisição
-- [ ] Tela de medições: formulário, indicadores (TMB, GET, IMC) exibidos ao salvar, gráfico de peso e IMC no tempo
+- [x] Tela de medições: formulário, indicadores (TMB, GET, IMC) exibidos ao salvar, gráfico de peso e IMC no tempo
 - [ ] Tela de configurações (fórmula padrão, fatores de atividade)
 - [ ] **[HUMANO]** nutricionista parceiro confere 5 casos reais
 
