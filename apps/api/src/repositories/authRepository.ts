@@ -1,4 +1,4 @@
-import type { AuthPrisma, PatientRecord, PatientSelect } from "../types/auth.js";
+import type { AuthPrisma, MeasurementRecord, MeasurementSelect, PatientRecord, PatientSelect } from "../types/auth.js";
 
 export type AuthRepository = {
   createNutritionist: (data: {
@@ -78,6 +78,13 @@ export type AuthRepository = {
     anamnese?: string | null;
   }) => Promise<boolean>;
   archivePatient: (nutritionistId: string, patientId: string) => Promise<boolean>;
+  findNutritionistSettings: (id: string) => Promise<{ formulaPadrao: "mifflin" | "harris_benedict"; fatoresAtividade: Record<string, number> } | null>;
+  findPatientOwner: (nutritionistId: string, patientId: string) => Promise<{ id: string; dataNascimento: Date; sexo: "M" | "F" } | null>;
+  createMeasurement: (patientId: string, data: Record<string, unknown>) => Promise<MeasurementRecord>;
+  listMeasurements: (nutritionistId: string, patientId: string) => Promise<MeasurementRecord[]>;
+  findMeasurement: (nutritionistId: string, measurementId: string) => Promise<MeasurementRecord | null>;
+  updateMeasurement: (nutritionistId: string, measurementId: string, data: Record<string, unknown>) => Promise<MeasurementRecord | null>;
+  deleteMeasurement: (nutritionistId: string, measurementId: string) => Promise<boolean>;
 };
 
 const patientSelect: PatientSelect = {
@@ -91,6 +98,11 @@ const patientSelect: PatientSelect = {
   arquivadoEm: true,
   criadoEm: true,
   atualizadoEm: true
+};
+const measurementSelect: MeasurementSelect = {
+  id: true, pacienteId: true, data: true, pesoKg: true, alturaCm: true,
+  circunferencias: true, nivelAtividade: true, tmbKcal: true, getKcal: true,
+  imc: true, formulaUsada: true, fatorUsado: true, criadoEm: true, atualizadoEm: true
 };
 
 type ProfileClient = {
@@ -116,6 +128,24 @@ type ProfileClient = {
       crn: string | null;
       logoPath: string | null;
     }>;
+  }
+};
+
+type MeasurementClient = {
+    nutricionista: {
+      findUnique: (args: { where: { id: string }; select: { formulaPadrao: true; fatoresAtividade: true } }) =>
+        Promise<{ formulaPadrao: "mifflin" | "harris_benedict"; fatoresAtividade: unknown } | null>;
+    };
+    paciente: {
+      findFirst: (args: { where: { id: string; nutricionistaId: string }; select: { id: true; dataNascimento: true; sexo: true } }) =>
+        Promise<{ id: string; dataNascimento: Date; sexo: "M" | "F" } | null>;
+    };
+    medicao: {
+      create: (args: { data: Record<string, unknown>; select: MeasurementSelect }) => Promise<MeasurementRecord>;
+      findMany: (args: { where: { pacienteId: string }; orderBy: { data: "desc" }; select: MeasurementSelect }) => Promise<MeasurementRecord[]>;
+      findFirst: (args: { where: { id: string }; select: MeasurementSelect }) => Promise<MeasurementRecord | null>;
+      update: (args: { where: { id: string }; data: Record<string, unknown>; select: MeasurementSelect }) => Promise<MeasurementRecord>;
+      delete: (args: { where: { id: string } }) => Promise<unknown>;
   };
 };
 
@@ -212,6 +242,55 @@ export function createAuthRepository(prisma: AuthPrisma): AuthRepository {
     archivePatient: async (nutritionistId, patientId) => (await prisma.paciente.updateMany({
       where: { id: patientId, nutricionistaId: nutritionistId, arquivadoEm: null },
       data: { arquivadoEm: new Date() }
-    })).count === 1
+    })).count === 1,
+    findNutritionistSettings: (id) => (prisma as unknown as MeasurementClient).nutricionista.findUnique({ where: { id }, select: { formulaPadrao: true, fatoresAtividade: true } })
+      .then((settings) => settings && {
+        formulaPadrao: settings.formulaPadrao,
+        fatoresAtividade: settings.fatoresAtividade as Record<string, number>
+      }),
+    findPatientOwner: (nutritionistId, patientId) => (prisma as unknown as MeasurementClient).paciente.findFirst({
+      where: { id: patientId, nutricionistaId: nutritionistId },
+      select: { id: true, dataNascimento: true, sexo: true }
+    }),
+    createMeasurement: (patientId, data) => (prisma as unknown as MeasurementClient).medicao.create({ data: { pacienteId: patientId, ...data }, select: measurementSelect }),
+    listMeasurements: async (nutritionistId, patientId) => {
+      const owner = await (prisma as unknown as MeasurementClient).paciente.findFirst({
+        where: { id: patientId, nutricionistaId: nutritionistId },
+        select: { id: true, dataNascimento: true, sexo: true }
+      });
+      return owner ? (prisma as unknown as MeasurementClient).medicao.findMany({ where: { pacienteId: patientId }, orderBy: { data: "desc" }, select: measurementSelect }) : [];
+    },
+    findMeasurement: async (nutritionistId, measurementId) => {
+      const measurement = await (prisma as unknown as MeasurementClient).medicao.findFirst({
+        where: { id: measurementId },
+        select: measurementSelect
+      });
+      if (!measurement) return null;
+      const owner = await (prisma as unknown as MeasurementClient).paciente.findFirst({
+        where: { id: measurement.pacienteId, nutricionistaId: nutritionistId },
+        select: { id: true, dataNascimento: true, sexo: true }
+      });
+      return owner ? measurement : null;
+    },
+    updateMeasurement: async (nutritionistId, measurementId, data) => {
+      const existing = await (prisma as unknown as MeasurementClient).medicao.findFirst({ where: { id: measurementId }, select: measurementSelect });
+      if (!existing) return null;
+      const owner = await (prisma as unknown as MeasurementClient).paciente.findFirst({
+        where: { id: existing.pacienteId, nutricionistaId: nutritionistId },
+        select: { id: true, dataNascimento: true, sexo: true }
+      });
+      return owner ? (prisma as unknown as MeasurementClient).medicao.update({ where: { id: measurementId }, data, select: measurementSelect }) : null;
+    },
+    deleteMeasurement: async (nutritionistId, measurementId) => {
+      const existing = await (prisma as unknown as MeasurementClient).medicao.findFirst({ where: { id: measurementId }, select: measurementSelect });
+      if (!existing) return false;
+      const owner = await (prisma as unknown as MeasurementClient).paciente.findFirst({
+        where: { id: existing.pacienteId, nutricionistaId: nutritionistId },
+        select: { id: true, dataNascimento: true, sexo: true }
+      });
+      if (!owner) return false;
+      await (prisma as unknown as MeasurementClient).medicao.delete({ where: { id: measurementId } });
+      return true;
+    }
   };
 }

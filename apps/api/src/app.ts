@@ -13,6 +13,8 @@ import { createProfileController } from "./controllers/profileController.js";
 import { createS3LogoStorage, createProfileService } from "./services/profileService.js";
 import { createPatientController } from "./controllers/patientController.js";
 import { createPatientService } from "./services/patientService.js";
+import { createMeasurementController } from "./controllers/measurementController.js";
+import { createMeasurementService } from "./services/measurementService.js";
 import type { AuthPrisma } from "./types/auth.js";
 
 export type { AuthPrisma } from "./types/auth.js";
@@ -38,6 +40,7 @@ export function buildApp(
   const repository = createAuthRepository(prisma);
   const profile = createProfileController(createProfileService(repository, createS3LogoStorage()));
   const patients = createPatientController(createPatientService(repository));
+  const measurements = createMeasurementController(createMeasurementService(repository));
 
   app.get("/health", async () => healthResponseSchema.parse({ status: "ok", service: "api" }));
 
@@ -57,6 +60,10 @@ export function buildApp(
   app.get("/patients/:id", patients.get);
   app.patch("/patients/:id", patients.update);
   app.post("/patients/:id/archive", patients.archive);
+  app.get("/patients/:id/measurements", measurements.list);
+  app.post("/patients/:id/measurements", measurements.create);
+  app.patch("/measurements/:id", measurements.update);
+  app.delete("/measurements/:id", measurements.remove);
 
   app.setErrorHandler((error, request, reply) => {
     const details = error as { validation?: unknown; statusCode?: number; message?: string };

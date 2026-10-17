@@ -55,10 +55,27 @@ export const patientUpdateSchema = patientCreateSchema.partial().refine(
 
 export const patientIdSchema = z.string().uuid();
 
+export const measurementCreateSchema = z.object({
+  data: z.string().date(),
+  pesoKg: z.number().min(2).max(500),
+  alturaCm: z.number().min(50).max(250),
+  circunferencias: z.record(z.number().positive()).optional(),
+  nivelAtividade: activityLevelSchema
+});
+
+export const measurementUpdateSchema = measurementCreateSchema.partial().refine(
+  (value) => Object.keys(value).length > 0,
+  { message: "Informe ao menos um campo para atualizar." }
+);
+
+export const measurementIdSchema = z.string().uuid();
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type PatientCreateInput = z.infer<typeof patientCreateSchema>;
 export type PatientUpdateInput = z.infer<typeof patientUpdateSchema>;
+export type MeasurementCreateInput = z.infer<typeof measurementCreateSchema>;
+export type MeasurementUpdateInput = z.infer<typeof measurementUpdateSchema>;
 
 export {
   DEFAULT_ACTIVITY_FACTORS,

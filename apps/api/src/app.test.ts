@@ -51,6 +51,13 @@ function createPrismaMock() {
       findMany: vi.fn<AuthPrisma["paciente"]["findMany"]>(),
       findFirst: vi.fn<AuthPrisma["paciente"]["findFirst"]>(),
       updateMany: vi.fn<AuthPrisma["paciente"]["updateMany"]>()
+    },
+    medicao: {
+      create: vi.fn(),
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn()
     }
   } satisfies AuthPrisma;
 
@@ -152,6 +159,108 @@ describe("autenticação", () => {
 
     afterEach(async () => {
       await app?.close();
+    });
+
+    describe("medições", () => {
+      let app: FastifyInstance;
+
+      afterEach(async () => {
+        await app?.close();
+      });
+
+      it("cria, lista, atualiza e remove medição com snapshot calculado", async () => {
+        const prisma = createPrismaMock();
+        const patientId = "88888888-8888-4888-8888-888888888888";
+        const measurementId = "99999999-9999-4999-8999-999999999999";
+        const measurement = {
+          id: measurementId,
+          pacienteId: patientId,
+          data: new Date("2026-01-01T00:00:00.000Z"),
+          pesoKg: 80,
+          alturaCm: 180,
+          circunferencias: null,
+          nivelAtividade: "moderado",
+          tmbKcal: 1780,
+          getKcal: 2759,
+          imc: 24.691358,
+          formulaUsada: "mifflin" as const,
+          fatorUsado: 1.55,
+          criadoEm: new Date("2026-01-01T00:00:00.000Z"),
+          atualizadoEm: new Date("2026-01-01T00:00:00.000Z")
+        };
+        prisma.nutricionista.findUnique.mockImplementation(async () => ({
+          id: nutricionista.id,
+          email: nutricionista.email,
+          nome: nutricionista.nome,
+          senhaHash: "unused",
+          formulaPadrao: "mifflin",
+          fatoresAtividade: { moderado: 1.55 }
+        } as never));
+        prisma.sessao.findUnique.mockResolvedValue({ nutricionistaId: nutricionista.id });
+        prisma.paciente.findFirst.mockResolvedValue({
+          id: patientId,
+          nutricionistaId: nutricionista.id,
+          nome: "Paciente",
+          dataNascimento: new Date("1995-01-01T00:00:00.000Z"),
+          sexo: "M",
+          contato: null,
+          anamnese: null,
+          arquivadoEm: null,
+          criadoEm: new Date(),
+          atualizadoEm: new Date()
+        });
+        prisma.medicao.create.mockResolvedValue(measurement);
+        prisma.medicao.findMany.mockResolvedValue([measurement]);
+        prisma.medicao.findFirst.mockResolvedValue(measurement);
+        prisma.medicao.update.mockResolvedValue({ ...measurement, pesoKg: 81 });
+        prisma.medicao.delete.mockResolvedValue(measurement);
+        app = buildApp(prisma);
+        await app.ready();
+        const cookies = cookieHeader(await loginWithMock(app, prisma));
+
+        const created = await app.inject({
+          method: "POST",
+          url: `/patients/${patientId}/measurements`,
+          headers: { cookie: cookies },
+          payload: {
+            data: "2026-01-01",
+            pesoKg: 80,
+            alturaCm: 180,
+            nivelAtividade: "moderado"
+          }
+        });
+        const listed = await app.inject({
+          method: "GET",
+          url: `/patients/${patientId}/measurements`,
+          headers: { cookie: cookies }
+        });
+        const updated = await app.inject({
+          method: "PATCH",
+          url: `/measurements/${measurementId}`,
+          headers: { cookie: cookies },
+          payload: { pesoKg: 81 }
+        });
+        const removed = await app.inject({
+          method: "DELETE",
+          url: `/measurements/${measurementId}`,
+          headers: { cookie: cookies }
+        });
+
+        expect(created.statusCode).toBe(201);
+        expect(prisma.medicao.create).toHaveBeenCalledWith(expect.objectContaining({
+          data: expect.objectContaining({
+            pacienteId: patientId,
+            tmbKcal: 1775,
+            getKcal: 2751.25,
+            formulaUsada: "mifflin",
+            fatorUsado: 1.55
+          })
+        }));
+        expect(listed.statusCode).toBe(200);
+        expect(updated.statusCode).toBe(200);
+        expect(removed.statusCode).toBe(200);
+        expect(prisma.medicao.delete).toHaveBeenCalledWith({ where: { id: measurementId } });
+      });
     });
 
     it("exige autenticação para acessar pacientes", async () => {

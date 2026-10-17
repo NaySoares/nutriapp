@@ -59,6 +59,13 @@ O cadastro aceita `nome`, `dataNascimento` no formato `YYYY-MM-DD`, `sexo` (`M` 
 
 As telas de pacientes estão disponíveis em `/app/pacientes/` (lista e busca) e `/app/paciente/` (cadastro e detalhe). O detalhe usa `?id=<uuid>` para funcionar no export estático.
 
+Medições usam:
+
+- `GET/POST /api/patients/:id/measurements`
+- `PATCH/DELETE /api/measurements/:id`
+
+Ao criar ou atualizar uma medição, a API calcula e grava na mesma operação o snapshot de TMB, GET, IMC, fórmula e fator de atividade, usando a configuração do nutricionista e a idade do paciente na data informada.
+
 ## Sprints
 
 - S0: fundação do monorepo, API, web, banco, Compose e CI.

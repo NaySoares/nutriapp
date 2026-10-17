@@ -78,6 +78,26 @@ export type AuthPrisma = {
       data: { nome?: string; dataNascimento?: Date; sexo?: "M" | "F"; contato?: string | null; anamnese?: string | null; arquivadoEm?: Date };
     }) => Promise<{ count: number }>;
   };
+  medicao?: {
+    create: (args: { data: Record<string, unknown>; select: MeasurementSelect }) => Promise<MeasurementRecord>;
+    findMany: (args: { where: { pacienteId: string }; orderBy: { data: "desc" }; select: MeasurementSelect }) => Promise<MeasurementRecord[]>;
+    findFirst: (args: { where: { id: string }; select: MeasurementSelect }) => Promise<MeasurementRecord | null>;
+    update: (args: { where: { id: string }; data: Record<string, unknown>; select: MeasurementSelect }) => Promise<MeasurementRecord>;
+    delete: (args: { where: { id: string } }) => Promise<unknown>;
+  };
+};
+
+export type MeasurementSelect = {
+  id: true; pacienteId: true; data: true; pesoKg: true; alturaCm: true;
+  circunferencias: true; nivelAtividade: true; tmbKcal: true; getKcal: true;
+  imc: true; formulaUsada: true; fatorUsado: true; criadoEm: true; atualizadoEm: true;
+};
+
+export type MeasurementRecord = {
+  id: string; pacienteId: string; data: Date; pesoKg: number | string; alturaCm: number | string;
+  circunferencias: unknown; nivelAtividade: string; tmbKcal: number | string; getKcal: number | string;
+  imc: number | string; formulaUsada: "mifflin" | "harris_benedict"; fatorUsado: number | string;
+  criadoEm: Date; atualizadoEm: Date;
 };
 
 export type PatientSelect = {

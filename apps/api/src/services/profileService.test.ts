@@ -31,7 +31,14 @@ function createRepository(): AuthRepository {
     listPatients: vi.fn(),
     findPatient: vi.fn(),
     updatePatient: vi.fn(),
-    archivePatient: vi.fn()
+    archivePatient: vi.fn(),
+    findNutritionistSettings: vi.fn(),
+    findPatientOwner: vi.fn(),
+    createMeasurement: vi.fn(),
+    listMeasurements: vi.fn(),
+    findMeasurement: vi.fn(),
+    updateMeasurement: vi.fn(),
+    deleteMeasurement: vi.fn()
   };
 }
 
