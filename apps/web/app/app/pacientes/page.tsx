@@ -26,8 +26,11 @@ import {
   Phone,
   Mail,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SideBar } from '../../../components/sidebar';
+import { useModalStore } from '../../../stores/modal-store';
+import { useHeaderStore } from '../../../stores/header-store';
+import { FormsNewPatient } from '../../../components/app/forms-patient';
 
 type CareType = 'Particular' | 'Hospitalar';
 type PatientStatus = 'Ativo' | 'Retorno pendente' | 'Inativo';
@@ -211,6 +214,28 @@ export default function PatientsPage() {
   const [newClinical, setNewClinical] = useState<ClinicalStatus>(
     'Acompanhamento clínico',
   );
+  const setConfig = useHeaderStore((state) => state.setConfig);
+  const reset = useHeaderStore((state) => state.reset);
+  const openModal = useModalStore((state) => state.openModal);
+  const closeModal = useModalStore((state) => state.closeModal);
+
+  useEffect(() => {
+    setConfig({
+      title: "Pacientes",
+      actions: (
+        <button
+          className="btn-primary"
+          onClick={() => openModal(<FormsNewPatient onClose={() => { closeModal(); }} />)}
+        >
+          <Plus size={15} />
+          Novo Paciente
+        </button>
+      )
+    });
+
+    return reset;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setConfig, reset]);
 
   const filteredPatients = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase('pt-BR');
@@ -312,7 +337,6 @@ export default function PatientsPage() {
           onClick={() => setMobileNavOpen(false)}
         />
       )}
-      <SideBar mobileNavOpen={mobileNavOpen} setMobileNavOpen={setMobileNavOpen} />
 
       <main className="main">
         <header className="topbar">

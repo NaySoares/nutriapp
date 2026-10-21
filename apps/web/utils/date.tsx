@@ -19,3 +19,10 @@ export function isDateInPast(dateString: string): boolean {
   const inputDate = new Date(dateString);
   return inputDate < today;
 }
+
+export function isDateInFuture(dateString: string): boolean {
+  // esse método não considera o horário
+  const today = new Date();
+  const inputDate = new Date(dateString);
+  return inputDate > today;
+}

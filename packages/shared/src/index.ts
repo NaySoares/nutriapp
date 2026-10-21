@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 export const formulaSchema = z.enum(["mifflin", "harris_benedict"]);
-export const sexSchema = z.enum(["M", "F"]);
 export const activityLevelSchema = z.enum([
   "sedentario",
   "leve",
@@ -40,20 +39,7 @@ export const resetPasswordSchema = z.object({
   novaSenha: z.string().min(12).max(128)
 });
 
-export const patientCreateSchema = z.object({
-  nome: z.string().trim().min(1).max(120),
-  dataNascimento: z.string().date(),
-  sexo: sexSchema,
-  contato: z.string().trim().max(120).optional(),
-  anamnese: z.string().max(10000).optional()
-});
 
-export const patientUpdateSchema = patientCreateSchema.partial().refine(
-  (value) => Object.keys(value).length > 0,
-  { message: "Informe ao menos um campo para atualizar." }
-);
-
-export const patientIdSchema = z.string().uuid();
 
 export const measurementCreateSchema = z.object({
   data: z.string().date(),
@@ -93,8 +79,6 @@ export type User = {
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
-export type PatientCreateInput = z.infer<typeof patientCreateSchema>;
-export type PatientUpdateInput = z.infer<typeof patientUpdateSchema>;
 export type MeasurementCreateInput = z.infer<typeof measurementCreateSchema>;
 export type MeasurementUpdateInput = z.infer<typeof measurementUpdateSchema>;
 export type SettingsInput = z.infer<typeof settingsSchema>;
@@ -118,3 +102,7 @@ export type {
 export type { AppointmentRecord, AppointmentStatus } from "./types/appointments.js";
 export { AppointmentCreateInput, AppointmentUpdateInput, AppointmentCreate, AppointmentUpdate, appointmentIdSchema, appointmentUpdateSchema } from "./types/appointments.js";
 export { LOCAIS, ATENDIMENTOS, TIPOS_CONSULTA, STATUS_AGENDAMENTO } from "./types/appointments.js";
+
+// patient types
+export type { PatientCreateInput, PatientUpdateInput } from "./types/patient.js";
+export { patientIdSchema } from "./types/patient.js";

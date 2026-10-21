@@ -13,24 +13,33 @@ export function createPatientController(service: PatientService) {
       if (!patients) return unauthorized(reply);
       return reply.send({ pacientes: patients });
     },
+
     create: async (request: FastifyRequest, reply: FastifyReply) => {
       const sessionId = authenticatedSession(request);
       if (!sessionId) return unauthorized(reply);
+
       const input = patientCreateSchema.safeParse(request.body);
       if (!input.success) return invalidInput(reply, input.error.flatten());
+
       const patient = await service.create(sessionId, input.data);
       if (!patient) return unauthorized(reply);
+
       return reply.status(201).send({ paciente: patient });
     },
+
     get: async (request: FastifyRequest, reply: FastifyReply) => {
       const sessionId = authenticatedSession(request);
       if (!sessionId) return unauthorized(reply);
+
       const patientId = patientIdSchema.safeParse((request.params as { id?: string }).id);
       if (!patientId.success) return notFound(reply);
+
       const patient = await service.get(sessionId, patientId.data);
       if (!patient) return notFound(reply);
+
       return reply.send({ paciente: patient });
     },
+
     update: async (request: FastifyRequest, reply: FastifyReply) => {
       const sessionId = authenticatedSession(request);
       if (!sessionId) return unauthorized(reply);
@@ -42,6 +51,7 @@ export function createPatientController(service: PatientService) {
       if (!patient) return notFound(reply);
       return reply.send({ paciente: patient });
     },
+
     archive: async (request: FastifyRequest, reply: FastifyReply) => {
       const sessionId = authenticatedSession(request);
       if (!sessionId) return unauthorized(reply);

@@ -61,45 +61,6 @@ interface TFallowup {
 type MeResponse = { nutricionista: User };
 type AppointmentsResponse = { agendamentos: AppointmentRecord[] };
 
-const initialAppointments: Appointment[] = [
-  {
-    time: '09:00',
-    name: 'Mariana Costa',
-    initials: 'MC',
-    type: 'Retorno · 45 min',
-    kind: 'Particular',
-    status: 'Confirmada',
-    tone: '',
-  },
-  {
-    time: '10:00',
-    name: 'Rafael Almeida',
-    initials: 'RA',
-    type: 'Primeira consulta · 60 min',
-    kind: 'Particular',
-    status: 'Confirmada',
-    tone: 'alt1',
-  },
-  {
-    time: '11:30',
-    name: 'Camila Ferreira',
-    initials: 'CF',
-    type: 'Acompanhamento · 30 min',
-    kind: 'Hospital',
-    status: 'Aguardando',
-    tone: 'alt2',
-  },
-  {
-    time: '14:00',
-    name: 'João Pedro Lima',
-    initials: 'JL',
-    type: 'Retorno · 45 min',
-    kind: 'Particular',
-    status: 'Confirmada',
-    tone: 'alt3',
-  },
-];
-
 const clinical = [
   { label: 'Eutrofia', count: 34, color: '#2d8057', percent: 28 },
   { label: 'Sobrepeso', count: 27, color: '#78b78c', percent: 22 },
@@ -129,6 +90,7 @@ export default function DashboardPage() {
 
 
   useEffect(() => {
+    setLoading(true);
     apiRequest<MeResponse>("/me").then(({ nutricionista }) => {
       setUser(nutricionista);
     }).catch((reason) => {
