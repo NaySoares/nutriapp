@@ -38,9 +38,15 @@ function createRepository(): AuthRepository {
     listMeasurements: vi.fn(),
     findMeasurement: vi.fn(),
     updateMeasurement: vi.fn(),
-    deleteMeasurement: vi.fn()
-    ,findSettings: vi.fn()
-    ,updateSettings: vi.fn()
+    deleteMeasurement: vi.fn(),
+    findSettings: vi.fn(),
+    updateSettings: vi.fn(),
+    createAppointment: vi.fn(),
+    listAppointments: vi.fn(),
+    findAppointment: vi.fn(),
+    updateAppointment: vi.fn(),
+    deleteAppointment: vi.fn(),
+    findConflicts: vi.fn()
   };
 }
 

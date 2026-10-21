@@ -2,32 +2,48 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { apiRequest } from "../../lib/api";
-import type { ATENDIMENTOS, TIPOS_CONSULTA, LOCAIS } from "@nutriapp/shared";
+import { ATENDIMENTOS, TIPOS_CONSULTA, LOCAIS, Sex } from "@nutriapp/shared";
+import { isDateInPast } from "../../utils/date";
+
+type Atendimento = (typeof ATENDIMENTOS)[number];
+type TipoConsulta = (typeof TIPOS_CONSULTA)[number];
+type Local = (typeof LOCAIS)[number];
 
 type NewAppointmentPayload = {
   paciente: string;
   data: string; // YYYY-MM-DD
+  dataNascimento: string; // YYYY-MM-DD
+  sexo: Sex;
   horario: string; // HH:mm
   duracao: number; // in minutes
-  atendimento: ATENDIMENTOS;
-  tipoConsulta: TIPOS_CONSULTA;
-  local: LOCAIS;
+  atendimento: Atendimento;
+  tipoConsulta: TipoConsulta;
+  local: Local;
   note?: string;
+  contato?: string;
 }
 
 export function FormsNewAppointment( { onClose, onCreated }: { onClose: () => void; onCreated?: () => void; }) {
   const [newName, setNewName] = useState<string>('');
   const [newDate, setNewDate] = useState(() => new Date().toLocaleDateString('en-CA')); // YYYY-MM-DD
   const [newDuration, setNewDuration] = useState<string>('45');
-  const [newType, setNewType] = useState<ATENDIMENTOS>('Particular');
-  const [newKind, setNewKind] = useState<TIPOS_CONSULTA>('Consulta de retorno');
-  const [newLocation, setNewLocation] = useState<LOCAIS>('Consultório');
+  const [newType, setNewType] = useState<Atendimento>('Particular');
+  const [newKind, setNewKind] = useState<TipoConsulta>('Consulta de retorno');
+  const [newLocation, setNewLocation] = useState<Local>('Consultório');
   const [newTime, setNewTime] = useState('15:00');
+  const [newBirthDate, setNewBirthDate] = useState(() => new Date().toLocaleDateString('en-CA')); // YYYY-MM-DD
+  const [newSex, setNewSex] = useState<Sex>('M');
+  const [newContact, setNewContact] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
   async function addAppointment(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!newName.trim() || loading) return;
+
+    if (isDateInPast(newDate)) {
+      toast.error("A data do agendamento não pode ser no passado.");
+      return;
+    }
 
     const payload: NewAppointmentPayload = {
       paciente: newName.trim(),
@@ -37,11 +53,14 @@ export function FormsNewAppointment( { onClose, onCreated }: { onClose: () => vo
       atendimento: newType,
       tipoConsulta: newKind,
       local: newLocation,
+      dataNascimento: newBirthDate,
+      sexo: newSex,
+      contato: newContact?.trim() || undefined,
     };
 
     setLoading(true);
     try {
-      await apiRequest("/agendamentos", { method: "POST", data: payload });
+      await apiRequest("/appointments", { method: "POST", data: payload });
       toast.success("Atendimento agendado com sucesso.");
       onCreated?.();
       onClose();
@@ -83,6 +102,7 @@ export function FormsNewAppointment( { onClose, onCreated }: { onClose: () => vo
             Nome do paciente <span className="text-[#b65c50]">*</span>
           </span>
           <input
+            id="appointment-name-input"
             required
             autoFocus
             value={newName}
@@ -94,9 +114,53 @@ export function FormsNewAppointment( { onClose, onCreated }: { onClose: () => vo
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
             <span className="mb-1.5 block text-[11px] font-semibold text-[#53665a]">
+              Data de Nascimento <span className="text-[#b65c50]">*</span>
+            </span>
+            <input
+              id="appointment-birthdate-input"
+              required
+              type="date"
+              value={newBirthDate}
+              onChange={(event) => setNewBirthDate(event.target.value)}
+              className="w-full rounded-lg border border-[#e3eae4] px-3 py-2.5 text-[12px] outline-none focus:border-[#7fb18e]"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1.5 block text-[11px] font-semibold text-[#53665a]">
+              Sexo <span className="text-[#b65c50]">*</span>
+            </span>
+            <select
+              value={newSex}
+              onChange={(event) => setNewSex(event.target.value as Sex)}
+              id="appointment-sex-select"
+              className="agenda-select w-full"
+              style={{ minHeight: "42px" }}
+            >
+              <option value="M">Masculino</option>
+              <option value="F">Feminino</option>
+            </select>
+          </label>
+        </div>
+        <label className="block">
+          <span className="mb-1.5 block text-[11px] font-semibold text-[#53665a]">
+            Contato <span className="text-[#b65c50]">*</span>
+          </span>
+          <input
+            id="appointment-contact-input"
+            required
+            value={newContact}
+            onChange={(event) => setNewContact(event.target.value)}
+            placeholder="Digite o contato do paciente"
+            className="w-full rounded-lg border border-[#e3eae4] px-3 py-2.5 text-[12px] outline-none focus:border-[#7fb18e]"
+          />
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block">
+            <span className="mb-1.5 block text-[11px] font-semibold text-[#53665a]">
               Data
             </span>
             <input
+              id="appointment-date-input"
               required
               type="date"
               value={newDate}
@@ -109,6 +173,7 @@ export function FormsNewAppointment( { onClose, onCreated }: { onClose: () => vo
               Horário
             </span>
             <input
+              id="appointment-time-input"
               required
               type="time"
               value={newTime}
@@ -123,9 +188,11 @@ export function FormsNewAppointment( { onClose, onCreated }: { onClose: () => vo
               Duração
             </span>
             <select
+              id="appointment-duration-select"
               value={newDuration}
               onChange={(event) => setNewDuration(event.target.value)}
-              className="agenda-select w-full"
+              className="w-full"
+              style={{ border: "1px solid #e4eae4", borderRadius: "9px", background: "white", padding: "9px 11px", fontSize: "11px", color: "#607166", outline: "none" }}
             >
               <option value="30">30 minutos</option>
               <option value="45">45 minutos</option>
@@ -139,9 +206,10 @@ export function FormsNewAppointment( { onClose, onCreated }: { onClose: () => vo
               Atendimento
             </span>
             <select
+              id="appointment-type-select"
               value={newType}
               onChange={(event) =>
-                setNewType(event.target.value as ATENDIMENTOS)
+                setNewType(event.target.value as Atendimento)
               }
               className="agenda-select w-full"
             >
@@ -155,8 +223,9 @@ export function FormsNewAppointment( { onClose, onCreated }: { onClose: () => vo
             Tipo de consulta
           </span>
           <select
+            id="appointment-kind-select"
             value={newKind}
-            onChange={(event) => setNewKind(event.target.value as TIPOS_CONSULTA)}
+            onChange={(event) => setNewKind(event.target.value as TipoConsulta)}
             className="agenda-select w-full"
           >
             <option>Consulta de retorno</option>
@@ -171,8 +240,9 @@ export function FormsNewAppointment( { onClose, onCreated }: { onClose: () => vo
             Local
           </span>
           <select
+            id="appointment-location-select"
             value={newLocation}
-            onChange={(event) => setNewLocation(event.target.value as LOCAIS)}
+            onChange={(event) => setNewLocation(event.target.value as Local)}
             className="agenda-select w-full"
           >
             <option>Consultório</option>

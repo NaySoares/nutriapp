@@ -114,7 +114,7 @@ const horarioSchema = z
 
 // ---------- Create ----------
 export const appointmentCreateSchema = z.object({
-  paciente: z.string().trim().min(1, "Informe o paciente.").max(120),
+  pacienteId: z.string().uuid().optional(),
   data: dataSchema,
   horario: horarioSchema,
   duracao: z.number().int().positive(),
@@ -125,6 +125,21 @@ export const appointmentCreateSchema = z.object({
 });
 
 export type AppointmentCreate = z.infer<typeof appointmentCreateSchema>;
+
+export const AppointmentCreateInput = z.object({
+  pacienteId: z.string().uuid().optional(),
+  paciente: z.string().trim().min(1, "Informe o paciente.").max(120),
+  data: dataSchema,
+  dataNascimento: dataSchema,
+  sexo: sexSchema,
+  horario: horarioSchema,
+  duracao: z.number().int().positive(),
+  atendimento: z.enum(ATENDIMENTOS),
+  tipoConsulta: z.enum(TIPOS_CONSULTA),
+  local: z.enum(LOCAIS),
+  note: z.string().trim().max(500).optional(),
+  contato: z.string().trim().max(120).optional()
+})
 
 // ---------- Update ----------
 const appointmentUpdateBase = appointmentCreateSchema.partial().extend({
@@ -138,6 +153,8 @@ export const appointmentUpdateSchema: z.ZodType<AppointmentUpdate> =
     (value) => Object.values(value).some((field) => field !== undefined),
     { message: "Informe ao menos um campo para atualizar." }
   );
+
+export const appointmentIdSchema = z.string().uuid();
 
 export type User = {
   id: string;
@@ -155,7 +172,7 @@ export type PatientCreateInput = z.infer<typeof patientCreateSchema>;
 export type PatientUpdateInput = z.infer<typeof patientUpdateSchema>;
 export type MeasurementCreateInput = z.infer<typeof measurementCreateSchema>;
 export type MeasurementUpdateInput = z.infer<typeof measurementUpdateSchema>;
-export type AppointmentCreateInput = z.infer<typeof appointmentCreateSchema>;
+export type AppointmentCreateInput = z.infer<typeof AppointmentCreateInput>;
 export type AppointmentUpdateInput = z.infer<typeof appointmentUpdateSchema>;
 export type SettingsInput = z.infer<typeof settingsSchema>;
 

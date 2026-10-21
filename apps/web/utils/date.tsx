@@ -12,3 +12,10 @@ export function getCurrentDayWithoutYear() {
   const today = new Date();
   return `${DAYS[today.getDay()]}, ${today.getDate()} de ${MONTHS[today.getMonth()]}`;
 }
+
+export function isDateInPast(dateString: string): boolean {
+  // esse método não considera o horário
+  const today = new Date();
+  const inputDate = new Date(dateString);
+  return inputDate < today;
+}

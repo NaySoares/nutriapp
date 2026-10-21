@@ -1,5 +1,5 @@
 import type { AuthRepository } from "../repositories/authRepository.js";
-import type { AppointmentCreateInput, AppointmentUpdateInput } from "@nutriapp/shared";
+import type { AppointmentCreateInput, AppointmentUpdateInput, } from "@nutriapp/shared";
 
 export function createAppointmentService(repository: AuthRepository) {
   return {
@@ -9,12 +9,49 @@ export function createAppointmentService(repository: AuthRepository) {
       return ownerId ? repository.listAppointments(ownerId) : null;
     },
 
-    async create(sessionId: string, patientId: string, input: AppointmentCreateInput) {
+
+    async create(sessionId: string, input: AppointmentCreateInput) {
       const ownerId = await repository.findSessionOwner(sessionId);
       if (!ownerId) return null;
-      const patient = await repository.findPatientOwner(ownerId, patientId);
+      const patientId = input.pacienteId;
+
+      const dataAppointment = {
+        paciente: input.paciente,
+        data: input.data,
+        horario: input.horario,
+        duracao: input.duracao,
+        atendimento: input.atendimento,
+        tipoConsulta: input.tipoConsulta,
+        local: input.local,
+        note: input?.note,
+      }
+
+      // se não tem ID é um paciente novo
+      if (patientId === undefined) {
+        const newPatient = await repository.createPatient(ownerId, {
+          nome: input.paciente,
+          dataNascimento: new Date(),
+          sexo: "M",
+          contato: input.contato,
+        });
+
+        if (!newPatient) return undefined;
+
+        const patient = await repository.findPatientOwner(ownerId, newPatient.id);
+        if (!patient) return undefined;
+
+
+
+        return repository.createAppointment(ownerId, newPatient.id, { ...dataAppointment });
+      }
+
+      if (typeof patientId !== "string") {
+        return undefined;
+      }
+
+      const patient = await repository.findPatientOwner(ownerId, input.pacienteId as string);
       if (!patient) return undefined;
-      return repository.createAppointment(ownerId, { pacienteId: patientId, ...input });
+      return repository.createAppointment(ownerId, patient.id, { ...dataAppointment });
     },
 
     async update(sessionId: string, appointmentId: string, input: AppointmentUpdateInput) {
@@ -28,7 +65,6 @@ export function createAppointmentService(repository: AuthRepository) {
       if (!patient) return undefined;
 
       const values = {
-        paciente: input.paciente ?? existing.pacienteId,
         data: input.data ?? existing.data,
         horario: input.horario ?? existing.horario,
         duracao: input.duracao ?? existing.duracao,
@@ -37,7 +73,7 @@ export function createAppointmentService(repository: AuthRepository) {
         local: input.local ?? existing.local,
         note: input.note ?? existing.note,
         status: input.status ?? existing.status,
-      } as AppointmentCreateInput;
+      } as AppointmentUpdateInput;
 
       return repository.updateAppointment(ownerId, appointmentId, values);
     },

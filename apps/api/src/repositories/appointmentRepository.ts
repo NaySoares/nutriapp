@@ -7,8 +7,6 @@ import type { AuthPrisma } from "../types/auth.js";
 
 export type AppointmentStatus = (typeof STATUS_AGENDAMENTO)[number];
 
-// ASSUMIDO: modelo `agendamento` com estes campos. Ajuste ao schema.prisma real
-// (ex.: `data` como DateTime/@db.Date, `pacienteId` em vez de `paciente` texto).
 export type AppointmentRecord = {
   id: string;
   nutricionistaId: string;
@@ -36,7 +34,7 @@ export type AppointmentFilters = {
 type AppointmentSlot = Pick<AppointmentCreate, "data" | "horario" | "duracao">;
 
 export type AppointmentRepository = {
-  createAppointment: (nutritionistId: string, data: AppointmentCreate) => Promise<AppointmentRecord>;
+  createAppointment: (nutritionistId: string, patientId: string, data: AppointmentCreate) => Promise<AppointmentRecord>;
   listAppointments: (nutritionistId: string, filters?: AppointmentFilters) => Promise<AppointmentRecord[]>;
   findAppointment: (nutritionistId: string, appointmentId: string) => Promise<AppointmentRecord | null>;
   updateAppointment: (
@@ -97,9 +95,18 @@ export function createAppointmentRepository(prisma: AuthPrisma): AppointmentRepo
     });
 
   return {
-    createAppointment: (nutritionistId, data) =>
+    createAppointment: (nutritionistId, patientId, data) =>
       client.agendamento.create({
-        data: { nutricionistaId: nutritionistId, ...data, status: INITIAL_STATUS },
+        data: {
+          ...data,
+          data: new Date(`${data.data}T00:00:00.000Z`),
+          nutricionista: {
+            connect: { id: nutritionistId }
+          },
+          paciente: {
+            connect: { id: patientId },
+          },
+          status: INITIAL_STATUS },
         select: appointmentSelect,
       }),
 

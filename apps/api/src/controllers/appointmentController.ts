@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { appointmentCreateSchema, appointmentIdSchema, appointmentUpdateSchema, patientIdSchema } from "@nutriapp/shared";
+import { AppointmentCreateInput, appointmentIdSchema, appointmentUpdateSchema, patientIdSchema } from "@nutriapp/shared";
 import { ACCESS_COOKIE, readAccessToken } from "./authController.js";
 import type { AppointmentService } from "../services/appointmentService.js";
 
@@ -10,21 +10,27 @@ export function createAppointmentController(service: AppointmentService) {
       const patient = patientIdSchema.safeParse((request.params as { id?: string }).id);
       if (!session) return unauthorized(reply);
       if (!patient.success) return notFound(reply);
-      const appointment = await service.list(session, patient.data);
+      const appointment = await service.list(session);
       if (!appointment) return unauthorized(reply);
       return reply.send({ agendamentos: appointment });
     },
 
     create: async (request: FastifyRequest, reply: FastifyReply) => {
       const session = authenticatedSession(request);
-      const patient = patientIdSchema.safeParse((request.params as { id?: string }).id);
-      const input = appointmentCreateSchema.safeParse(request.body);
+      const patientName = (request.body as { paciente?: string }).paciente;
+      const patient = patientName ? { success: true, data: patientName } : { success: false, error: "Paciente não informado" };
+
+      const input = AppointmentCreateInput.safeParse(request.body);
+
       if (!session) return unauthorized(reply);
-      if (!patient.success) return notFound(reply);
+      if (!patient.success) return invalidInput(reply, { paciente: "Paciente não informado" });
       if (!input.success) return invalidInput(reply, input.error.flatten());
-      const appointment = await service.create(session, patient.data, input.data);
+
+      const appointment = await service.create(session, input.data);
+
       if (!appointment) return unauthorized(reply);
       if (appointment === undefined) return notFound(reply);
+
       return reply.status(201).send({ agendamento: appointment });
     },
 

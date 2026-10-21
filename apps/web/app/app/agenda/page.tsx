@@ -505,39 +505,6 @@ export default function AgendaPage() {
           background: #fff;
           box-shadow: 0 2px 8px rgba(31, 57, 40, 0.025);
         }
-        .agenda-primary {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 7px;
-          border-radius: 9px;
-          background: #287653;
-          padding: 10px 13px;
-          color: white;
-          font-size: 11px;
-          font-weight: 650;
-          transition: background 0.15s;
-        }
-        .agenda-primary:hover {
-          background: #1f6243;
-        }
-        .agenda-secondary {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 7px;
-          border: 1px solid #e4eae4;
-          border-radius: 9px;
-          background: white;
-          padding: 9px 11px;
-          color: #607166;
-          font-size: 11px;
-          font-weight: 550;
-          transition: background 0.15s;
-        }
-        .agenda-secondary:hover {
-          background: #f8faf8;
-        }
         .appointment-card {
           width: 100%;
           border: 1px solid #e7eee8;
@@ -677,58 +644,6 @@ export default function AgendaPage() {
       `}</style>
 
       <main className="agenda-main">
-        <header className="agenda-topbar">
-          <div className="flex items-center gap-3">
-            <button
-              aria-label="Abrir menu"
-              onClick={() => setMobileNavOpen(true)}
-              className="agenda-mobile-menu rounded-lg border border-[#e8eee9] p-2 text-[#496354]"
-            >
-              <CalendarDays size={18} />
-            </button>
-            <div>
-              <div className="text-[11px] text-[#849188]">
-                Organize seus atendimentos
-              </div>
-              <div className="mt-1 text-[17px] font-bold tracking-[-.45px]">
-                Agenda
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-2 rounded-lg border border-[#e7ece7] bg-white px-3 py-2.5 text-[11px] text-[#718278] sm:flex">
-              <UserRound size={15} />
-              <span>Dra. Ana Souza</span>
-            </div>
-            <button
-              aria-label="Notificações"
-              onClick={() =>
-                flash(
-                  pendingCount
-                    ? `Há ${pendingCount} consultas aguardando confirmação nesta semana.`
-                    : 'Nenhuma confirmação pendente nesta semana.',
-                )
-              }
-              className="relative rounded-lg border border-[#e7ece7] bg-white p-2.5 text-[#718278]"
-            >
-              <Bell size={16} />
-              {pendingCount > 0 && (
-                <span className="absolute right-[7px] top-[6px] h-1.5 w-1.5 rounded-full bg-[#d9a354] ring-2 ring-white" />
-              )}
-            </button>
-            <button
-              onClick={() => {
-                setNewDate(selectedDate);
-                setShowModal(true);
-              }}
-              className="agenda-primary"
-            >
-              <Plus size={15} />
-              Nova consulta
-            </button>
-          </div>
-        </header>
-
         <div className="agenda-content">
           <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
             <div>

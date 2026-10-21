@@ -72,10 +72,12 @@ export type AuthPrisma = {
       orderBy: { nome: "asc" };
       select: PatientSelect;
     }) => Promise<PatientRecord[]>;
+
     findFirst: (args: {
       where: { id: string; nutricionistaId: string };
       select: PatientSelect;
     }) => Promise<PatientRecord | null>;
+
     updateMany: (args: {
       where: { id: string; nutricionistaId: string; arquivadoEm?: null };
       data: { nome?: string; dataNascimento?: Date; sexo?: "M" | "F"; contato?: string | null; anamnese?: string | null; arquivadoEm?: Date };
