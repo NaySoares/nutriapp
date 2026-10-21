@@ -233,6 +233,7 @@ model Agendamento {
   id              String        @id @default(uuid()) @db.Uuid
   nutricionistaId String        @map("nutricionista_id") @db.Uuid
   pacienteId      String        @map("paciente_id") @db.Uuid
+  pacienteNome    String        @default("") @map("paciente_nome")
   data            DateTime      @db.Date
   horario         String        @db.VarChar(5) // HH:mm
   duracao         Int           @db.SmallInt

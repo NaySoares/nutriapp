@@ -9,14 +9,13 @@ export function createAppointmentService(repository: AuthRepository) {
       return ownerId ? repository.listAppointments(ownerId) : null;
     },
 
-
     async create(sessionId: string, input: AppointmentCreateInput) {
       const ownerId = await repository.findSessionOwner(sessionId);
       if (!ownerId) return null;
       const patientId = input.pacienteId;
 
       const dataAppointment = {
-        paciente: input.paciente,
+        pacienteNome: input.paciente,
         data: input.data,
         horario: input.horario,
         duracao: input.duracao,
@@ -39,8 +38,6 @@ export function createAppointmentService(repository: AuthRepository) {
 
         const patient = await repository.findPatientOwner(ownerId, newPatient.id);
         if (!patient) return undefined;
-
-
 
         return repository.createAppointment(ownerId, newPatient.id, { ...dataAppointment });
       }

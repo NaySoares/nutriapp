@@ -1,27 +1,5 @@
-import {
-  STATUS_AGENDAMENTO,
-  type AppointmentCreate,
-  type AppointmentUpdate,
-} from "@nutriapp/shared";
+import { AppointmentCreate, AppointmentRecord, AppointmentStatus, AppointmentUpdate } from "@nutriapp/shared";
 import type { AuthPrisma } from "../types/auth.js";
-
-export type AppointmentStatus = (typeof STATUS_AGENDAMENTO)[number];
-
-export type AppointmentRecord = {
-  id: string;
-  nutricionistaId: string;
-  pacienteId: string;
-  data: string; // YYYY-MM-DD
-  horario: string; // HH:mm
-  duracao: number; // minutos
-  atendimento: AppointmentCreate["atendimento"];
-  tipoConsulta: AppointmentCreate["tipoConsulta"];
-  local: AppointmentCreate["local"];
-  note: string | null;
-  status: AppointmentStatus;
-  criadoEm: Date;
-  atualizadoEm: Date;
-};
 
 type AppointmentSelect = { [K in keyof AppointmentRecord]: true };
 
@@ -69,6 +47,7 @@ const appointmentSelect: AppointmentSelect = {
   id: true,
   nutricionistaId: true,
   pacienteId: true,
+  pacienteNome: true,
   data: true,
   horario: true,
   duracao: true,
@@ -110,6 +89,7 @@ export function createAppointmentRepository(prisma: AuthPrisma): AppointmentRepo
         select: appointmentSelect,
       }),
 
+    // todo: adicionar uma quantidade padrão de agendamentos por página e paginação
     listAppointments: (nutritionistId, filters = {}) =>
       client.agendamento.findMany({
         where: {

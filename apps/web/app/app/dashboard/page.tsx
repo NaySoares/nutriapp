@@ -28,6 +28,7 @@ import { useAuthStore } from '../../../stores/auth-store';
 import { User } from '@nutriapp/shared';
 import { getInitials } from '../../../utils/name';
 import { FormsNewAppointment } from '../../../components/app/forms-appointment';
+import { AppointmentRecord, } from "@nutriapp/shared";
 
 interface Appointment {
   time: string;
@@ -58,6 +59,7 @@ interface TFallowup {
 }
 
 type MeResponse = { nutricionista: User };
+type AppointmentsResponse = { agendamentos: AppointmentRecord[] };
 
 const initialAppointments: Appointment[] = [
   {
@@ -107,11 +109,10 @@ const clinical = [
 ];
 
 export default function DashboardPage() {
-  const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'Todos' | 'Particular' | 'Hospital'>(
     'Todos',
   );
-  const [appointments, setAppointments] = useState(initialAppointments);
+  const [appointments, setAppointments] = useState<AppointmentRecord[]>([]);
   const [notice, setNotice] = useState('');
 
   const [weekOffset, setWeekOffset] = useState(0);
@@ -139,6 +140,19 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
+    setLoading(true);
+    apiRequest<AppointmentsResponse>("/appointments").then((response) => {
+      setAppointments(response.agendamentos);
+    }).catch((reason) => {
+      toast.error(reason instanceof Error ? reason.message : "Erro ao buscar dados.");
+    }).finally(() => {
+      setLoading(false);
+    });
+// eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+
+  useEffect(() => {
     setConfig({
       title: "Visão Geral",
       subtitle: getCurrentDay(),
@@ -161,10 +175,10 @@ export default function DashboardPage() {
     () =>
       appointments.filter(
         (a) =>
-          (filter === 'Todos' || a.kind === filter) &&
-          a.name.toLowerCase().includes(query.toLowerCase()),
+          (filter === 'Todos' || a.atendimento === filter) &&
+          a.pacienteNome.toLowerCase(),
       ),
-    [appointments, filter, query],
+    [appointments, filter],
   );
 
   const weekLabel =
@@ -179,6 +193,83 @@ export default function DashboardPage() {
   const goTo = (href: string) => {
     router.push(href);
   };
+
+  function GraphClinical() {
+    return (
+      <div className="panel p-5 sm:p-6">
+      <div className="mb-5 flex items-start justify-between">
+        <div>
+          <h2 className="section-title">
+            Perfil clínico dos pacientes
+          </h2>
+          <p className="section-subtitle">
+            Distribuição por classificação registrada
+          </p>
+        </div>
+        <button
+          onClick={() => goTo('/app/relatorios')}
+          aria-label="Mais detalhes clínicos"
+          className="rounded-md p-1.5 text-[#94a097] hover:bg-[#f5f8f5]"
+        >
+          <MoreHorizontal size={18} />
+        </button>
+      </div>
+      <div className="flex flex-wrap items-center justify-center gap-6 py-1 sm:gap-7">
+        <div className="chart-donut">
+          <div className="donut-center">
+            <span className="text-[26px] font-bold tracking-[-1px]">
+              121
+            </span>
+            <span className="mt-0.5 text-[9px] text-[#8b978f]">
+              pacientes
+            </span>
+          </div>
+        </div>
+        <div className="min-w-[145px] flex-1 space-y-3">
+          {clinical.map((c) => (
+            <div key={c.label} className="flex items-center gap-2">
+              <span
+                className="h-2 w-2 rounded-full"
+                style={{ background: c.color }}
+              />
+              <span className="flex-1 text-[10px] text-[#6e7e73]">
+                {c.label}
+              </span>
+              <span className="text-[11px] font-bold text-[#344b3c]">
+                {c.count}
+              </span>
+              <span className="w-7 text-right text-[9px] text-[#9ba69e]">
+                {c.percent}%
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="mt-6 rounded-xl bg-[#f6f9f6] p-3.5">
+        <div className="flex items-start gap-2.5">
+          <div className="mt-0.5 rounded-lg bg-white p-2 text-[#3c8058]">
+            <Activity size={15} />
+          </div>
+          <div>
+            <div className="text-[11px] font-bold text-[#3b5d46]">
+              Visão para acompanhamento
+            </div>
+            <p className="mt-1 text-[10px] leading-[1.6] text-[#829087]">
+              34 pacientes estão classificados como eutróficos. Consulte
+              a evolução individual antes de definir condutas.
+            </p>
+          </div>
+        </div>
+      </div>
+      <button
+        onClick={() => goTo('/app/pacientes')}
+        className="mt-4 flex w-full items-center justify-center gap-1.5 border-t border-[#eef2ee] pt-4 text-[11px] font-bold text-[#2d8057]"
+      >
+        Explorar pacientes <ArrowRight size={13} />
+      </button>
+    </div>
+    )
+  }
 
   return (
     <div className="min-h-screen">
@@ -349,25 +440,25 @@ export default function DashboardPage() {
               <div>
                 {filteredAppointments.length ? (
                   filteredAppointments.map((a, i) => (
-                    <div key={`${a.name}-${a.time}`} className="table-row">
+                    <div key={`${a.pacienteNome}-${a.horario}`} className="table-row">
                       <div className="flex min-w-0 items-center gap-2.5">
-                        <div className={`avatar ${a.tone}`}>{a.initials}</div>
+                        <div className={`avatar alt1`}>{getInitials(a.pacienteNome)}</div>
                         <div className="min-w-0">
                           <div className="truncate text-[11px] font-bold text-[#334a3b]">
-                            {a.name}
+                            {a.pacienteNome}
                           </div>
                           <div className="mt-1 truncate text-[10px] text-[#8b978f]">
-                            {a.type}
+                            {a.tipoConsulta}
                           </div>
                         </div>
                       </div>
                       <div className="hide-mobile">
                         <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#516459]">
                           <Clock3 size={12} className="text-[#9aa69e]" />
-                          {a.time}
+                          {a.horario}
                         </div>
                         <div className="mt-1 text-[9px] text-[#9aa69e]">
-                          {a.kind}
+                          {a.atendimento}
                         </div>
                       </div>
                       <div className="hide-mobile">
@@ -381,10 +472,10 @@ export default function DashboardPage() {
                         </span>
                       </div>
                       <button
-                        aria-label={`Opções para ${a.name}`}
+                        aria-label={`Opções para ${a.pacienteNome}`}
                         onClick={() =>
                           setNotice(
-                            `Atendimento de ${a.name}: abra o prontuário para ver detalhes.`,
+                            `Atendimento de ${a.pacienteNome}: abra o prontuário para ver detalhes.`,
                           )
                         }
                         className="justify-self-end rounded-md p-1.5 text-[#9ba69e] hover:bg-[#f5f8f5]"
@@ -407,78 +498,7 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            <div className="panel p-5 sm:p-6">
-              <div className="mb-5 flex items-start justify-between">
-                <div>
-                  <h2 className="section-title">
-                    Perfil clínico dos pacientes
-                  </h2>
-                  <p className="section-subtitle">
-                    Distribuição por classificação registrada
-                  </p>
-                </div>
-                <button
-                  onClick={() => goTo('/app/relatorios')}
-                  aria-label="Mais detalhes clínicos"
-                  className="rounded-md p-1.5 text-[#94a097] hover:bg-[#f5f8f5]"
-                >
-                  <MoreHorizontal size={18} />
-                </button>
-              </div>
-              <div className="flex flex-wrap items-center justify-center gap-6 py-1 sm:gap-7">
-                <div className="chart-donut">
-                  <div className="donut-center">
-                    <span className="text-[26px] font-bold tracking-[-1px]">
-                      121
-                    </span>
-                    <span className="mt-0.5 text-[9px] text-[#8b978f]">
-                      pacientes
-                    </span>
-                  </div>
-                </div>
-                <div className="min-w-[145px] flex-1 space-y-3">
-                  {clinical.map((c) => (
-                    <div key={c.label} className="flex items-center gap-2">
-                      <span
-                        className="h-2 w-2 rounded-full"
-                        style={{ background: c.color }}
-                      />
-                      <span className="flex-1 text-[10px] text-[#6e7e73]">
-                        {c.label}
-                      </span>
-                      <span className="text-[11px] font-bold text-[#344b3c]">
-                        {c.count}
-                      </span>
-                      <span className="w-7 text-right text-[9px] text-[#9ba69e]">
-                        {c.percent}%
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="mt-6 rounded-xl bg-[#f6f9f6] p-3.5">
-                <div className="flex items-start gap-2.5">
-                  <div className="mt-0.5 rounded-lg bg-white p-2 text-[#3c8058]">
-                    <Activity size={15} />
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-bold text-[#3b5d46]">
-                      Visão para acompanhamento
-                    </div>
-                    <p className="mt-1 text-[10px] leading-[1.6] text-[#829087]">
-                      34 pacientes estão classificados como eutróficos. Consulte
-                      a evolução individual antes de definir condutas.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => goTo('/app/pacientes')}
-                className="mt-4 flex w-full items-center justify-center gap-1.5 border-t border-[#eef2ee] pt-4 text-[11px] font-bold text-[#2d8057]"
-              >
-                Explorar pacientes <ArrowRight size={13} />
-              </button>
-            </div>
+            <GraphClinical />
           </section>
 
           <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,1fr)]">

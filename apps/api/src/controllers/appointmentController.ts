@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { AppointmentCreateInput, appointmentIdSchema, appointmentUpdateSchema, patientIdSchema } from "@nutriapp/shared";
+import { AppointmentCreateInput, appointmentIdSchema, appointmentUpdateSchema } from "@nutriapp/shared";
 import { ACCESS_COOKIE, readAccessToken } from "./authController.js";
 import type { AppointmentService } from "../services/appointmentService.js";
 
@@ -7,9 +7,8 @@ export function createAppointmentController(service: AppointmentService) {
   return {
     list: async (request: FastifyRequest, reply: FastifyReply) => {
       const session = authenticatedSession(request);
-      const patient = patientIdSchema.safeParse((request.params as { id?: string }).id);
       if (!session) return unauthorized(reply);
-      if (!patient.success) return notFound(reply);
+
       const appointment = await service.list(session);
       if (!appointment) return unauthorized(reply);
       return reply.send({ agendamentos: appointment });

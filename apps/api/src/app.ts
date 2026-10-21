@@ -71,6 +71,7 @@ export function buildApp(
   app.patch("/measurements/:id", measurements.update);
   app.delete("/measurements/:id", measurements.remove);
 
+  app.get("/appointments", appointments.list);
   app.post("/appointments", appointments.create);
 
 
