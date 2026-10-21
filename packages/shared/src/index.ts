@@ -81,12 +81,82 @@ export const settingsSchema = z.object({
   })
 });
 
+export const ATENDIMENTOS = ["Particular", "Hospitalar"] as const;
+export const TIPOS_CONSULTA = [
+  "Consulta de retorno",
+  "Avaliação nutricional",
+  "Acompanhamento",
+  "Revisão do plano",
+  "Primeira consulta",
+] as const;
+export const LOCAIS = ["Consultório", "Online", "Hospital"] as const;
+export const STATUS_AGENDAMENTO = [
+  "Confirmada",
+  "Aguardando confirmação",
+  "Concluída",
+  "Falta",
+  "Cancelada",
+] as const;
+
+// ---------- Campos ----------
+const dataSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Use o formato AAAA-MM-DD.")
+  .refine((value) => {
+    // rejeita datas que casam o formato mas não existem (ex.: 2026-02-31)
+    const date = new Date(`${value}T00:00:00Z`);
+    return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value);
+  }, "Data inválida.");
+
+const horarioSchema = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use o formato HH:mm.");
+
+// ---------- Create ----------
+export const appointmentCreateSchema = z.object({
+  paciente: z.string().trim().min(1, "Informe o paciente.").max(120),
+  data: dataSchema,
+  horario: horarioSchema,
+  duracao: z.number().int().positive(),
+  atendimento: z.enum(ATENDIMENTOS),
+  tipoConsulta: z.enum(TIPOS_CONSULTA),
+  local: z.enum(LOCAIS),
+  note: z.string().trim().max(500).optional(),
+});
+
+export type AppointmentCreate = z.infer<typeof appointmentCreateSchema>;
+
+// ---------- Update ----------
+const appointmentUpdateBase = appointmentCreateSchema.partial().extend({
+  status: z.enum(STATUS_AGENDAMENTO).optional(),
+});
+
+export type AppointmentUpdate = z.infer<typeof appointmentUpdateBase>;
+
+export const appointmentUpdateSchema: z.ZodType<AppointmentUpdate> =
+  appointmentUpdateBase.refine(
+    (value) => Object.values(value).some((field) => field !== undefined),
+    { message: "Informe ao menos um campo para atualizar." }
+  );
+
+export type User = {
+  id: string;
+  nome: string;
+  email: string;
+  role: string;
+  crn: string | null;
+  avatarUrl?: string | null;
+  logoPath: string | null
+};
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type PatientCreateInput = z.infer<typeof patientCreateSchema>;
 export type PatientUpdateInput = z.infer<typeof patientUpdateSchema>;
 export type MeasurementCreateInput = z.infer<typeof measurementCreateSchema>;
 export type MeasurementUpdateInput = z.infer<typeof measurementUpdateSchema>;
+export type AppointmentCreateInput = z.infer<typeof appointmentCreateSchema>;
+export type AppointmentUpdateInput = z.infer<typeof appointmentUpdateSchema>;
 export type SettingsInput = z.infer<typeof settingsSchema>;
 
 export {

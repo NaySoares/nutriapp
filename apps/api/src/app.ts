@@ -16,6 +16,8 @@ import { createPatientService } from "./services/patientService.js";
 import { createMeasurementController } from "./controllers/measurementController.js";
 import { createMeasurementService } from "./services/measurementService.js";
 import type { AuthPrisma } from "./types/auth.js";
+import { createAppointmentService } from "./services/appointmentService.js";
+import { createAppointmentController } from "./controllers/appointmentController.js";
 
 export type { AuthPrisma } from "./types/auth.js";
 
@@ -41,6 +43,7 @@ export function buildApp(
   const profile = createProfileController(createProfileService(repository, createS3LogoStorage()));
   const patients = createPatientController(createPatientService(repository));
   const measurements = createMeasurementController(createMeasurementService(repository));
+  const appointments = createAppointmentController(createAppointmentService(repository));
 
   app.get("/health", async () => healthResponseSchema.parse({ status: "ok", service: "api" }));
 
@@ -64,8 +67,12 @@ export function buildApp(
   app.post("/patients/:id/archive", patients.archive);
   app.get("/patients/:id/measurements", measurements.list);
   app.post("/patients/:id/measurements", measurements.create);
+
   app.patch("/measurements/:id", measurements.update);
   app.delete("/measurements/:id", measurements.remove);
+
+  app.post("/appointments", appointments.create);
+
 
   app.setErrorHandler((error, request, reply) => {
     const details = error as { validation?: unknown; statusCode?: number; message?: string };

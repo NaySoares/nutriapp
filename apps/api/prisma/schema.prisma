@@ -23,21 +23,23 @@ enum FonteAlimento {
 }
 
 model Nutricionista {
-  id               String          @id @default(uuid()) @db.Uuid
-  email            String          @unique
-  senhaHash        String          @map("senha_hash")
+  id               String            @id @default(uuid()) @db.Uuid
+  email            String            @unique
+  senhaHash        String            @map("senha_hash")
   nome             String
   crn              String?
-  logoPath         String?         @map("logo_path")
-  formulaPadrao    FormulaPadrao   @default(mifflin) @map("formula_padrao")
-  fatoresAtividade Json            @map("fatores_atividade")
-  criadoEm         DateTime        @default(now()) @map("criado_em")
-  atualizadoEm     DateTime        @updatedAt @map("atualizado_em")
+  logoPath         String?           @map("logo_path")
+  formulaPadrao    FormulaPadrao     @default(mifflin) @map("formula_padrao")
+  fatoresAtividade Json              @map("fatores_atividade")
+  criadoEm         DateTime          @default(now()) @map("criado_em")
+  atualizadoEm     DateTime          @updatedAt @map("atualizado_em")
   sessoes          Sessao[]
   resetsSenha      ResetSenha[]
   pacientes        Paciente[]
   consentimentos   Consentimento[]
   auditorias       AuditoriaAcesso[]
+  agendamentos     Agendamento[]
+
   @@map("nutricionistas")
 }
 
@@ -50,6 +52,7 @@ model Sessao {
   criadoEm         DateTime      @default(now()) @map("criado_em")
   atualizadoEm     DateTime      @updatedAt @map("atualizado_em")
   nutricionista    Nutricionista @relation(fields: [nutricionistaId], references: [id])
+
   @@index([nutricionistaId])
   @@map("sessoes")
 }
@@ -63,110 +66,118 @@ model ResetSenha {
   criadoEm        DateTime      @default(now()) @map("criado_em")
   atualizadoEm    DateTime      @updatedAt @map("atualizado_em")
   nutricionista   Nutricionista @relation(fields: [nutricionistaId], references: [id])
+
   @@index([nutricionistaId])
   @@map("reset_senha")
 }
 
 model Paciente {
-  id              String           @id @default(uuid()) @db.Uuid
-  nutricionistaId String           @map("nutricionista_id") @db.Uuid
+  id              String        @id @default(uuid()) @db.Uuid
+  nutricionistaId String        @map("nutricionista_id") @db.Uuid
   nome            String
-  dataNascimento  DateTime         @map("data_nascimento") @db.Date
+  dataNascimento  DateTime      @map("data_nascimento") @db.Date
   sexo            Sexo
   contato         String?
   anamnese        String?
-  arquivadoEm     DateTime?        @map("arquivado_em")
-  criadoEm        DateTime         @default(now()) @map("criado_em")
-  atualizadoEm    DateTime         @updatedAt @map("atualizado_em")
-  nutricionista   Nutricionista    @relation(fields: [nutricionistaId], references: [id])
+  arquivadoEm     DateTime?     @map("arquivado_em")
+  criadoEm        DateTime      @default(now()) @map("criado_em")
+  atualizadoEm    DateTime      @updatedAt @map("atualizado_em")
+  nutricionista   Nutricionista @relation(fields: [nutricionistaId], references: [id])
   medicoes        Medicao[]
   planos          Plano[]
+  agendamentos    Agendamento[]
+
   @@index([nutricionistaId])
   @@map("pacientes")
 }
 
 model Medicao {
-  id              String     @id @default(uuid()) @db.Uuid
-  pacienteId      String     @map("paciente_id") @db.Uuid
-  data            DateTime   @db.Date
-  pesoKg          Decimal    @map("peso_kg") @db.Decimal(8, 2)
-  alturaCm        Decimal    @map("altura_cm") @db.Decimal(8, 2)
+  id              String        @id @default(uuid()) @db.Uuid
+  pacienteId      String        @map("paciente_id") @db.Uuid
+  data            DateTime      @db.Date
+  pesoKg          Decimal       @map("peso_kg") @db.Decimal(8, 2)
+  alturaCm        Decimal       @map("altura_cm") @db.Decimal(8, 2)
   circunferencias Json?
-  nivelAtividade  String     @map("nivel_atividade")
-  tmbKcal         Decimal    @map("tmb_kcal") @db.Decimal(10, 2)
-  getKcal         Decimal    @map("get_kcal") @db.Decimal(10, 2)
-  imc             Decimal    @db.Decimal(8, 2)
+  nivelAtividade  String        @map("nivel_atividade")
+  tmbKcal         Decimal       @map("tmb_kcal") @db.Decimal(10, 2)
+  getKcal         Decimal       @map("get_kcal") @db.Decimal(10, 2)
+  imc             Decimal       @db.Decimal(8, 2)
   formulaUsada    FormulaPadrao @map("formula_usada")
-  fatorUsado      Decimal    @map("fator_usado") @db.Decimal(5, 3)
-  criadoEm        DateTime   @default(now()) @map("criado_em")
-  atualizadoEm    DateTime   @updatedAt @map("atualizado_em")
-  paciente        Paciente   @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  fatorUsado      Decimal       @map("fator_usado") @db.Decimal(5, 3)
+  criadoEm        DateTime      @default(now()) @map("criado_em")
+  atualizadoEm    DateTime      @updatedAt @map("atualizado_em")
+  paciente        Paciente      @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+
   @@index([pacienteId])
   @@map("medicoes")
 }
 
 model Alimento {
-  id            String          @id @default(uuid()) @db.Uuid
-  fonte         FonteAlimento
-  idExterno     String          @map("id_externo")
-  nome          String
-  nomeBusca     String          @map("nome_busca")
-  grupo         String?
-  energiaKcal   Decimal?        @map("energia_kcal") @db.Decimal(10, 2)
-  proteinaG     Decimal?        @map("proteina_g") @db.Decimal(10, 2)
-  lipidiosG     Decimal?        @map("lipidio_g") @db.Decimal(10, 2)
-  carboidratoG  Decimal?        @map("carboidrato_g") @db.Decimal(10, 2)
-  fibraG        Decimal?        @map("fibra_g") @db.Decimal(10, 2)
-  sodioMg       Decimal?        @map("sodio_mg") @db.Decimal(10, 2)
-  outros        Json?
-  criadoEm      DateTime        @default(now()) @map("criado_em")
-  atualizadoEm  DateTime        @updatedAt @map("atualizado_em")
-  medidas       MedidaCaseira[]
-  itensPlano    ItemPlano[]
+  id           String          @id @default(uuid()) @db.Uuid
+  fonte        FonteAlimento
+  idExterno    String          @map("id_externo")
+  nome         String
+  nomeBusca    String          @map("nome_busca")
+  grupo        String?
+  energiaKcal  Decimal?        @map("energia_kcal") @db.Decimal(10, 2)
+  proteinaG    Decimal?        @map("proteina_g") @db.Decimal(10, 2)
+  lipidiosG    Decimal?        @map("lipidio_g") @db.Decimal(10, 2)
+  carboidratoG Decimal?        @map("carboidrato_g") @db.Decimal(10, 2)
+  fibraG       Decimal?        @map("fibra_g") @db.Decimal(10, 2)
+  sodioMg      Decimal?        @map("sodio_mg") @db.Decimal(10, 2)
+  outros       Json?
+  criadoEm     DateTime        @default(now()) @map("criado_em")
+  atualizadoEm DateTime        @updatedAt @map("atualizado_em")
+  medidas      MedidaCaseira[]
+  itensPlano   ItemPlano[]
+
   @@unique([fonte, idExterno])
   @@index([nomeBusca])
   @@map("alimentos")
 }
 
 model MedidaCaseira {
-  id          String   @id @default(uuid()) @db.Uuid
-  alimentoId  String   @map("alimento_id") @db.Uuid
-  descricao   String
-  gramas      Decimal  @db.Decimal(8, 2)
-  criadoEm    DateTime @default(now()) @map("criado_em")
-  atualizadoEm DateTime @updatedAt @map("atualizado_em")
-  alimento    Alimento @relation(fields: [alimentoId], references: [id], onDelete: Cascade)
-  itensPlano  ItemPlano[]
+  id           String      @id @default(uuid()) @db.Uuid
+  alimentoId   String      @map("alimento_id") @db.Uuid
+  descricao    String
+  gramas       Decimal     @db.Decimal(8, 2)
+  criadoEm     DateTime    @default(now()) @map("criado_em")
+  atualizadoEm DateTime    @updatedAt @map("atualizado_em")
+  alimento     Alimento    @relation(fields: [alimentoId], references: [id], onDelete: Cascade)
+  itensPlano   ItemPlano[]
+
   @@index([alimentoId])
   @@map("medidas_caseiras")
 }
 
 model Plano {
-  id              String        @id @default(uuid()) @db.Uuid
-  pacienteId      String        @map("paciente_id") @db.Uuid
-  nome            String
-  metaKcal        Decimal?      @map("meta_kcal") @db.Decimal(10, 2)
-  versaoDe        String?       @map("versao_de") @db.Uuid
-  criadoEm        DateTime      @default(now()) @map("criado_em")
-  atualizadoEm    DateTime      @updatedAt @map("atualizado_em")
-  paciente        Paciente      @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
-  origem          Plano?        @relation("Versoes", fields: [versaoDe], references: [id])
-  versoes         Plano[]       @relation("Versoes")
-  refeicoes       Refeicao[]
+  id           String     @id @default(uuid()) @db.Uuid
+  pacienteId   String     @map("paciente_id") @db.Uuid
+  nome         String
+  metaKcal     Decimal?   @map("meta_kcal") @db.Decimal(10, 2)
+  versaoDe     String?    @map("versao_de") @db.Uuid
+  criadoEm     DateTime   @default(now()) @map("criado_em")
+  atualizadoEm DateTime   @updatedAt @map("atualizado_em")
+  paciente     Paciente   @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  origem       Plano?     @relation("Versoes", fields: [versaoDe], references: [id])
+  versoes      Plano[]    @relation("Versoes")
+  refeicoes    Refeicao[]
+
   @@index([pacienteId])
   @@map("planos")
 }
 
 model Refeicao {
-  id          String      @id @default(uuid()) @db.Uuid
-  planoId     String      @map("plano_id") @db.Uuid
-  nome        String
-  horario     String?
-  ordem       Int
-  criadoEm    DateTime    @default(now()) @map("criado_em")
+  id           String      @id @default(uuid()) @db.Uuid
+  planoId      String      @map("plano_id") @db.Uuid
+  nome         String
+  horario      String?
+  ordem        Int
+  criadoEm     DateTime    @default(now()) @map("criado_em")
   atualizadoEm DateTime    @updatedAt @map("atualizado_em")
-  plano       Plano       @relation(fields: [planoId], references: [id], onDelete: Cascade)
-  itens       ItemPlano[]
+  plano        Plano       @relation(fields: [planoId], references: [id], onDelete: Cascade)
+  itens        ItemPlano[]
+
   @@index([planoId])
   @@map("refeicoes")
 }
@@ -184,6 +195,7 @@ model ItemPlano {
   refeicao         Refeicao       @relation(fields: [refeicaoId], references: [id], onDelete: Cascade)
   alimento         Alimento       @relation(fields: [alimentoId], references: [id])
   medida           MedidaCaseira? @relation(fields: [medidaId], references: [id])
+
   @@index([refeicaoId])
   @@map("itens_plano")
 }
@@ -197,6 +209,7 @@ model Consentimento {
   criadoEm        DateTime      @default(now()) @map("criado_em")
   atualizadoEm    DateTime      @updatedAt @map("atualizado_em")
   nutricionista   Nutricionista @relation(fields: [nutricionistaId], references: [id])
+
   @@index([nutricionistaId])
   @@map("consentimentos")
 }
@@ -211,6 +224,29 @@ model AuditoriaAcesso {
   criadoEm        DateTime      @default(now()) @map("criado_em")
   atualizadoEm    DateTime      @updatedAt @map("atualizado_em")
   nutricionista   Nutricionista @relation(fields: [nutricionistaId], references: [id])
+
   @@index([nutricionistaId])
   @@map("auditoria_acessos")
+}
+
+model Agendamento {
+  id              String        @id @default(uuid()) @db.Uuid
+  nutricionistaId String        @map("nutricionista_id") @db.Uuid
+  pacienteId      String        @map("paciente_id") @db.Uuid
+  data            DateTime      @db.Date
+  horario         String        @db.VarChar(5) // HH:mm
+  duracao         Int           @db.SmallInt
+  atendimento     String
+  tipoConsulta    String        @map("tipo_consulta")
+  local           String
+  note            String?
+  status          String        @default("Aguardando confirmação")
+  criadoEm        DateTime      @default(now()) @map("criado_em")
+  atualizadoEm    DateTime      @updatedAt @map("atualizado_em")
+  nutricionista   Nutricionista @relation(fields: [nutricionistaId], references: [id])
+  paciente        Paciente      @relation(fields: [pacienteId], references: [id])
+
+  @@index([nutricionistaId, data])
+  @@index([pacienteId])
+  @@map("agendamentos")
 }
