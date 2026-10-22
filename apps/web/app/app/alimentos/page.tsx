@@ -1,9 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
-import {Bell, Check, Filter, Pencil, Plus, Search, Trash2, X, Database, Leaf } from "lucide-react";
-import { SideBar } from "../../../components/layout/sidebar";
+import { useEffect, useMemo, useState } from "react";
+import { Filter, Pencil, Plus, Search, Trash2, X, Database } from "lucide-react";
+import { useHeaderStore } from "../../../stores/header-store";
+import { useModalStore } from "../../../stores/modal-store";
+import { toast } from "sonner";
+import { FormsNewFood } from "../../../components/alimentos/forms-foods";
+import { ModalDelete } from "../../../components/ui/modal";
 
 type Food = {
   id: number;
@@ -32,111 +35,55 @@ const seedFoods: Food[] = [
 
 const categories = ["Frutas", "Verduras e legumes", "Cereais e derivados", "Leguminosas", "Carnes e ovos", "Leites e derivados", "Óleos e gorduras", "Outros"];
 
-const blankFood = { name: "", category: "Frutas", portion: "100 g", kcal: "0", protein: "0", carbs: "0", fat: "0", fiber: "0" };
-
 export default function FoodsPage() {
   const [foods, setFoods] = useState(seedFoods);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Todas as categorias");
   const [source, setSource] = useState("Todas as origens");
-  const [modal, setModal] = useState(false);
-  const [editing, setEditing] = useState<Food | null>(null);
-  const [form, setForm] = useState(blankFood);
-  const [notice, setNotice] = useState("");
-  const [menuOpen, setMenuOpen] = useState(false);
 
-  const filtered = useMemo(() => foods.filter(f => f.name.toLocaleLowerCase("pt-BR").includes(query.toLocaleLowerCase("pt-BR"))).filter(f => category === "Todas as categorias" || f.category === category).filter(f => source === "Todas as origens" || f.source === source).sort((a,b) => a.name.localeCompare(b.name,"pt-BR")), [foods, query, category, source]);
+  const setConfig = useHeaderStore((state) => state.setConfig);
+  const reset = useHeaderStore((state) => state.reset);
+  const openModal = useModalStore((state) => state.openModal);
+  const closeModal = useModalStore((state) => state.closeModal);
 
-  function startAdd() {
-    setEditing(null);
-    setForm(blankFood);
-    setModal(true);
-  }
-
-  function startEdit(food: Food) {
-    setEditing(food);
-    setForm({
-      name: food.name,
-      category: food.category,
-      portion: food.portion,
-      kcal: String(food.kcal),
-      protein: String(food.protein),
-      carbs: String(food.carbs),
-      fat: String(food.fat),
-      fiber: String(food.fiber)
+  useEffect(() => {
+    setConfig({
+      title: "Alimentos",
+      subtitle: 'Biblioteca nutricional',
+      actions: (
+        <button
+          className="btn-primary"
+          onClick={() => openModal(<FormsNewFood onClose={() => { closeModal(); }} />)}
+        >
+          <Plus size={15} />
+          Adicionar alimento
+        </button>
+      )
     });
 
-    setModal(true);
-  }
+    return reset;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setConfig, reset]);
 
-  function saveFood(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const food: Food = {
-      id: editing?.id ?? Date.now(),
-      name: form.name.trim(),
-      category: form.category,
-      portion: form.portion.trim() || "100 g",
-      kcal: Number(form.kcal) || 0,
-      protein: Number(form.protein) || 0,
-      carbs: Number(form.carbs) || 0,
-      fat: Number(form.fat) || 0,
-      fiber: Number(form.fiber) || 0,
-      source: editing?.source ?? "Manual",
-      updated: "Hoje"
-    };
-
-    setFoods(current => editing ? current.map(f => f.id === editing.id ? food : f) : [food, ...current]); setModal(false); setNotice(editing ? "Alimento atualizado nesta demonstração." : "Alimento cadastrado nesta demonstração.");
-
-    window.setTimeout(() => setNotice(""), 3000);
-  }
+  const filtered = useMemo(() => {
+    return (
+      foods.filter(f => f.name.toLocaleLowerCase("pt-BR")
+        .includes(query.toLocaleLowerCase("pt-BR")))
+        .filter(f => category === "Todas as categorias" || f.category === category)
+        .filter(f => source === "Todas as origens" || f.source === source)
+        .sort((a,b) => a.name.localeCompare(b.name,"pt-BR"))
+    );
+  }, [foods, query, category, source]);
 
   function removeFood(food: Food) {
-    if (window.confirm(`Remover ${food.name} desta lista de demonstração?`)) {
-      setFoods(current => current.filter(f => f.id !== food.id));
-    }
+    setFoods(current => current.filter(f => f.id !== food.id));
+    closeModal();
+    toast.success(`Alimento ${food.name} removido com sucesso.`);
   }
 
   return (
   <div className="min-h-screen">
-    <SideBar mobileNavOpen={menuOpen} setMobileNavOpen={setMenuOpen} />
     <main className="main">
-      <header className="topbar">
-        <div className="flex items-center gap-3">
-          <button
-            className="mobile-menu rounded-lg border border-[#e8eee9] p-2"
-            onClick={()=>setMenuOpen(true)}
-            aria-label="Abrir menu"
-          >
-              <Leaf size={18}/>
-          </button>
-          <div>
-            <div className="text-[11px] text-[#849188]">
-              Biblioteca nutricional
-            </div>
-            <div className="mt-1 text-[17px] font-bold">
-              Alimentos
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            aria-label="Notificações"
-            className="rounded-lg border border-[#e7ece7] bg-white p-2.5 text-[#718278]"
-            onClick={()=>setNotice("Nenhuma notificação nova.")}
-          >
-            <Bell size={16}/>
-          </button>
-          <button
-            className="btn-primary"
-            onClick={startAdd}
-          >
-            <Plus size={15}/>
-            Adicionar alimento
-          </button>
-        </div>
-      </header>
-
     <div className="content">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -289,14 +236,21 @@ export default function FoodsPage() {
                   <div className="flex gap-1">
                     <button
                       aria-label={`Editar ${f.name}`}
-                      onClick={()=>startEdit(f)}
+                      onClick={()=> toast.info("Edição de alimentos não está disponível nesta demonstração.")}
                       className="rounded-lg p-2 text-[#819087] hover:bg-white hover:text-[#287653]"
                     >
                       <Pencil size={14}/>
                     </button>
                     <button
                       aria-label={`Remover ${f.name}`}
-                      onClick={()=>removeFood(f)}
+                      onClick={() => openModal(
+                        <ModalDelete
+                          title="Remover Alimento"
+                          description={`Tem certeza que deseja remover ${f.name}?`}
+                          onConfirm={() => removeFood(f)}
+                          onCancel={() => closeModal()}
+                        />
+                      )}
                       className="rounded-lg p-2 text-[#a0aaa2] hover:bg-white hover:text-[#b65c50]"
                     >
                       <Trash2 size={14}/>
@@ -323,114 +277,6 @@ export default function FoodsPage() {
     </section>
     </div>
   </main>
-  {notice&&
-    <div role="status" className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-xl border border-[#dce9df] bg-white px-4 py-3 text-[12px] text-[#355743] shadow-lg">
-      <Check size={15}/>{notice}
-      <button onClick={()=>setNotice("")}>
-        <X size={13}/>
-      </button>
-    </div>}
-
-  {modal&&
-    <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-[#17251d]/35 p-4" onMouseDown={e=>{if(e.target===e.currentTarget)setModal(false)}}>
-      <div role="dialog" aria-modal="true" className="my-auto w-full max-w-[560px] rounded-2xl border border-[#e8eee9] bg-white p-5 shadow-xl sm:p-6">
-        <div className="mb-5 flex items-start justify-between">
-          <div>
-            <div className="mb-1 text-[10px] font-bold uppercase tracking-[1px] text-[#7c8c81]">
-              BIBLIOTECA NUTRICIONAL
-            </div>
-            <h2 className="text-[20px] font-bold text-[#20352c]">
-              {editing?"Editar alimento":"Adicionar alimento"}
-            </h2>
-            <p className="mt-1 text-[11px] text-[#87948b]">Informe os valores para a porção de referência indicada.</p>
-          </div>
-          <button
-            onClick={()=>setModal(false)}
-            aria-label="Fechar"
-            className="p-2 text-[#87948b]"
-          >
-            <X size={17}/>
-          </button>
-        </div>
-        <form
-          onSubmit={saveFood}
-          className="space-y-4"
-        >
-          <label className="block">
-            <span className="mb-1.5 block text-[11px] font-semibold text-[#53665a]">
-              Nome do alimento
-            </span>
-            <input
-              required
-              autoFocus
-              value={form.name}
-              onChange={e=>setForm({...form,name:e.target.value})}
-              placeholder="Ex.: Batata-doce cozida"
-              className="w-full rounded-lg border border-[#e3eae4] px-3 py-2.5 text-[12px] outline-none focus:border-[#7fb18e]"
-            />
-          </label>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <label className="block">
-              <span className="mb-1.5 block text-[11px] font-semibold text-[#53665a]">
-                Categoria
-              </span>
-              <select
-                value={form.category}
-                onChange={e=>setForm({...form,category:e.target.value})}
-                className="w-full rounded-lg border border-[#e3eae4] bg-white px-3 py-2.5 text-[12px]"
-              >
-                {categories.map(c=><option key={c}>{c}</option>)}
-              </select>
-            </label>
-            <label className="block">
-              <span className="mb-1.5 block text-[11px] font-semibold text-[#53665a]">
-                Porção de referência
-              </span>
-              <input
-                value={form.portion}
-                onChange={e=>setForm({...form,portion:e.target.value})}
-                placeholder="100 g"
-                className="w-full rounded-lg border border-[#e3eae4] px-3 py-2.5 text-[12px] outline-none"
-              />
-            </label>
-          </div>
-          <div>
-            <div className="mb-2 text-[11px] font-semibold text-[#53665a]">
-              Informações nutricionais
-            </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {([{key:"kcal",label:"Energia (kcal)"},{key:"protein",label:"Proteínas (g)"},{key:"carbs",label:"Carboidratos (g)"},{key:"fat",label:"Gorduras (g)"},{key:"fiber",label:"Fibras (g)"}] as const).map(item=>
-                <label key={item.key} className="block">
-                  <span className="mb-1.5 block text-[10px] text-[#87948b]">
-                    {item.label}
-                  </span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.1"
-                    value={form[item.key]}
-                    onChange={e=>setForm({...form,[item.key]:e.target.value})}
-                    className="w-full rounded-lg border border-[#e3eae4] px-3 py-2.5 text-[12px] outline-none focus:border-[#7fb18e]"
-                  />
-                </label>
-              )}
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2 border-t border-[#edf1ed] pt-4">
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={()=>setModal(false)}>
-                Cancelar
-            </button>
-            <button type="submit" className="btn-primary">
-              <Check size={14}/>{editing?"Salvar alterações":"Salvar alimento"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>}
   </div>
   )
 }
