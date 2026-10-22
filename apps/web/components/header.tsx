@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 function Navlink({
   children,
   href,
@@ -20,12 +22,12 @@ export function Header() {
     <header className="fixed top-0 left-0 z-50 w-full">
       <div className="flex flex-wrap items-center justify-between border-b border-slate-200/50 bg-transparent px-6 py-6 backdrop-blur-md">
         <div className="mx-auto max-w-3xl">
-          <a
+          <Link
             href="/"
             className="text-sm font-semibold uppercase tracking-widest text-emerald-700"
           >
             Salga App
-          </a>
+          </Link>
         </div>
 
         <nav className="mx-auto flex max-w-3xl items-center justify-between">

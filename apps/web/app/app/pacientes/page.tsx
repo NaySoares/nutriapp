@@ -120,14 +120,16 @@ export default function PatientsPage() {
 
   const router = useRouter();
 
-  const filteredPatients = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase('pt-BR');
-    return patients
-      .filter(
-        (patient) =>
-          !normalizedQuery ||
-          patient.nome.toLocaleLowerCase('pt-BR').includes(normalizedQuery),
-      )
+  const filteredPatients = patients
+
+  // const filteredPatients = useMemo(() => {
+  //   const normalizedQuery = query.trim().toLocaleLowerCase('pt-BR');
+  //   return patients
+  //     .filter(
+  //       (patient) =>
+  //         !normalizedQuery ||
+  //         patient.nome.toLocaleLowerCase('pt-BR').includes(normalizedQuery),
+  //     )
       // .filter(
       //   (patient) => careFilter === 'Todos' || patient.care === careFilter,
       // )
@@ -140,12 +142,12 @@ export default function PatientsPage() {
       //   (patient) =>
       //     statusFilter === 'Todos os status' || patient.status === statusFilter,
       // )
-      .sort((a, b) =>
-        sortAZ
-          ? a.nome.localeCompare(b.nome, 'pt-BR')
-          : b.nome.localeCompare(a.nome, 'pt-BR'),
-      );
-  }, [patients, query, careFilter, clinicalFilter, statusFilter, sortAZ]);
+  //     .sort((a, b) =>
+  //       sortAZ
+  //         ? a.nome.localeCompare(b.nome, 'pt-BR')
+  //         : b.nome.localeCompare(a.nome, 'pt-BR'),
+  //     );
+  // }, [patients, query, careFilter, clinicalFilter, statusFilter, sortAZ]);
 
   // const activeCount = patients.filter(
   //   (patient) => patient.status === 'Ativo',
@@ -286,10 +288,10 @@ export default function PatientsPage() {
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <h2 className="section-title">Lista de pacientes</h2>
-                  <p className="section-subtitle">
+                  {/* <p className="section-subtitle">
                     {filteredPatients.length}{' '}
                     {filteredPatients.length === 1 ? 'resultado' : 'resultados'}
-                  </p>
+                  </p> */}
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                   <label className="flex min-w-0 items-center gap-2 rounded-lg border border-[#e7ece7] bg-[#fbfcfb] px-3 py-2.5 text-[#98a39b] sm:w-[270px]">
@@ -417,7 +419,7 @@ export default function PatientsPage() {
                           </span>
                         </button>
                       </td>
-                      <td className="px-4 py-3.5">
+                      {/* <td className="px-4 py-3.5">
                         <span
                           className={`pill ${patient.care === 'Particular' ? 'bg-[#e9f5ed] text-[#287653]' : 'bg-[#edf2fa] text-[#5576a3]'}`}
                         >
@@ -467,7 +469,7 @@ export default function PatientsPage() {
                         >
                           <Eye size={15} />
                         </button>
-                      </td>
+                      </td> */}
                     </tr>
                   ))}
                 </tbody>
