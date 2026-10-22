@@ -383,7 +383,6 @@ export default function MealsPage() {
   }
   return (
     <div className="min-h-screen">
-      <SideBar mobileNavOpen={menuOpen} setMobileNavOpen={setMenuOpen} />
       <main className="main">
         <header className="topbar">
           <div className="flex items-center gap-3">

@@ -306,7 +306,6 @@ export default function FinancePage() {
           onClick={() => setMobileNavOpen(false)}
         />
       )}
-      <SideBar mobileNavOpen={mobileNavOpen} setMobileNavOpen={setMobileNavOpen} />
 
       <main className="main">
         <header className="topbar">

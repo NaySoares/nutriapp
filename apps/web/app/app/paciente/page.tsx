@@ -128,7 +128,6 @@ export default function PatientDetailPage() {
     <div className="min-h-screen bg-[#f7f9f7] text-[#24352b]">
       {mobileNavOpen &&
       <button aria-label="Fechar menu" className="fixed inset-0 z-10 bg-black/20 md:hidden" onClick={() => setMobileNavOpen(false)} />}
-      <SideBar mobileNavOpen={mobileNavOpen} setMobileNavOpen={() => setMobileNavOpen(false)} />
 
       <main className="main">
         <header className="topbar print:hidden"><div className="flex items-center gap-3"><button className="mobile-menu rounded-lg border border-[#e8eee9] p-2 text-[#496354]" aria-label="Abrir menu" onClick={() => setMobileNavOpen(true)}><Users size={18} /></button><div><div className="text-[11px] text-[#849188]">Segunda-feira, 19 de outubro de 2026</div><div className="mt-1 text-[17px] font-bold tracking-[-.45px]">Ficha do paciente</div></div></div><div className="flex items-center gap-2"><button aria-label="Notificações" onClick={() => notify("Nenhuma nova notificação clínica.")} className="relative rounded-lg border border-[#e7ece7] bg-white p-2.5 text-[#718278]"><Bell size={16} /></button><button onClick={() => { setEditing(!editing); notify(editing ? "Edição finalizada nesta demonstração." : "Campos editáveis habilitados nesta demonstração."); }} className="btn-secondary"><Pencil size={14} />{editing ? "Concluir edição" : "Editar cadastro"}</button><button onClick={printPlan} className="btn-primary"><Printer size={15} />Imprimir plano</button></div></header>

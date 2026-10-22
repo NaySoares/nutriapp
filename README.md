@@ -1,6 +1,10 @@
 # NutriApp
 
-Aplicação web estática e API para nutricionistas.
+Aplicação web completa para Nutricionista
+
+
+# TESTE É COISA DE QUEM TEM TEMPO. EU TENHO PRAZO.
+
 
 ## Desenvolvimento
 

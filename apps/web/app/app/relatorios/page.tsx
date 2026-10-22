@@ -90,7 +90,6 @@ export default function ReportsPage() {
   return (
     <div className="min-h-screen">
       {mobileNavOpen && <button aria-label="Fechar menu" className="fixed inset-0 z-10 bg-black/20 md:hidden" onClick={() => setMobileNavOpen(false)} />}
-      <SideBar mobileNavOpen={mobileNavOpen} setMobileNavOpen={setMobileNavOpen} />
 
       <main className="main">
         <header className="topbar">
