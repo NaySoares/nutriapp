@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from "react";
 import { Apple, ArrowRight, HeartPulse, MoreHorizontal, Settings, X, LayoutDashboard, Users, CalendarDays, Wallet, Utensils, FileUser, FileText } from "lucide-react";
 import { usePathname, useRouter } from 'next/navigation';
