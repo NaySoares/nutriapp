@@ -104,5 +104,5 @@ export { AppointmentCreateInput, AppointmentUpdateInput, AppointmentCreate, Appo
 export { LOCAIS, ATENDIMENTOS, TIPOS_CONSULTA, STATUS_AGENDAMENTO } from "./types/appointments.js";
 
 // patient types
-export type { PatientCreateInput, PatientUpdateInput } from "./types/patient.js";
-export { patientIdSchema } from "./types/patient.js";
+export type { PatientCreateInput, PatientUpdateInput, PatientSelect, PatientRecord } from "./types/patient.js";
+export { patientIdSchema, patientUpdateSchema, patientCreateSchema } from "./types/patient.js";

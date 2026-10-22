@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {Bell, Check, Filter, Pencil, Plus, Search, Trash2, X, Database, Leaf } from "lucide-react";
-import { SideBar } from "../../../components/sidebar";
+import { SideBar } from "../../../components/layout/sidebar";
 
 type Food = {
   id: number;

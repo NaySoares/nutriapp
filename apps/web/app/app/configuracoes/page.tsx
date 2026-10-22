@@ -19,7 +19,7 @@ import {
   Info,
 } from 'lucide-react';
 import { useState } from 'react';
-import { SideBar } from '../../../components/sidebar';
+import { SideBar } from '../../../components/layout/sidebar';
 
 interface ImportRow {
   name: string;

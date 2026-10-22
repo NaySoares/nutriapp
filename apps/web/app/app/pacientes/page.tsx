@@ -1,22 +1,16 @@
 'use client';
 
 import {
-  Apple,
   ArrowDownUp,
   Bell,
   CalendarDays,
   ChevronDown,
   ClipboardList,
-  FileText,
   HeartPulse,
-  LayoutDashboard,
-  MoreHorizontal,
   Plus,
   Search,
-  Settings,
   SlidersHorizontal,
   Users,
-  Wallet,
   X,
   CircleAlert,
   Clock3,
@@ -25,12 +19,21 @@ import {
   Eye,
   Phone,
   Mail,
+  FileText,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { SideBar } from '../../../components/sidebar';
 import { useModalStore } from '../../../stores/modal-store';
 import { useHeaderStore } from '../../../stores/header-store';
 import { FormsNewPatient } from '../../../components/app/forms-patient';
+import { apiRequest } from '../../../lib/api';
+import { toast } from 'sonner';
+import { PatientRecord } from '@nutriapp/shared';
+import { getInitials } from '../../../utils/name';
+import { useRouter } from 'next/navigation';
+import { FormsNewAppointment } from '../../../components/app/forms-appointment';
+import { usePatientStore } from '../../../stores/patient-store';
+import { Button } from '../../../components/ui/button';
+import { useAppointmentContext } from '../../../stores/appointment-store';
 
 type CareType = 'Particular' | 'Hospitalar';
 type PatientStatus = 'Ativo' | 'Retorno pendente' | 'Inativo';
@@ -40,152 +43,22 @@ type ClinicalStatus =
   | 'Obesidade'
   | 'Baixo peso'
   | 'Acompanhamento clínico';
-interface Patient {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  initials: string;
-  care: CareType;
-  clinical: ClinicalStatus;
-  lastVisit: string;
-  nextVisit: string | null;
-  status: PatientStatus;
-  tone: string;
-}
 
-const initialPatients: Patient[] = [
-  {
-    id: 1,
-    name: 'Mariana Costa',
-    email: 'mariana.costa@email.com',
-    phone: '(91) 98812-3401',
-    initials: 'MC',
-    care: 'Particular',
-    clinical: 'Sobrepeso',
-    lastVisit: '16 out, 2026',
-    nextVisit: '23 out, 09:00',
-    status: 'Ativo',
-    tone: '',
-  },
-  {
-    id: 2,
-    name: 'Rafael Almeida',
-    email: 'rafael.almeida@email.com',
-    phone: '(91) 98145-2260',
-    initials: 'RA',
-    care: 'Particular',
-    clinical: 'Eutrofia',
-    lastVisit: '15 out, 2026',
-    nextVisit: '22 out, 10:30',
-    status: 'Ativo',
-    tone: 'alt1',
-  },
-  {
-    id: 3,
-    name: 'Camila Ferreira',
-    email: 'camila.ferreira@email.com',
-    phone: '(91) 98201-1198',
-    initials: 'CF',
-    care: 'Hospitalar',
-    clinical: 'Acompanhamento clínico',
-    lastVisit: '19 out, 2026',
-    nextVisit: '21 out, 11:00',
-    status: 'Ativo',
-    tone: 'alt2',
-  },
-  {
-    id: 4,
-    name: 'João Pedro Lima',
-    email: 'joao.lima@email.com',
-    phone: '(91) 98443-7720',
-    initials: 'JL',
-    care: 'Particular',
-    clinical: 'Obesidade',
-    lastVisit: '02 out, 2026',
-    nextVisit: null,
-    status: 'Retorno pendente',
-    tone: 'alt3',
-  },
-  {
-    id: 5,
-    name: 'Beatriz Santos',
-    email: 'beatriz.santos@email.com',
-    phone: '(91) 99176-8502',
-    initials: 'BS',
-    care: 'Particular',
-    clinical: 'Baixo peso',
-    lastVisit: '13 out, 2026',
-    nextVisit: '27 out, 14:00',
-    status: 'Ativo',
-    tone: 'alt4',
-  },
-  {
-    id: 6,
-    name: 'Lucas Martins',
-    email: 'lucas.martins@email.com',
-    phone: '(91) 98330-9084',
-    initials: 'LM',
-    care: 'Hospitalar',
-    clinical: 'Acompanhamento clínico',
-    lastVisit: '18 out, 2026',
-    nextVisit: '20 out, 08:30',
-    status: 'Ativo',
-    tone: 'alt1',
-  },
-  {
-    id: 7,
-    name: 'Isabela Rocha',
-    email: 'isabela.rocha@email.com',
-    phone: '(91) 98752-1904',
-    initials: 'IR',
-    care: 'Particular',
-    clinical: 'Eutrofia',
-    lastVisit: '08 set, 2026',
-    nextVisit: null,
-    status: 'Retorno pendente',
-    tone: 'alt2',
-  },
-  {
-    id: 8,
-    name: 'Pedro Henrique Silva',
-    email: 'pedro.silva@email.com',
-    phone: '(91) 98292-4417',
-    initials: 'PS',
-    care: 'Hospitalar',
-    clinical: 'Sobrepeso',
-    lastVisit: '17 out, 2026',
-    nextVisit: '24 out, 15:30',
-    status: 'Ativo',
-    tone: 'alt3',
-  },
-  {
-    id: 9,
-    name: 'Fernanda Oliveira',
-    email: 'fernanda.oliveira@email.com',
-    phone: '(91) 98930-5221',
-    initials: 'FO',
-    care: 'Particular',
-    clinical: 'Obesidade',
-    lastVisit: '11 ago, 2026',
-    nextVisit: null,
-    status: 'Inativo',
-    tone: 'alt4',
-  },
-  {
-    id: 10,
-    name: 'Gabriel Nunes',
-    email: 'gabriel.nunes@email.com',
-    phone: '(91) 98192-0607',
-    initials: 'GN',
-    care: 'Particular',
-    clinical: 'Eutrofia',
-    lastVisit: '14 out, 2026',
-    nextVisit: '28 out, 09:30',
-    status: 'Ativo',
-    tone: '',
-  },
-];
+// const initialPatients: = [
+//   {
+//     id: 1,
+//     name: 'Mariana Costa',
+//     email: 'mariana.costa@email.com',
+//     phone: '(91) 98812-3401',
+//     initials: 'MC',
+//     care: 'Particular',
+//     clinical: 'Sobrepeso',
+//     lastVisit: '16 out, 2026',
+//     nextVisit: '23 out, 09:00',
+//     status: 'Ativo',
+//     tone: '',
+//   }
+// ];
 
 const clinicalOptions: ClinicalStatus[] = [
   'Eutrofia',
@@ -195,8 +68,10 @@ const clinicalOptions: ClinicalStatus[] = [
   'Acompanhamento clínico',
 ];
 
+type PatientsResponse = { pacientes: PatientRecord[] };
+
 export default function PatientsPage() {
-  const [patients, setPatients] = useState<Patient[]>(initialPatients);
+  const [patients, setPatients] = useState<PatientRecord[]>([]);
   const [query, setQuery] = useState('');
   const [careFilter, setCareFilter] = useState('Todos');
   const [clinicalFilter, setClinicalFilter] = useState('Todas as condições');
@@ -204,20 +79,16 @@ export default function PatientsPage() {
   const [sortAZ, setSortAZ] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<PatientRecord | null>(null);
   const [notice, setNotice] = useState('');
-  const [newName, setNewName] = useState('');
-  const [newEmail, setNewEmail] = useState('');
-  const [newPhone, setNewPhone] = useState('');
-  const [newCare, setNewCare] = useState<CareType>('Particular');
-  const [newClinical, setNewClinical] = useState<ClinicalStatus>(
-    'Acompanhamento clínico',
-  );
+  const [loading, setLoading] = useState(false);
+
   const setConfig = useHeaderStore((state) => state.setConfig);
   const reset = useHeaderStore((state) => state.reset);
   const openModal = useModalStore((state) => state.openModal);
   const closeModal = useModalStore((state) => state.closeModal);
+
+  const setAppointmentPatient = useAppointmentContext((state) => state.setPatient);
 
   useEffect(() => {
     setConfig({
@@ -237,42 +108,61 @@ export default function PatientsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setConfig, reset]);
 
+  useEffect(() => {
+    setLoading(true);
+    apiRequest<PatientsResponse>("/patients").then((response) => {
+      setPatients(response.pacientes);
+    }).catch((reason) => {
+      toast.error(reason instanceof Error ? reason.message : "Erro ao buscar dados.");
+    }).finally(() => {
+      setLoading(false);
+    });
+// eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const router = useRouter();
+
   const filteredPatients = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase('pt-BR');
     return patients
       .filter(
         (patient) =>
           !normalizedQuery ||
-          patient.name.toLocaleLowerCase('pt-BR').includes(normalizedQuery),
+          patient.nome.toLocaleLowerCase('pt-BR').includes(normalizedQuery),
       )
-      .filter(
-        (patient) => careFilter === 'Todos' || patient.care === careFilter,
-      )
-      .filter(
-        (patient) =>
-          clinicalFilter === 'Todas as condições' ||
-          patient.clinical === clinicalFilter,
-      )
-      .filter(
-        (patient) =>
-          statusFilter === 'Todos os status' || patient.status === statusFilter,
-      )
+      // .filter(
+      //   (patient) => careFilter === 'Todos' || patient.care === careFilter,
+      // )
+      // .filter(
+      //   (patient) =>
+      //     clinicalFilter === 'Todas as condições' ||
+      //     patient.clinical === clinicalFilter,
+      // )
+      // .filter(
+      //   (patient) =>
+      //     statusFilter === 'Todos os status' || patient.status === statusFilter,
+      // )
       .sort((a, b) =>
         sortAZ
-          ? a.name.localeCompare(b.name, 'pt-BR')
-          : b.name.localeCompare(a.name, 'pt-BR'),
+          ? a.nome.localeCompare(b.nome, 'pt-BR')
+          : b.nome.localeCompare(a.nome, 'pt-BR'),
       );
   }, [patients, query, careFilter, clinicalFilter, statusFilter, sortAZ]);
 
-  const activeCount = patients.filter(
-    (patient) => patient.status === 'Ativo',
-  ).length;
-  const pendingCount = patients.filter(
-    (patient) => patient.status === 'Retorno pendente',
-  ).length;
-  const privateCount = patients.filter(
-    (patient) => patient.care === 'Particular',
-  ).length;
+  // const activeCount = patients.filter(
+  //   (patient) => patient.status === 'Ativo',
+  // ).length;
+  // const pendingCount = patients.filter(
+  //   (patient) => patient.status === 'Retorno pendente',
+  // ).length;
+  // const privateCount = patients.filter(
+  //   (patient) => patient.care === 'Particular',
+  // ).length;
+
+  const activeCount = 3
+  const pendingCount = 3
+  const privateCount = 3
+
   const hasFilters =
     query.trim() !== '' ||
     careFilter !== 'Todos' ||
@@ -285,46 +175,16 @@ export default function PatientsPage() {
     setClinicalFilter('Todas as condições');
     setStatusFilter('Todos os status');
   }
-  function addPatient(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const name = newName.trim();
-    if (!name) return;
-    const initials = name
-      .split(/\s+/)
-      .slice(0, 2)
-      .map((part) => part[0])
-      .join('')
-      .toUpperCase();
-    const patient: Patient = {
-      id: Date.now(),
-      name,
-      email: newEmail.trim() || 'Não informado',
-      phone: newPhone.trim() || 'Não informado',
-      initials,
-      care: newCare,
-      clinical: newClinical,
-      lastVisit: 'Sem consulta',
-      nextVisit: null,
-      status: 'Ativo',
-      tone: 'alt2',
-    };
-    setPatients((current) => [patient, ...current]);
-    setShowAddModal(false);
-    setNewName('');
-    setNewEmail('');
-    setNewPhone('');
-    setQuery(name);
-    setNotice(`Paciente ${name} cadastrado nesta demonstração.`);
-    window.setTimeout(() => setNotice(''), 3500);
-  }
-  function markFollowUp(patient: Patient) {
+
+
+  function markFollowUp(patient: PatientRecord) {
     setPatients((current) =>
       current.map((item) =>
         item.id === patient.id ? { ...item, status: 'Ativo' } : item,
       ),
     );
-    setSelectedPatient({ ...patient, status: 'Ativo' });
-    setNotice(`Retorno de ${patient.name} marcado para acompanhamento.`);
+    setSelectedPatient({ ...patient });
+    setNotice(`Retorno de ${patient.nome} marcado para acompanhamento.`);
     window.setTimeout(() => setNotice(''), 3500);
   }
 
@@ -339,55 +199,6 @@ export default function PatientsPage() {
       )}
 
       <main className="main">
-        <header className="topbar">
-          <div className="flex items-center gap-3">
-            <button
-              className="mobile-menu rounded-lg border border-[#e8eee9] p-2 text-[#496354]"
-              aria-label="Abrir menu"
-              onClick={() => setMobileNavOpen(true)}
-            >
-              <Users size={18} />
-            </button>
-            <div>
-              <div className="text-[11px] text-[#849188]">
-                Segunda-feira, 19 de outubro de 2026
-              </div>
-              <div className="mt-1 text-[17px] font-bold tracking-[-.45px]">
-                Pacientes
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-2 rounded-lg border border-[#e7ece7] bg-white px-3 py-2.5 text-[11px] text-[#718278] sm:flex">
-              <Users size={15} />
-              <span>{patients.length} cadastrados</span>
-            </div>
-            <button
-              aria-label="Notificações"
-              onClick={() =>
-                setNotice(
-                  pendingCount
-                    ? `Você tem ${pendingCount} pacientes com retorno pendente.`
-                    : 'Nenhuma pendência de retorno no momento.',
-                )
-              }
-              className="relative rounded-lg border border-[#e7ece7] bg-white p-2.5 text-[#718278]"
-            >
-              <Bell size={16} />
-              {pendingCount > 0 && (
-                <span className="absolute right-[7px] top-[6px] h-1.5 w-1.5 rounded-full bg-[#d9a354] ring-2 ring-white" />
-              )}
-            </button>
-            <button
-              className="btn-primary"
-              onClick={() => setShowAddModal(true)}
-            >
-              <Plus size={15} />
-              Novo paciente
-            </button>
-          </div>
-        </header>
-
         <div className="content">
           <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -478,7 +289,7 @@ export default function PatientsPage() {
                 <div>
                   <h2 className="section-title">Lista de pacientes</h2>
                   <p className="section-subtitle">
-                    Dados demonstrativos · {filteredPatients.length}{' '}
+                    {filteredPatients.length}{' '}
                     {filteredPatients.length === 1 ? 'resultado' : 'resultados'}
                   </p>
                 </div>
@@ -492,7 +303,7 @@ export default function PatientsPage() {
                       placeholder="Buscar por nome..."
                       className="w-full bg-transparent text-[12px] text-[#304638] outline-none placeholder:text-[#9ba69e]"
                     />
-                    <kbd className="hidden rounded border border-[#e3e9e4] bg-white px-1.5 py-0.5 text-[9px] text-[#9ba69e] md:inline">
+                    <kbd className="hidden rounded border text-nowrap border-[#e3e9e4] bg-white px-1.5 py-0.5 text-[9px] text-[#9ba69e] md:inline">
                       ⌘ K
                     </kbd>
                   </label>
@@ -595,15 +406,15 @@ export default function PatientsPage() {
                           onClick={() => setSelectedPatient(patient)}
                           className="flex items-center gap-3 text-left"
                         >
-                          <span className={`avatar ${patient.tone}`}>
-                            {patient.initials}
+                          <span className={`avatar alt2`}>
+                            {getInitials(patient.nome)}
                           </span>
                           <span className="min-w-0">
                             <span className="block whitespace-nowrap text-[12px] font-semibold text-[#304638] group-hover:text-[#287653]">
-                              {patient.name}
+                              {patient.nome}
                             </span>
                             <span className="mt-1 block max-w-[190px] truncate text-[10px] text-[#8a978f]">
-                              {patient.email}
+                              {patient.contato || 'Contato não informado'}
                             </span>
                           </span>
                         </button>
@@ -612,17 +423,17 @@ export default function PatientsPage() {
                         <span
                           className={`pill ${patient.care === 'Particular' ? 'bg-[#e9f5ed] text-[#287653]' : 'bg-[#edf2fa] text-[#5576a3]'}`}
                         >
-                          {patient.care}
+                          {patient.care || 'Tipo de atendimento não informado'}
                         </span>
                       </td>
                       <td className="px-4 py-3.5">
                         <span className="text-[11px] text-[#53665a]">
-                          {patient.clinical}
+                          {patient.clinical || 'Condição não informada'}
                         </span>
                       </td>
                       <td className="px-4 py-3.5">
                         <span className="whitespace-nowrap text-[11px] text-[#718278]">
-                          {patient.lastVisit}
+                          {patient.lastVisit ? patient.lastVisit : 'Sem consulta'}
                         </span>
                       </td>
                       <td className="px-4 py-3.5">
@@ -702,47 +513,6 @@ export default function PatientsPage() {
               </p>
             </div>
           </section>
-
-          <section className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
-            <div className="panel flex items-start gap-3 p-4">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#fff5e6] text-[#a8752c]">
-                <Clock3 size={17} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="text-[12px] font-bold text-[#304638]">
-                  Retornos que merecem atenção
-                </h3>
-                <p className="mt-1 text-[11px] leading-5 text-[#7d8b83]">
-                  {pendingCount
-                    ? `${pendingCount} pacientes estão sem um próximo retorno agendado. Revise o contexto antes de entrar em contato.`
-                    : 'Não há retornos pendentes na lista atual.'}
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setStatusFilter('Retorno pendente');
-                  setShowFilters(true);
-                }}
-                className="shrink-0 text-[11px] font-semibold text-[#287653]"
-              >
-                Ver lista
-              </button>
-            </div>
-            <div className="panel flex items-start gap-3 p-4">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#e9f5ed] text-[#287653]">
-                <HeartPulse size={17} />
-              </div>
-              <div>
-                <h3 className="text-[12px] font-bold text-[#304638]">
-                  Informação clínica com contexto
-                </h3>
-                <p className="mt-1 text-[11px] leading-5 text-[#7d8b83]">
-                  As classificações devem vir do registro clínico atualizado e
-                  seguir os critérios definidos pela profissional.
-                </p>
-              </div>
-            </div>
-          </section>
         </div>
       </main>
 
@@ -763,142 +533,6 @@ export default function PatientsPage() {
         </div>
       )}
 
-      {showAddModal && (
-        <div
-          className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-[#17251d]/35 p-4"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setShowAddModal(false);
-          }}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="add-patient-title"
-            className="my-auto w-full max-w-[510px] rounded-2xl border border-[#e8eee9] bg-white p-5 shadow-xl sm:p-6"
-          >
-            <div className="mb-5 flex items-start justify-between">
-              <div>
-                <div className="mb-1 text-[10px] font-bold uppercase tracking-[1px] text-[#7c8c81]">
-                  CADASTRO
-                </div>
-                <h2
-                  id="add-patient-title"
-                  className="text-[20px] font-bold tracking-[-.5px] text-[#20352c]"
-                >
-                  Novo paciente
-                </h2>
-                <p className="mt-1 text-[11px] text-[#87948b]">
-                  Adicione informações básicas para a demonstração.
-                </p>
-              </div>
-              <button
-                aria-label="Fechar"
-                onClick={() => setShowAddModal(false)}
-                className="rounded-lg p-2 text-[#87948b] hover:bg-[#f5f8f5]"
-              >
-                <X size={17} />
-              </button>
-            </div>
-            <form onSubmit={addPatient} className="space-y-4">
-              <label className="block">
-                <span className="mb-1.5 block text-[11px] font-semibold text-[#53665a]">
-                  Nome completo <span className="text-[#b65c50]">*</span>
-                </span>
-                <input
-                  required
-                  autoFocus
-                  value={newName}
-                  onChange={(event) => setNewName(event.target.value)}
-                  placeholder="Ex.: Ana Carolina Souza"
-                  className="w-full rounded-lg border border-[#e3eae4] px-3 py-2.5 text-[12px] outline-none focus:border-[#7fb18e]"
-                />
-              </label>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <label className="block">
-                  <span className="mb-1.5 block text-[11px] font-semibold text-[#53665a]">
-                    E-mail
-                  </span>
-                  <span className="flex items-center gap-2 rounded-lg border border-[#e3eae4] px-3">
-                    <Mail size={14} className="text-[#98a39b]" />
-                    <input
-                      type="email"
-                      value={newEmail}
-                      onChange={(event) => setNewEmail(event.target.value)}
-                      placeholder="email@exemplo.com"
-                      className="w-full py-2.5 text-[12px] outline-none"
-                    />
-                  </span>
-                </label>
-                <label className="block">
-                  <span className="mb-1.5 block text-[11px] font-semibold text-[#53665a]">
-                    Telefone
-                  </span>
-                  <span className="flex items-center gap-2 rounded-lg border border-[#e3eae4] px-3">
-                    <Phone size={14} className="text-[#98a39b]" />
-                    <input
-                      value={newPhone}
-                      onChange={(event) => setNewPhone(event.target.value)}
-                      placeholder="(00) 00000-0000"
-                      className="w-full py-2.5 text-[12px] outline-none"
-                    />
-                  </span>
-                </label>
-              </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <label className="block">
-                  <span className="mb-1.5 block text-[11px] font-semibold text-[#53665a]">
-                    Tipo de atendimento
-                  </span>
-                  <select
-                    value={newCare}
-                    onChange={(event) =>
-                      setNewCare(event.target.value as CareType)
-                    }
-                    className="w-full rounded-lg border border-[#e3eae4] bg-white px-3 py-2.5 text-[12px] outline-none focus:border-[#7fb18e]"
-                  >
-                    <option>Particular</option>
-                    <option>Hospitalar</option>
-                  </select>
-                </label>
-                <label className="block">
-                  <span className="mb-1.5 block text-[11px] font-semibold text-[#53665a]">
-                    Classificação registrada
-                  </span>
-                  <select
-                    value={newClinical}
-                    onChange={(event) =>
-                      setNewClinical(event.target.value as ClinicalStatus)
-                    }
-                    className="w-full rounded-lg border border-[#e3eae4] bg-white px-3 py-2.5 text-[12px] outline-none focus:border-[#7fb18e]"
-                  >
-                    {clinicalOptions.map((condition) => (
-                      <option key={condition}>{condition}</option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-              <p className="rounded-lg bg-[#f6f9f6] p-3 text-[10px] leading-4 text-[#7d8b83]">
-                Este protótipo guarda o cadastro apenas no estado da página. Não
-                insira dados reais ou sensíveis de pacientes.
-              </p>
-              <div className="flex justify-end gap-2 border-t border-[#edf1ed] pt-4">
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={() => setShowAddModal(false)}
-                >
-                  Cancelar
-                </button>
-                <button type="submit" className="btn-primary">
-                  <Plus size={14} />
-                  Cadastrar paciente
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
       {selectedPatient && (
         <div
           className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-[#17251d]/35 p-4"
@@ -915,19 +549,19 @@ export default function PatientsPage() {
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div
-                  className={`grid h-12 w-12 place-items-center rounded-2xl bg-[#e9f5ed] text-[13px] font-bold text-[#287653] ${selectedPatient.tone}`}
+                  className={`grid h-12 w-12 place-items-center rounded-2xl bg-[#e9f5ed] text-[13px] font-bold text-[#287653] alt2`}
                 >
-                  {selectedPatient.initials}
+                  {getInitials(selectedPatient.nome)}
                 </div>
                 <div>
                   <h2
                     id="patient-details-title"
                     className="text-[17px] font-bold text-[#20352c]"
                   >
-                    {selectedPatient.name}
+                    {selectedPatient.nome}
                   </h2>
                   <p className="mt-1 text-[11px] text-[#87948b]">
-                    Paciente · dados de demonstração
+                    Paciente
                   </p>
                 </div>
               </div>
@@ -943,13 +577,13 @@ export default function PatientsPage() {
               <div className="rounded-xl bg-[#f7f9f7] p-3">
                 <div className="text-[10px] text-[#87948b]">Atendimento</div>
                 <div className="mt-1 text-[12px] font-semibold text-[#304638]">
-                  {selectedPatient.care}
+                  {/* {selectedPatient.care} */} não informado
                 </div>
               </div>
               <div className="rounded-xl bg-[#f7f9f7] p-3">
                 <div className="text-[10px] text-[#87948b]">Status</div>
                 <div className="mt-1 text-[12px] font-semibold text-[#304638]">
-                  {selectedPatient.status}
+                  {/* {selectedPatient.status} */} não informado
                 </div>
               </div>
               <div className="col-span-2 rounded-xl border border-[#edf1ed] p-3">
@@ -957,7 +591,7 @@ export default function PatientsPage() {
                   Classificação registrada
                 </div>
                 <div className="mt-1 text-[12px] font-semibold text-[#304638]">
-                  {selectedPatient.clinical}
+                  {/* {selectedPatient.clinical} */} não informado
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-3">
                   <div>
@@ -965,7 +599,7 @@ export default function PatientsPage() {
                       Última consulta
                     </div>
                     <div className="mt-1 text-[11px] text-[#53665a]">
-                      {selectedPatient.lastVisit}
+                      {/* {selectedPatient.lastVisit} */} não informado
                     </div>
                   </div>
                   <div>
@@ -973,7 +607,7 @@ export default function PatientsPage() {
                       Próximo retorno
                     </div>
                     <div className="mt-1 text-[11px] text-[#53665a]">
-                      {selectedPatient.nextVisit || 'Não agendado'}
+                      {/* {selectedPatient.nextVisit} */} não agendado
                     </div>
                   </div>
                 </div>
@@ -981,30 +615,47 @@ export default function PatientsPage() {
               <div className="col-span-2 space-y-2 rounded-xl border border-[#edf1ed] p-3">
                 <div className="flex items-center gap-2 text-[11px] text-[#53665a]">
                   <Mail size={13} className="text-[#87948b]" />
-                  {selectedPatient.email}
+                  {selectedPatient.contato}
                 </div>
                 <div className="flex items-center gap-2 text-[11px] text-[#53665a]">
                   <Phone size={13} className="text-[#87948b]" />
-                  {selectedPatient.phone}
+                  {selectedPatient.contato}
                 </div>
               </div>
             </div>
             <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-[#edf1ed] pt-4">
-              <button
-                className="btn-secondary"
+              <Button
+                variant="secondary"
                 onClick={() => setSelectedPatient(null)}
               >
                 Fechar
-              </button>
-              {selectedPatient.status === 'Retorno pendente' && (
-                <button
-                  className="btn-primary"
-                  onClick={() => markFollowUp(selectedPatient)}
-                >
-                  <CalendarDays size={14} />
-                  Marcar para acompanhamento
-                </button>
-              )}
+              </Button>
+
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setAppointmentPatient(selectedPatient);
+                  openModal(
+                    <FormsNewAppointment
+                      onClose={() => {
+                        closeModal();
+                        setAppointmentPatient(null);
+                      }} />
+                    )
+                }}
+              >
+                <CalendarDays size={14} />
+                Agendar
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  router.push("/app/paciente")
+                }}
+              >
+                <FileText size={14} />
+                Abrir Ficha
+              </Button>
             </div>
           </div>
         </div>

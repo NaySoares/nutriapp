@@ -8,7 +8,7 @@ import {
   FileText, Filter, HeartPulse, LayoutDashboard, MoreHorizontal, Search,
   Settings, SlidersHorizontal, TrendingUp, Users, Wallet, X, CircleAlert,
 } from "lucide-react";
-import { SideBar } from "../../../components/sidebar";
+import { SideBar } from "../../../components/layout/sidebar";
 
 type ReportTab = "Visão geral" | "Atendimentos" | "Pacientes" | "Financeiro";
 type Period = "Últimos 30 dias" | "Últimos 90 dias" | "Este ano";

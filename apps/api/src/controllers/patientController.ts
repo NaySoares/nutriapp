@@ -8,9 +8,11 @@ export function createPatientController(service: PatientService) {
     list: async (request: FastifyRequest, reply: FastifyReply) => {
       const sessionId = authenticatedSession(request);
       if (!sessionId) return unauthorized(reply);
+
       const query = request.query as { q?: string; incluirArquivados?: string };
       const patients = await service.list(sessionId, query.q?.trim(), query.incluirArquivados === "true");
       if (!patients) return unauthorized(reply);
+
       return reply.send({ pacientes: patients });
     },
 

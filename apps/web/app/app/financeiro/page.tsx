@@ -19,7 +19,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { SideBar } from '../../../components/sidebar';
+import { SideBar } from '../../../components/layout/sidebar';
 
 type EntryStatus = 'Recebido' | 'Pendente' | 'Atrasado';
 type EntryType = 'Consulta' | 'Plano alimentar' | 'Retorno';

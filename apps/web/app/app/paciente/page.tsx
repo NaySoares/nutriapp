@@ -9,7 +9,7 @@ import {
   Printer, Search, Settings, ShieldAlert, Target, Trash2, Utensils, Wallet, Weight,
   X, Users, Pill, Ruler, Save, Info, CircleAlert, Sparkles, ChevronRight,
 } from "lucide-react";
-import { SideBar } from "../../../components/sidebar";
+import { SideBar } from "../../../components/layout/sidebar";
 
 type Tab = "Resumo" | "Anamnese" | "Antropometria" | "Plano alimentar";
 type Food = { id: number; name: string; amount: number; kcal100: number; protein100: number; carbs100: number; fat100: number; substitutes: { name: string; amount: number; kcal100: number; protein100: number; carbs100: number; fat100: number }[] };

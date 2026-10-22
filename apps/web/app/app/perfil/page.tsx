@@ -1,5 +1,5 @@
 import { ProfileForm } from "../../../components/profile-form";
-import { SideBar } from "../../../components/sidebar";
+import { SideBar } from "../../../components/layout/sidebar";
 export default function ProfilePage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">

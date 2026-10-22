@@ -1,5 +1,5 @@
 import { MeasurementRecord, MeasurementSelect } from "./measurement";
-import { PatientRecord, PatientSelect } from "./patient";
+import { PatientRecord, PatientSelect } from "@nutriapp/shared";
 
 export type AuthPrisma = {
   nutricionista: {

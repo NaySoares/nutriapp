@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { apiRequest } from "../../lib/api";
 import { ATENDIMENTOS, TIPOS_CONSULTA, LOCAIS, Sex } from "@nutriapp/shared";
 import { isDateInPast } from "../../utils/date";
+import { usePatientStore } from "../../stores/patient-store";
+import { useAppointmentContext } from "../../stores/appointment-store";
 
 type Atendimento = (typeof ATENDIMENTOS)[number];
 type TipoConsulta = (typeof TIPOS_CONSULTA)[number];
@@ -35,6 +37,21 @@ export function FormsNewAppointment( { onClose, onCreated }: { onClose: () => vo
   const [newSex, setNewSex] = useState<Sex>('M');
   const [newContact, setNewContact] = useState<string>('');
   const [loading, setLoading] = useState(false);
+
+  const patientAppointment = useAppointmentContext((state) => state.patient);
+
+
+  useEffect(() => {
+  if (!patientAppointment) return;
+
+  setNewName(patientAppointment.nome);
+  setNewBirthDate(
+    new Date(patientAppointment.dataNascimento).toLocaleDateString("en-CA")
+  );
+  setNewSex(patientAppointment.sexo);
+  setNewContact(patientAppointment.contato || "");
+}, [patientAppointment]);
+
 
   async function addAppointment(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

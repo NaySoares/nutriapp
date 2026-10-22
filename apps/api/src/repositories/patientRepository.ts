@@ -1,5 +1,5 @@
 import type { AuthPrisma } from "../types/auth.js";
-import { PatientRecord, PatientSelect } from "../types/patient.js";
+import { PatientRecord, PatientSelect } from "@nutriapp/shared";
 
 export type PatientRepository = {
   createPatient: (

@@ -1,11 +1,10 @@
-import { Bell, Menu, Plus } from "lucide-react";
-import { getCurrentDay } from "../../utils/date";
+import { Bell, Menu } from "lucide-react";
 import { useHeaderStore } from "../../stores/header-store";
+import { toast } from "sonner";
 
 type HeaderApp = {
   onMenuClick?: () => void;
 }
-
 
 export function HeaderApp({ onMenuClick }: HeaderApp) {
   const config = useHeaderStore((state) => state.config);
@@ -36,9 +35,9 @@ export function HeaderApp({ onMenuClick }: HeaderApp) {
         {config.actions}
         <button
           aria-label="Notificações"
-          onClick={() =>
-            alert('Você está em dia: nenhuma nova notificação.')
-          }
+          onClick={() => {
+            toast.info("Sem notificações no momento.");
+          }}
           className="relative rounded-lg border border-[#e7ece7] bg-white p-2.5 text-[#718278]"
         >
           <Bell size={16} />

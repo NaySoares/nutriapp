@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { SideBar } from '../../../components/sidebar';
+import { SideBar } from '../../../components/layout/sidebar';
 import { useHeaderStore } from '../../../stores/header-store';
 import { useModalStore } from '../../../stores/modal-store';
 import { FormsNewAppointment } from '../../../components/app/forms-appointment';

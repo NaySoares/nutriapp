@@ -1,9 +1,9 @@
 'use client';
 
 import "./../globals.css";
-import { SideBar } from "../../components/sidebar";
+import { SideBar } from "../../components/layout/sidebar";
 import { useState } from "react";
-import { HeaderApp } from "../../components/app/header";
+import { HeaderApp } from "../../components/layout/header";
 import { Toaster } from "sonner";
 import Modal from "../../components/ui/modal";
 import { AuthBoundary } from "../../components/auth-boundary";

@@ -30,16 +30,6 @@ import { getInitials } from '../../../utils/name';
 import { FormsNewAppointment } from '../../../components/app/forms-appointment';
 import { AppointmentRecord, } from "@nutriapp/shared";
 
-interface Appointment {
-  time: string;
-  name: string;
-  initials: string;
-  type: string;
-  kind: 'Particular' | 'Hospital';
-  status: 'Confirmada' | 'Aguardando';
-  tone: string;
-}
-
 interface TKpiCard {
   icon: React.ReactNode;
   iconBg: string;
