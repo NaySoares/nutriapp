@@ -73,6 +73,7 @@ export function buildApp(
 
   app.get("/appointments", appointments.list);
   app.post("/appointments", appointments.create);
+  app.patch("/appointments/:id", appointments.update);
 
 
   app.setErrorHandler((error, request, reply) => {

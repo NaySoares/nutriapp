@@ -6,7 +6,6 @@ import {
   CalendarDays,
   ChevronDown,
   ClipboardList,
-  HeartPulse,
   Plus,
   Search,
   SlidersHorizontal,
@@ -31,7 +30,6 @@ import { PatientRecord } from '@nutriapp/shared';
 import { getInitials } from '../../../utils/name';
 import { useRouter } from 'next/navigation';
 import { FormsNewAppointment } from '../../../components/app/forms-appointment';
-import { usePatientStore } from '../../../stores/patient-store';
 import { Button } from '../../../components/ui/button';
 import { useAppointmentContext } from '../../../stores/appointment-store';
 

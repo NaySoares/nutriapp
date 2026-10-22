@@ -4,7 +4,6 @@ import { Plus } from "lucide-react";
 import { apiRequest } from "../../lib/api";
 import { ATENDIMENTOS, TIPOS_CONSULTA, LOCAIS, Sex } from "@nutriapp/shared";
 import { isDateInPast } from "../../utils/date";
-import { usePatientStore } from "../../stores/patient-store";
 import { useAppointmentContext } from "../../stores/appointment-store";
 
 type Atendimento = (typeof ATENDIMENTOS)[number];
@@ -39,7 +38,7 @@ export function FormsNewAppointment( { onClose, onCreated }: { onClose: () => vo
   const [loading, setLoading] = useState(false);
 
   const patientAppointment = useAppointmentContext((state) => state.patient);
-
+  const clearPatient = useAppointmentContext((state) => state.clearPatient);
 
   useEffect(() => {
   if (!patientAppointment) return;
@@ -80,6 +79,7 @@ export function FormsNewAppointment( { onClose, onCreated }: { onClose: () => vo
       await apiRequest("/appointments", { method: "POST", data: payload });
       toast.success("Atendimento agendado com sucesso.");
       onCreated?.();
+      clearPatient();
       onClose();
     } catch (reason) {
       toast.error(

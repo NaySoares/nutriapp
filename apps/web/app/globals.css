@@ -91,3 +91,133 @@ button { cursor: pointer; }
 .agenda-secondary:hover {
   background: #f8faf8;
 }
+
+.agenda-main {
+  margin-left: 244px;
+  min-height: 100vh;
+}
+.agenda-content {
+  padding: 27px 32px 40px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+.agenda-panel {
+  border: 1px solid #e8eee8;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(31, 57, 40, 0.025);
+}
+.appointment-card {
+  width: 100%;
+  border: 1px solid #e7eee8;
+  border-left: 3px solid #6da985;
+  border-radius: 8px;
+  background: #fbfdfb;
+  padding: 9px 9px 10px;
+  text-align: left;
+  transition:
+    box-shadow 0.15s,
+    transform 0.15s;
+}
+.appointment-card:hover {
+  box-shadow: 0 4px 12px rgba(38, 73, 48, 0.08);
+  transform: translateY(-1px);
+}
+.appointment-card.blue {
+  border-left-color: #7b9ec6;
+  background: #f8faff;
+}
+.appointment-card.gray {
+  border-left-color: #c5c5c5;
+  background: #f0f2f0;
+}
+.appointment-card.lilac {
+  border-left-color: #b65c50;
+  background: #fff0ed;
+}
+.appointment-card.peach {
+  border-left-color: #d6a078;
+  background: #fffaf6;
+}
+.appointment-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 20px;
+  padding: 4px 7px;
+  font-size: 9px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.status-confirmed {
+  background: #e9f5ed;
+  color: #287653;
+}
+.status-waiting {
+  background: #fff4df;
+  color: #9b6b21;
+}
+.status-done {
+  background: #edf2fa;
+  color: #5576a3;
+}
+.status-missed {
+  background: #ffe1db;
+  color: #b65c50;
+}
+.status-cancelled {
+  background: #d9d9d9;
+  color: #7d8b83;
+}
+.agenda-avatar {
+  display: grid;
+  height: 28px;
+  width: 28px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 9px;
+  background: #e4f0e7;
+  color: #3b7752;
+  font-size: 9px;
+  font-weight: 700;
+}
+.agenda-avatar.blue {
+  background: #eaf0fa;
+  color: #5876a2;
+}
+.agenda-avatar.lilac {
+  background: #f0ebfa;
+  color: #7c69a6;
+}
+.agenda-avatar.peach {
+  background: #faeee4;
+  color: #a66e43;
+}
+.agenda-avatar.sage {
+  background: #e4f0e7;
+  color: #3b7752;
+}
+.agenda-avatar.gray {
+  background: #f0f2f0;
+  color: #7d8b83;
+}
+@media (max-width: 900px) {
+  .agenda-main {
+    margin-left: 0;
+  }
+  .agenda-content {
+    padding: 22px 18px 32px;
+  }
+}
+@media (max-width: 600px) {
+  .agenda-content {
+    padding: 18px 12px 28px;
+  }
+  .agenda-week-grid {
+    min-width: 820px;
+  }
+  .agenda-week-scroll {
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+}

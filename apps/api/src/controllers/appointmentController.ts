@@ -37,9 +37,11 @@ export function createAppointmentController(service: AppointmentService) {
       const session = authenticatedSession(request);
       const id = appointmentIdSchema.safeParse((request.params as { id?: string }).id);
       const input = appointmentUpdateSchema.safeParse(request.body);
+
       if (!session) return unauthorized(reply);
       if (!id.success) return notFound(reply);
       if (!input.success) return invalidInput(reply, input.error.flatten());
+
       const appointment = await service.update(session, id.data, input.data);
       if (!appointment) return notFound(reply);
       return reply.send({ agendamento: appointment });
