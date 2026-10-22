@@ -9,6 +9,8 @@ export const activityLevelSchema = z.enum([
   "muito_ativo"
 ]);
 
+export const healthResponseSchema = z.object({ status: z.literal("ok"), service: z.literal("api") });
+
 export const apiErrorSchema = z.object({
   codigo: z.string(),
   mensagem: z.string(),

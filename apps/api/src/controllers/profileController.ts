@@ -1,8 +1,8 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { settingsSchema } from "@nutriapp/shared";
-import { ACCESS_COOKIE, readAccessToken } from "./authController.js";
 import type { ProfileService } from "../services/profileService.js";
+import { requireSession } from "../middleware/authenticate.js";
 
 const profileSchema = z.object({
   nome: z.string().trim().min(1).max(120).optional(),
@@ -14,15 +14,15 @@ const profileSchema = z.object({
 export function createProfileController(service: ProfileService) {
   return {
     get: async (request: FastifyRequest, reply: FastifyReply) => {
-      const sessionId = authenticatedId(request);
-      if (!sessionId) return unauthorized(reply);
+      const sessionId = requireSession(request);
       const profile = await service.getProfile(sessionId);
       if (!profile) return reply.status(404).send({ codigo: "NAO_ENCONTRADO", mensagem: "Perfil não encontrado." });
+
       return reply.send({ nutricionista: profile });
     },
+
     update: async (request: FastifyRequest, reply: FastifyReply) => {
-      const sessionId = authenticatedId(request);
-      if (!sessionId) return unauthorized(reply);
+      const sessionId = requireSession(request);
       const input = profileSchema.safeParse(request.body);
       if (!input.success) return reply.status(400).send({
         codigo: "VALIDACAO_INVALIDA",
@@ -33,9 +33,9 @@ export function createProfileController(service: ProfileService) {
       if (!profile) return unauthorized(reply);
       return reply.send({ nutricionista: profile });
     },
+
     uploadLogo: async (request: FastifyRequest, reply: FastifyReply) => {
-      const sessionId = authenticatedId(request);
-      if (!sessionId) return unauthorized(reply);
+      const sessionId = requireSession(request);
       const file = await request.file();
       if (!file) return reply.status(400).send({ codigo: "ARQUIVO_AUSENTE", mensagem: "Envie uma imagem para a logo." });
       try {
@@ -53,16 +53,16 @@ export function createProfileController(service: ProfileService) {
         throw error;
       }
     },
+
     getSettings: async (request: FastifyRequest, reply: FastifyReply) => {
-      const sessionId = authenticatedId(request);
-      if (!sessionId) return unauthorized(reply);
+      const sessionId = requireSession(request);
       const settings = await service.getSettings(sessionId);
       if (!settings) return unauthorized(reply);
       return reply.send({ configuracoes: settings });
     },
+
     updateSettings: async (request: FastifyRequest, reply: FastifyReply) => {
-      const sessionId = authenticatedId(request);
-      if (!sessionId) return unauthorized(reply);
+      const sessionId = requireSession(request);
       const input = settingsSchema.safeParse(request.body);
       if (!input.success) return reply.status(400).send({
         codigo: "VALIDACAO_INVALIDA",
@@ -76,9 +76,6 @@ export function createProfileController(service: ProfileService) {
   };
 }
 
-function authenticatedId(request: FastifyRequest): string | undefined {
-  return readAccessToken(request.cookies[ACCESS_COOKIE]);
-}
 
 function unauthorized(reply: FastifyReply) {
   return reply.status(401).send({ codigo: "NAO_AUTENTICADO", mensagem: "É necessário estar autenticado." });

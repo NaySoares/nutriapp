@@ -3,8 +3,7 @@ import cookie from "@fastify/cookie";
 import sensible from "@fastify/sensible";
 import multipart from "@fastify/multipart";
 import { PrismaClient } from "@prisma/client";
-import { z } from "zod";
-import { apiErrorSchema } from "@nutriapp/shared";
+import { apiErrorSchema, healthResponseSchema } from "@nutriapp/shared";
 import { sendPasswordResetEmail, type PasswordResetEmail } from "./email.js";
 import { createAuthController } from "./controllers/authController.js";
 import { createAuthRepository } from "./repositories/authRepository.js";
@@ -18,10 +17,9 @@ import { createMeasurementService } from "./services/measurementService.js";
 import type { AuthPrisma } from "./types/auth.js";
 import { createAppointmentService } from "./services/appointmentService.js";
 import { createAppointmentController } from "./controllers/appointmentController.js";
+import { authenticate } from "./middleware/authenticate.js";
 
 export type { AuthPrisma } from "./types/auth.js";
-
-const healthResponseSchema = z.object({ status: z.literal("ok"), service: z.literal("api") });
 
 export function buildApp(
   prisma: AuthPrisma = new PrismaClient() as unknown as AuthPrisma,
@@ -34,17 +32,21 @@ export function buildApp(
         : undefined
     }
   });
+  app.decorateRequest("authSession", null);
+
   void app.register(sensible);
   void app.register(cookie);
   void app.register(multipart, { limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
 
-  const auth = createAuthController(createAuthService(createAuthRepository(prisma), sendResetEmail));
+
   const repository = createAuthRepository(prisma);
+  const auth = createAuthController(createAuthService(repository, sendResetEmail));
   const profile = createProfileController(createProfileService(repository, createS3LogoStorage()));
   const patients = createPatientController(createPatientService(repository));
   const measurements = createMeasurementController(createMeasurementService(repository));
   const appointments = createAppointmentController(createAppointmentService(repository));
 
+  // Rotas Públicas
   app.get("/health", async () => healthResponseSchema.parse({ status: "ok", service: "api" }));
 
   app.post("/auth/register", auth.register);
@@ -54,26 +56,31 @@ export function buildApp(
   app.post("/auth/refresh", auth.refresh);
   app.post("/auth/logout", auth.logout);
 
-  app.get("/me", profile.get);
-  app.patch("/me", profile.update);
-  app.post("/me/logo", profile.uploadLogo);
-  app.get("/me/settings", profile.getSettings);
-  app.patch("/me/settings", profile.updateSettings);
+  // Rotas Privadas
+  app.register(async (privateApp) => {
+    privateApp.addHook("preHandler", authenticate);
 
-  app.get("/patients", patients.list);
-  app.post("/patients", patients.create);
-  app.get("/patients/:id", patients.get);
-  app.patch("/patients/:id", patients.update);
-  app.post("/patients/:id/archive", patients.archive);
-  app.get("/patients/:id/measurements", measurements.list);
-  app.post("/patients/:id/measurements", measurements.create);
+    privateApp.get("/me", profile.get);
+    privateApp.patch("/me", profile.update);
+    privateApp.post("/me/logo", profile.uploadLogo);
+    privateApp.get("/me/settings", profile.getSettings);
+    privateApp.patch("/me/settings", profile.updateSettings);
 
-  app.patch("/measurements/:id", measurements.update);
-  app.delete("/measurements/:id", measurements.remove);
+    privateApp.get("/patients", patients.list);
+    privateApp.post("/patients", patients.create);
+    privateApp.get("/patients/:id", patients.get);
+    privateApp.patch("/patients/:id", patients.update);
+    privateApp.post("/patients/:id/archive", patients.archive);
+    privateApp.get("/patients/:id/measurements", measurements.list);
+    privateApp.post("/patients/:id/measurements", measurements.create);
 
-  app.get("/appointments", appointments.list);
-  app.post("/appointments", appointments.create);
-  app.patch("/appointments/:id", appointments.update);
+    privateApp.patch("/measurements/:id", measurements.update);
+    privateApp.delete("/measurements/:id", measurements.remove);
+
+    privateApp.get("/appointments", appointments.list);
+    privateApp.post("/appointments", appointments.create);
+    privateApp.patch("/appointments/:id", appointments.update);
+  });
 
 
   app.setErrorHandler((error, request, reply) => {

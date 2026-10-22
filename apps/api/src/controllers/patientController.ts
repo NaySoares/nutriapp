@@ -1,13 +1,12 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { patientCreateSchema, patientIdSchema, patientUpdateSchema } from "@nutriapp/shared";
-import { ACCESS_COOKIE, readAccessToken } from "./authController.js";
 import type { PatientService } from "../services/patientService.js";
+import { requireSession } from "../middleware/authenticate.js";
 
 export function createPatientController(service: PatientService) {
   return {
     list: async (request: FastifyRequest, reply: FastifyReply) => {
-      const sessionId = authenticatedSession(request);
-      if (!sessionId) return unauthorized(reply);
+      const sessionId = requireSession(request);
 
       const query = request.query as { q?: string; incluirArquivados?: string };
       const patients = await service.list(sessionId, query.q?.trim(), query.incluirArquivados === "true");
@@ -17,8 +16,7 @@ export function createPatientController(service: PatientService) {
     },
 
     create: async (request: FastifyRequest, reply: FastifyReply) => {
-      const sessionId = authenticatedSession(request);
-      if (!sessionId) return unauthorized(reply);
+      const sessionId = requireSession(request);
 
       const input = patientCreateSchema.safeParse(request.body);
       if (!input.success) return invalidInput(reply, input.error.flatten());
@@ -30,8 +28,7 @@ export function createPatientController(service: PatientService) {
     },
 
     get: async (request: FastifyRequest, reply: FastifyReply) => {
-      const sessionId = authenticatedSession(request);
-      if (!sessionId) return unauthorized(reply);
+      const sessionId = requireSession(request);
 
       const patientId = patientIdSchema.safeParse((request.params as { id?: string }).id);
       if (!patientId.success) return notFound(reply);
@@ -43,31 +40,29 @@ export function createPatientController(service: PatientService) {
     },
 
     update: async (request: FastifyRequest, reply: FastifyReply) => {
-      const sessionId = authenticatedSession(request);
-      if (!sessionId) return unauthorized(reply);
+      const sessionId = requireSession(request);
+
       const patientId = patientIdSchema.safeParse((request.params as { id?: string }).id);
       const input = patientUpdateSchema.safeParse(request.body);
       if (!patientId.success) return notFound(reply);
       if (!input.success) return invalidInput(reply, input.error.flatten());
+
       const patient = await service.update(sessionId, patientId.data, input.data);
       if (!patient) return notFound(reply);
       return reply.send({ paciente: patient });
     },
 
     archive: async (request: FastifyRequest, reply: FastifyReply) => {
-      const sessionId = authenticatedSession(request);
-      if (!sessionId) return unauthorized(reply);
+      const sessionId = requireSession(request);
+
       const patientId = patientIdSchema.safeParse((request.params as { id?: string }).id);
       if (!patientId.success) return notFound(reply);
+
       const archived = await service.archive(sessionId, patientId.data);
       if (!archived) return notFound(reply);
       return reply.send({ status: "ok" });
     }
   };
-}
-
-function authenticatedSession(request: FastifyRequest): string | undefined {
-  return readAccessToken(request.cookies[ACCESS_COOKIE]);
 }
 
 function unauthorized(reply: FastifyReply) {
