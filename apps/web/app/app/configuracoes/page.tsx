@@ -19,7 +19,6 @@ import {
   Info,
 } from 'lucide-react';
 import { useState } from 'react';
-import { SideBar } from '../../../components/layout/sidebar';
 
 interface ImportRow {
   name: string;
@@ -34,82 +33,82 @@ interface ImportRow {
   error?: string;
 }
 
-function parseCsv(text: string): ImportRow[] {
-  const lines = text
-    .replace(/^\uFEFF/, '')
-    .split(/\r?\n/)
-    .filter((line) => line.trim());
-  if (lines.length < 2) return [];
-  const parseLine = (line: string) => {
-    const result: string[] = [];
-    let current = '',
-      quoted = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"' && line[i + 1] === '"' && quoted) {
-        current += '"';
-        i++;
-      } else if (ch === '"') quoted = !quoted;
-      else if ((ch === ',' || ch === ';' || ch === '\t') && !quoted) {
-        result.push(current.trim());
-        current = '';
-      } else current += ch;
-    }
-    result.push(current.trim());
-    return result;
-  };
-  const headers = parseLine(lines[0]).map((h) =>
-    h
-      .toLocaleLowerCase('pt-BR')
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]/g, ''),
-  );
-  const aliases: Record<string, string[]> = {
-    name: ['nome', 'alimento', 'name', 'food'],
-    category: ['categoria', 'category', 'grupo'],
-    portion: ['porcao', 'porcaoreferencia', 'medida', 'serving'],
-    kcal: ['kcal', 'energia', 'calorias', 'energy'],
-    protein: ['proteina', 'proteinas', 'protein'],
-    carbs: ['carboidrato', 'carboidratos', 'carbs', 'carbohydrate'],
-    fat: ['gordura', 'gorduras', 'fat', 'lipidios'],
-    fiber: ['fibra', 'fibras', 'fiber'],
-  };
-  const index: Record<string, number> = {};
-  for (const [field, names] of Object.entries(aliases)) {
-    index[field] = headers.findIndex((h) => names.includes(h));
-  }
-  return lines.slice(1).map((line) => {
-    const cells = parseLine(line);
-    const get = (field: string) =>
-      index[field] >= 0 ? (cells[index[field]] ?? '') : '';
-    const num = (field: string) =>
-      Number((get(field) || '0').replace(',', '.'));
-    const name = get('name');
-    const missing = [];
-    if (!name) missing.push('nome ausente');
-    if (index.kcal < 0) missing.push('coluna kcal ausente');
-    if (index.protein < 0) missing.push('coluna proteína ausente');
-    if (index.carbs < 0) missing.push('coluna carboidrato ausente');
-    if (index.fat < 0) missing.push('coluna gordura ausente');
-    return {
-      name,
-      category: get('category') || 'Outros',
-      portion: get('portion') || '100 g',
-      kcal: num('kcal'),
-      protein: num('protein'),
-      carbs: num('carbs'),
-      fat: num('fat'),
-      fiber: num('fiber'),
-      valid:
-        missing.length === 0 &&
-        [num('kcal'), num('protein'), num('carbs'), num('fat')].every(
-          (n) => Number.isFinite(n) && n >= 0,
-        ),
-      error: missing.length ? missing.join(', ') : undefined,
-    };
-  });
-}
+// function parseCsv(text: string): ImportRow[] {
+//   const lines = text
+//     .replace(/^\uFEFF/, '')
+//     .split(/\r?\n/)
+//     .filter((line) => line.trim());
+//   if (lines.length < 2) return [];
+//   const parseLine = (line: string) => {
+//     const result: string[] = [];
+//     let current = '',
+//       quoted = false;
+//     for (let i = 0; i < line.length; i++) {
+//       const ch = line[i];
+//       if (ch === '"' && line[i + 1] === '"' && quoted) {
+//         current += '"';
+//         i++;
+//       } else if (ch === '"') quoted = !quoted;
+//       else if ((ch === ',' || ch === ';' || ch === '\t') && !quoted) {
+//         result.push(current.trim());
+//         current = '';
+//       } else current += ch;
+//     }
+//     result.push(current.trim());
+//     return result;
+//   };
+//   const headers = parseLine(lines[0]).map((h) =>
+//     h
+//       .toLocaleLowerCase('pt-BR')
+//       .normalize('NFD')
+//       .replace(/[\u0300-\u036f]/g, '')
+//       .replace(/[^a-z0-9]/g, ''),
+//   );
+//   const aliases: Record<string, string[]> = {
+//     name: ['nome', 'alimento', 'name', 'food'],
+//     category: ['categoria', 'category', 'grupo'],
+//     portion: ['porcao', 'porcaoreferencia', 'medida', 'serving'],
+//     kcal: ['kcal', 'energia', 'calorias', 'energy'],
+//     protein: ['proteina', 'proteinas', 'protein'],
+//     carbs: ['carboidrato', 'carboidratos', 'carbs', 'carbohydrate'],
+//     fat: ['gordura', 'gorduras', 'fat', 'lipidios'],
+//     fiber: ['fibra', 'fibras', 'fiber'],
+//   };
+//   const index: Record<string, number> = {};
+//   for (const [field, names] of Object.entries(aliases)) {
+//     index[field] = headers.findIndex((h) => names.includes(h));
+//   }
+//   return lines.slice(1).map((line) => {
+//     const cells = parseLine(line);
+//     const get = (field: string) =>
+//       index[field] >= 0 ? (cells[index[field]] ?? '') : '';
+//     const num = (field: string) =>
+//       Number((get(field) || '0').replace(',', '.'));
+//     const name = get('name');
+//     const missing = [];
+//     if (!name) missing.push('nome ausente');
+//     if (index.kcal < 0) missing.push('coluna kcal ausente');
+//     if (index.protein < 0) missing.push('coluna proteína ausente');
+//     if (index.carbs < 0) missing.push('coluna carboidrato ausente');
+//     if (index.fat < 0) missing.push('coluna gordura ausente');
+//     return {
+//       name,
+//       category: get('category') || 'Outros',
+//       portion: get('portion') || '100 g',
+//       kcal: num('kcal'),
+//       protein: num('protein'),
+//       carbs: num('carbs'),
+//       fat: num('fat'),
+//       fiber: num('fiber'),
+//       valid:
+//         missing.length === 0 &&
+//         [num('kcal'), num('protein'), num('carbs'), num('fat')].every(
+//           (n) => Number.isFinite(n) && n >= 0,
+//         ),
+//       error: missing.length ? missing.join(', ') : undefined,
+//     };
+//   });
+// }
 export default function SettingsPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [notice, setNotice] = useState('');
@@ -144,31 +143,33 @@ export default function SettingsPage() {
       desc: 'Proteção e acesso',
     },
   ];
-  async function handleFile(file?: File) {
-    if (!file) return;
-    setFileName(file.name);
-    setImportMessage('');
-    if (!file.name.toLowerCase().endsWith('.csv')) {
-      setCsvRows([]);
-      setImportMessage('Selecione um arquivo .csv para continuar.');
-      return;
-    }
-    try {
-      const text = await file.text();
-      const rows = parseCsv(text);
-      setCsvRows(rows);
-      setImportMessage(
-        rows.length
-          ? `${rows.length} linhas lidas. Confira a prévia antes de confirmar.`
-          : 'O arquivo não contém linhas de dados para importar.',
-      );
-    } catch {
-      setCsvRows([]);
-      setImportMessage(
-        'Não foi possível ler o arquivo. Confira o formato e tente novamente.',
-      );
-    }
-  }
+
+  // async function handleFile(file?: File) {
+  //   if (!file) return;
+  //   setFileName(file.name);
+  //   setImportMessage('');
+  //   if (!file.name.toLowerCase().endsWith('.csv')) {
+  //     setCsvRows([]);
+  //     setImportMessage('Selecione um arquivo .csv para continuar.');
+  //     return;
+  //   }
+  //   try {
+  //     const text = await file.text();
+  //     const rows = parseCsv(text);
+  //     setCsvRows(rows);
+  //     setImportMessage(
+  //       rows.length
+  //         ? `${rows.length} linhas lidas. Confira a prévia antes de confirmar.`
+  //         : 'O arquivo não contém linhas de dados para importar.',
+  //     );
+  //   } catch {
+  //     setCsvRows([]);
+  //     setImportMessage(
+  //       'Não foi possível ler o arquivo. Confira o formato e tente novamente.',
+  //     );
+  //   }
+  // }
+
   function applyImport() {
     if (!validRows.length) return;
     setImporting(true);
@@ -187,7 +188,6 @@ export default function SettingsPage() {
   }
   return (
     <div className="min-h-screen">
-      <SideBar mobileNavOpen={menuOpen} setMobileNavOpen={setMenuOpen} />
       <main className="main">
         <header className="topbar">
           <div className="flex items-center gap-3">
@@ -495,7 +495,8 @@ export default function SettingsPage() {
                         type="file"
                         accept=".csv,text/csv"
                         className="sr-only"
-                        onChange={(e) => handleFile(e.target.files?.[0])}
+                        // onChange={(e) => handleFile(e.target.files?.[0])}
+                        onChange={(e) => {alert('Função de importação desativada nesta demonstração.'); e.target.value = '';}}
                       />
                     </label>
                     {fileName && (
