@@ -648,7 +648,7 @@ export default function PatientsPage() {
               <Button
                 variant="primary"
                 onClick={() => {
-                  router.push("/app/paciente")
+                  router.push(`/app/paciente?id=${selectedPatient.id}`)
                 }}
               >
                 <FileText size={14} />

@@ -42,6 +42,8 @@ import { useModalStore } from '../../../stores/modal-store';
 import { apiRequest } from '../../../lib/api';
 import { useAuthStore } from '../../../stores/auth-store';
 import { getInitials } from '../../../utils/name';
+import { usePatientStore } from '../../../stores/patient-store';
+import { useSearchParams } from 'next/navigation';
 
 type Tab = 'Resumo' | 'Anamnese' | 'Antropometria' | 'Plano alimentar';
 interface Food {
@@ -258,7 +260,7 @@ export default function PatientDetailPage() {
     calf: 13,
   });
   const [boneDiameter, setBoneDiameter] = useState({ wrist: 5.8, femur: 9.4 });
-
+  const [patient, setPatient] = useState();
   const setConfig = useHeaderStore((state) => state.setConfig);
   const reset = useHeaderStore((state) => state.reset);
 
@@ -266,6 +268,9 @@ export default function PatientDetailPage() {
   const closeModal = useModalStore((state) => state.closeModal);
   const setUser = useAuthStore((state) => state.setUser);
   const user = useAuthStore((state) => state.user);
+
+  const patientId = useSearchParams()?.get('id');
+  console.log('patientId', patientId);
 
   useEffect(() => {
     setConfig({
@@ -468,22 +473,22 @@ export default function PatientDetailPage() {
       <main className="main">
         <div className="content">
           <div className="mb-5 flex items-center gap-2 text-[11px] text-[#819087] print:hidden">
-            <Link href="/pacientes" className="hover:text-[#287653]">
+            <Link href="/app/pacientes" className="hover:text-[#287653]">
               Pacientes
             </Link>
             <ChevronRight size={13} />
-            <span className="text-[#3e5547]">Mariana Costa</span>
+            <span className="text-[#3e5547]">Elienai Soares</span>
           </div>
           <section className="panel p-4 mb-5 overflow-hidden">
             <div className="flex flex-col gap-5 p-5 md:flex-row md:items-center md:justify-between md:p-6">
               <div className="flex items-start gap-4">
                 <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-[#e0eee2] text-[18px] font-bold text-[#36734f]">
-                  MC
+                  ES
                 </div>
                 <div>
                   <div className="mb-1 flex flex-wrap items-center gap-2">
                     <h1 className="text-[22px] font-bold tracking-[-.7px]">
-                      Mariana Costa
+                      Elienai Soares
                     </h1>
                     <span className="pill pill-success">Paciente ativa</span>
                     <span className="pill">Particular</span>
