@@ -1,31 +1,37 @@
-import type { AuthRepository } from "../repositories/authRepository.js";
 import type { PatientCreateInput, PatientUpdateInput } from "@nutriapp/shared";
+import { SessionRepository } from "../repositories/sessionRepository.js";
+import { PatientRepository } from "../repositories/patientRepository.js";
 
-export function createPatientService(repository: AuthRepository) {
+type PatientServiceDependencies = {
+  sessions: SessionRepository;
+  patients: PatientRepository;
+};
+
+export function createPatientService({ sessions, patients }: PatientServiceDependencies) {
   return {
     async list(sessionId: string, search?: string, includeArchived = false) {
-      const nutritionistId = await repository.findSessionOwner(sessionId);
-      return nutritionistId ? repository.listPatients(nutritionistId, search, includeArchived) : null;
+      const nutritionistId = await sessions.findSessionOwner(sessionId);
+      return nutritionistId ? patients.listPatients(nutritionistId, search, includeArchived) : null;
     },
     async create(sessionId: string, input: PatientCreateInput) {
-      const nutritionistId = await repository.findSessionOwner(sessionId);
+      const nutritionistId = await sessions.findSessionOwner(sessionId);
       if (!nutritionistId) return null;
-      return repository.createPatient(nutritionistId, toCreateData(input));
+      return patients.createPatient(nutritionistId, toCreateData(input));
     },
     async get(sessionId: string, patientId: string) {
-      const nutritionistId = await repository.findSessionOwner(sessionId);
-      return nutritionistId ? repository.findPatient(nutritionistId, patientId) : null;
+      const nutritionistId = await sessions.findSessionOwner(sessionId);
+      return nutritionistId ? patients.findPatient(nutritionistId, patientId) : null;
     },
     async update(sessionId: string, patientId: string, input: PatientUpdateInput) {
-      const nutritionistId = await repository.findSessionOwner(sessionId);
+      const nutritionistId = await sessions.findSessionOwner(sessionId);
       if (!nutritionistId) return null;
-      const updated = await repository.updatePatient(nutritionistId, patientId, toUpdateData(input));
-      return updated ? repository.findPatient(nutritionistId, patientId) : undefined;
+      const updated = await patients.updatePatient(nutritionistId, patientId, toUpdateData(input));
+      return updated ? patients.findPatient(nutritionistId, patientId) : undefined;
     },
     async archive(sessionId: string, patientId: string) {
-      const nutritionistId = await repository.findSessionOwner(sessionId);
+      const nutritionistId = await sessions.findSessionOwner(sessionId);
       if (!nutritionistId) return null;
-      return (await repository.archivePatient(nutritionistId, patientId)) || undefined;
+      return (await patients.archivePatient(nutritionistId, patientId)) || undefined;
     }
   };
 }

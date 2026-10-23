@@ -108,3 +108,7 @@ export { LOCAIS, ATENDIMENTOS, TIPOS_CONSULTA, STATUS_AGENDAMENTO } from "./type
 // patient types
 export type { PatientCreateInput, PatientUpdateInput, PatientSelect, PatientRecord } from "./types/patient.js";
 export { patientIdSchema, patientUpdateSchema, patientCreateSchema } from "./types/patient.js";
+
+// food types
+export type { FoodRecord, FoodCreateInput, FoodUpdateInput } from "./types/food.js";
+export { foodIdSchema, foodUpdateSchema, foodCreateSchema } from "./types/food.js";

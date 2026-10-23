@@ -1,4 +1,6 @@
-import type { AuthPrisma } from "../types/auth.js";
+import type { PrismaClient } from "@prisma/client";
+
+type Db = Pick<PrismaClient, "sessao">;
 
 export type SessionRepository = {
   createSession: (data: {
@@ -18,7 +20,7 @@ export type SessionRepository = {
   revokeSessions: (nutricionistaId: string) => Promise<number>;
 };
 
-export function createSessionRepository(prisma: AuthPrisma): SessionRepository {
+export function createSessionRepository(prisma: Db): SessionRepository {
   return {
     createSession: (data) => prisma.sessao.create({ data }),
 

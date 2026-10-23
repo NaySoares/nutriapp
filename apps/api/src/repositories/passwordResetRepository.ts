@@ -1,4 +1,6 @@
-import type { AuthPrisma } from "../types/auth.js";
+import type { PrismaClient } from "@prisma/client";
+
+type Db = Pick<PrismaClient, "resetSenha">;
 
 export type PasswordResetRepository = {
   createPasswordReset: (data: {
@@ -10,7 +12,7 @@ export type PasswordResetRepository = {
   claimPasswordReset: (id: string, tokenHash: string, usadoEm: Date) => Promise<number>;
 };
 
-export function createPasswordResetRepository(prisma: AuthPrisma): PasswordResetRepository {
+export function createPasswordResetRepository(prisma: Db): PasswordResetRepository {
   return {
     createPasswordReset: (data) => prisma.resetSenha.create({ data }),
 

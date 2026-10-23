@@ -1,7 +1,8 @@
+import type { PrismaClient } from "@prisma/client";
 import { AppointmentCreate, AppointmentRecord, AppointmentStatus, AppointmentUpdate } from "@nutriapp/shared";
-import type { AuthPrisma } from "../types/auth.js";
 
 type AppointmentSelect = { [K in keyof AppointmentRecord]: true };
+type Db = Pick<PrismaClient, "agendamento">;
 
 export type AppointmentFilters = {
   from?: string; // YYYY-MM-DD, inclusivo
@@ -64,7 +65,7 @@ const INITIAL_STATUS: AppointmentStatus = "Aguardando confirmação";
 
 const toMinutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
 
-export function createAppointmentRepository(prisma: AuthPrisma): AppointmentRepository {
+export function createAppointmentRepository(prisma: Db): AppointmentRepository {
   const client = prisma as unknown as AppointmentClient;
 
   const findAppointment: AppointmentRepository["findAppointment"] = (nutritionistId, appointmentId) =>

@@ -6,7 +6,6 @@ import { PrismaClient } from "@prisma/client";
 import { apiErrorSchema, healthResponseSchema } from "@nutriapp/shared";
 import { sendPasswordResetEmail, type PasswordResetEmail } from "./email.js";
 import { createAuthController } from "./controllers/authController.js";
-import { createAuthRepository } from "./repositories/authRepository.js";
 import { createAuthService } from "./services/authService.js";
 import { createProfileController } from "./controllers/profileController.js";
 import { createS3LogoStorage, createProfileService } from "./services/profileService.js";
@@ -14,15 +13,15 @@ import { createPatientController } from "./controllers/patientController.js";
 import { createPatientService } from "./services/patientService.js";
 import { createMeasurementController } from "./controllers/measurementController.js";
 import { createMeasurementService } from "./services/measurementService.js";
-import type { AuthPrisma } from "./types/auth.js";
 import { createAppointmentService } from "./services/appointmentService.js";
 import { createAppointmentController } from "./controllers/appointmentController.js";
+import { createFoodService } from "./services/foodService.js";
+import { createFoodController } from "./controllers/foodController.js";
 import { authenticate } from "./middleware/authenticate.js";
-
-export type { AuthPrisma } from "./types/auth.js";
+import { createRepositories } from "./repositories/index.js";
 
 export function buildApp(
-  prisma: AuthPrisma = new PrismaClient() as unknown as AuthPrisma,
+  prisma = new PrismaClient(),
   sendResetEmail: (email: PasswordResetEmail) => Promise<void> = sendPasswordResetEmail
 ): FastifyInstance {
   const app = Fastify({
@@ -38,13 +37,37 @@ export function buildApp(
   void app.register(cookie);
   void app.register(multipart, { limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
 
+  const repositories = createRepositories(prisma);
 
-  const repository = createAuthRepository(prisma);
-  const auth = createAuthController(createAuthService(repository, sendResetEmail));
-  const profile = createProfileController(createProfileService(repository, createS3LogoStorage()));
-  const patients = createPatientController(createPatientService(repository));
-  const measurements = createMeasurementController(createMeasurementService(repository));
-  const appointments = createAppointmentController(createAppointmentService(repository));
+  const auth = createAuthController(createAuthService({
+    nutritionists: repositories.nutritionists,
+    sessions: repositories.sessions,
+    passwordResets: repositories.passwordResets,
+  }, sendResetEmail));
+  const profile = createProfileController(createProfileService({
+    sessions: repositories.sessions,
+    nutritionists: repositories.nutritionists,
+    settings: repositories.settings
+  }, createS3LogoStorage()));
+  const patients = createPatientController(createPatientService({
+    sessions: repositories.sessions,
+    patients: repositories.patients,
+  }));
+  const measurements = createMeasurementController(createMeasurementService({
+    sessions: repositories.sessions,
+    measurements: repositories.measurements,
+    patients: repositories.patients,
+    settings: repositories.settings,
+  }));
+  const appointments = createAppointmentController(createAppointmentService({
+    sessions: repositories.sessions,
+    appointments: repositories.appointments,
+    patients: repositories.patients,
+  }));
+  const foods = createFoodController(createFoodService({
+    sessions: repositories.sessions,
+    foods: repositories.foods,
+  }));
 
   // Rotas Públicas
   app.get("/health", async () => healthResponseSchema.parse({ status: "ok", service: "api" }));
@@ -80,6 +103,8 @@ export function buildApp(
     privateApp.get("/appointments", appointments.list);
     privateApp.post("/appointments", appointments.create);
     privateApp.patch("/appointments/:id", appointments.update);
+
+    privateApp.get("/foods", foods.list);
   });
 
 

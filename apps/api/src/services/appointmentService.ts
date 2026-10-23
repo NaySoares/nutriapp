@@ -1,16 +1,24 @@
-import type { AuthRepository } from "../repositories/authRepository.js";
 import type { AppointmentCreateInput, AppointmentUpdateInput, } from "@nutriapp/shared";
+import { SessionRepository } from "../repositories/sessionRepository.js";
+import { PatientRepository } from "../repositories/patientRepository.js";
+import { AppointmentRepository } from "../repositories/appointmentRepository.js";
 
-export function createAppointmentService(repository: AuthRepository) {
+type AppointmentServiceDependencies = {
+  sessions: SessionRepository;
+  appointments: AppointmentRepository;
+  patients: PatientRepository;
+};
+
+export function createAppointmentService({sessions, appointments, patients}: AppointmentServiceDependencies) {
   return {
     async list(sessionId: string) {
-      const ownerId = await repository.findSessionOwner(sessionId);
+      const ownerId = await sessions.findSessionOwner(sessionId);
       if (!ownerId) return null;
-      return ownerId ? repository.listAppointments(ownerId) : null;
+      return ownerId ? appointments.listAppointments(ownerId) : null;
     },
 
     async create(sessionId: string, input: AppointmentCreateInput) {
-      const ownerId = await repository.findSessionOwner(sessionId);
+      const ownerId = await sessions.findSessionOwner(sessionId);
       if (!ownerId) return null;
       const patientId = input.pacienteId;
 
@@ -27,7 +35,7 @@ export function createAppointmentService(repository: AuthRepository) {
 
       // se não tem ID é um paciente novo
       if (patientId === undefined) {
-        const newPatient = await repository.createPatient(ownerId, {
+        const newPatient = await patients.createPatient(ownerId, {
           nome: input.paciente,
           dataNascimento: new Date(),
           sexo: "M",
@@ -36,29 +44,29 @@ export function createAppointmentService(repository: AuthRepository) {
 
         if (!newPatient) return undefined;
 
-        const patient = await repository.findPatientOwner(ownerId, newPatient.id);
+        const patient = await patients.findPatientOwner(ownerId, newPatient.id);
         if (!patient) return undefined;
 
-        return repository.createAppointment(ownerId, newPatient.id, { ...dataAppointment });
+        return appointments.createAppointment(ownerId, newPatient.id, { ...dataAppointment });
       }
 
       if (typeof patientId !== "string") {
         return undefined;
       }
 
-      const patient = await repository.findPatientOwner(ownerId, input.pacienteId as string);
+      const patient = await patients.findPatientOwner(ownerId, input.pacienteId as string);
       if (!patient) return undefined;
-      return repository.createAppointment(ownerId, patient.id, { ...dataAppointment });
+      return appointments.createAppointment(ownerId, patient.id, { ...dataAppointment });
     },
 
     async update(sessionId: string, appointmentId: string, input: AppointmentUpdateInput) {
-      const ownerId = await repository.findSessionOwner(sessionId);
+      const ownerId = await sessions.findSessionOwner(sessionId);
       if (!ownerId) return null;
 
-      const existing = await repository.findAppointment(ownerId, appointmentId);
+      const existing = await appointments.findAppointment(ownerId, appointmentId);
       if (!existing) return undefined;
 
-      const patient = await repository.findPatientOwner(ownerId, existing.pacienteId);
+      const patient = await patients.findPatientOwner(ownerId, existing.pacienteId);
       if (!patient) return undefined;
 
       const values = {
@@ -72,11 +80,11 @@ export function createAppointmentService(repository: AuthRepository) {
         status: input.status ?? existing.status,
       } as AppointmentUpdateInput;
 
-      return repository.updateAppointment(ownerId, appointmentId, values);
+      return appointments.updateAppointment(ownerId, appointmentId, values);
     },
     async remove(sessionId: string, appointmentId: string) {
-      const ownerId = await repository.findSessionOwner(sessionId);
-      return ownerId ? repository.deleteMeasurement(ownerId, appointmentId) : null;
+      const ownerId = await sessions.findSessionOwner(sessionId);
+      return ownerId ? appointments.deleteAppointment(ownerId, appointmentId) : null;
     }
   };
 }

@@ -1,3 +1,5 @@
+import type { Prisma } from "@prisma/client";
+
 export type MeasurementSelect = {
   id: true;
   pacienteId: true;
@@ -19,15 +21,15 @@ export type MeasurementRecord = {
   id: string;
   pacienteId: string;
   data: Date;
-  pesoKg: number | string;
-  alturaCm: number | string;
-  circunferencias: unknown;
+  pesoKg: Prisma.Decimal;
+  alturaCm: Prisma.Decimal;
+  circunferencias: Prisma.JsonValue | null;
   nivelAtividade: string;
-  tmbKcal: number | string;
-  getKcal: number | string;
-  imc: number | string;
-  formulaUsada: "mifflin" | "harris_benedict";
-  fatorUsado: number | string;
+  tmbKcal: Prisma.Decimal;
+  getKcal: Prisma.Decimal;
+  imc: Prisma.Decimal;
+  formulaUsada: string;
+  fatorUsado: Prisma.Decimal;
   criadoEm: Date;
   atualizadoEm: Date;
 };

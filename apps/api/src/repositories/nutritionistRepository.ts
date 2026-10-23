@@ -1,5 +1,7 @@
-import type { AuthPrisma } from "../types/auth.js";
-import { asProfileClient } from "./prismaClientsRepository.js";
+
+import type { PrismaClient } from "@prisma/client";
+
+type Db = Pick<PrismaClient, "nutricionista">;
 
 export type NutritionistProfile = {
   id: string;
@@ -16,25 +18,35 @@ export type NutritionistRepository = {
     nome: string;
     fatoresAtividade: Record<string, number>;
   }) => Promise<{ id: string; email: string; nome: string }>;
+
   findNutritionistByEmail: (email: string) => Promise<{
     id: string;
     email: string;
     nome: string;
     senhaHash: string;
   } | null>;
+
   updatePassword: (id: string, senhaHash: string) => Promise<unknown>;
+
   findProfile: (id: string) => Promise<NutritionistProfile | null>;
+
   updateProfile: (
     id: string,
     data: { nome?: string; crn?: string | null; logoPath?: string }
   ) => Promise<NutritionistProfile>;
 };
 
-const profileSelect = { id: true, email: true, nome: true, crn: true, logoPath: true } as const;
+const profileSelect = {
+  id: true,
+  email: true,
+  nome: true,
+  crn: true,
+  logoPath: true,
+} as const;
 
-export function createNutritionistRepository(prisma: AuthPrisma): NutritionistRepository {
-  const profileClient = asProfileClient(prisma);
-
+export function createNutritionistRepository(
+  prisma: Db
+): NutritionistRepository {
   return {
     createNutritionist: (data) =>
       prisma.nutricionista.create({
@@ -45,7 +57,12 @@ export function createNutritionistRepository(prisma: AuthPrisma): NutritionistRe
     findNutritionistByEmail: (email) =>
       prisma.nutricionista.findUnique({
         where: { email },
-        select: { id: true, email: true, nome: true, senhaHash: true },
+        select: {
+          id: true,
+          email: true,
+          nome: true,
+          senhaHash: true,
+        },
       }),
 
     updatePassword: (id, senhaHash) =>
@@ -55,9 +72,16 @@ export function createNutritionistRepository(prisma: AuthPrisma): NutritionistRe
       }),
 
     findProfile: (id) =>
-      profileClient.nutricionista.findUnique({ where: { id }, select: profileSelect }),
+      prisma.nutricionista.findUnique({
+        where: { id },
+        select: profileSelect,
+      }),
 
     updateProfile: (id, data) =>
-      profileClient.nutricionista.update({ where: { id }, data, select: profileSelect }),
+      prisma.nutricionista.update({
+        where: { id },
+        data,
+        select: profileSelect,
+      }),
   };
 }

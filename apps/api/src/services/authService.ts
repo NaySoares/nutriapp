@@ -1,7 +1,9 @@
 import argon2 from "argon2";
 import { createHash, randomBytes } from "node:crypto";
 import type { PasswordResetEmail } from "../email.js";
-import type { AuthRepository } from "../repositories/authRepository.js";
+import { NutritionistRepository } from "../repositories/nutritionistRepository.js";
+import { SessionRepository } from "../repositories/sessionRepository.js";
+import { PasswordResetRepository } from "../repositories/passwordResetRepository.js";
 
 export const ACCESS_TTL_SECONDS = 15 * 60;
 export const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -17,33 +19,39 @@ const defaultActivityFactors = {
   muito_ativo: 1.9
 };
 
-export function createAuthService(repository: AuthRepository, sendResetEmail: (email: PasswordResetEmail) => Promise<void>) {
+type AuthServiceDependencies = {
+  nutritionists: NutritionistRepository;
+  sessions: SessionRepository;
+  passwordResets: PasswordResetRepository;
+};
+
+export function createAuthService({ nutritionists, sessions, passwordResets }: AuthServiceDependencies, sendResetEmail: (email: PasswordResetEmail) => Promise<void>) {
   return {
     async register(input: { email: string; senha: string; nome: string }) {
       const senhaHash = await argon2.hash(input.senha, { type: argon2.argon2id });
-      const nutricionista = await repository.createNutritionist({
+      const nutricionista = await nutritionists.createNutritionist({
         email: input.email.toLowerCase(),
         senhaHash,
         nome: input.nome,
         fatoresAtividade: defaultActivityFactors
       });
-      return { nutricionista, session: await createSession(repository, nutricionista.id) };
+      return { nutricionista, session: await createSession(sessions, nutricionista.id) };
     },
 
     async login(input: { email: string; senha: string }) {
-      const nutricionista = await repository.findNutritionistByEmail(input.email.toLowerCase());
+      const nutricionista = await nutritionists.findNutritionistByEmail(input.email.toLowerCase());
       if (!nutricionista || !(await argon2.verify(nutricionista.senhaHash, input.senha))) return null;
       return {
         nutricionista: { id: nutricionista.id, email: nutricionista.email, nome: nutricionista.nome },
-        session: await createSession(repository, nutricionista.id)
+        session: await createSession(sessions, nutricionista.id)
       };
     },
 
     async requestPasswordReset(email: string) {
-      const nutricionista = await repository.findNutritionistByEmail(email.toLowerCase());
+      const nutricionista = await nutritionists.findNutritionistByEmail(email.toLowerCase());
       if (!nutricionista) return;
       const token = randomBytes(32).toString("base64url");
-      await repository.createPasswordReset({
+      await passwordResets.createPasswordReset({
         nutricionistaId: nutricionista.id,
         tokenHash: tokenHash(token),
         expiraEm: new Date(Date.now() + PASSWORD_RESET_TTL_MS)
@@ -53,20 +61,20 @@ export function createAuthService(repository: AuthRepository, sendResetEmail: (e
 
     async resetPassword(token: string, novaSenha: string) {
       const hash = tokenHash(token);
-      const reset = await repository.findValidPasswordReset(hash);
+      const reset = await passwordResets.findValidPasswordReset(hash);
       if (!reset) return false;
-      if (await repository.claimPasswordReset(reset.id, hash, new Date()) !== 1) return false;
+      if (await passwordResets.claimPasswordReset(reset.id, hash, new Date()) !== 1) return false;
       const senhaHash = await argon2.hash(novaSenha, { type: argon2.argon2id });
-      await repository.updatePassword(reset.nutricionistaId, senhaHash);
-      await repository.revokeSessions(reset.nutricionistaId);
+      await nutritionists.updatePassword(reset.nutricionistaId, senhaHash);
+      await sessions.revokeSessions(reset.nutricionistaId);
       return true;
     },
 
     async refresh(refreshToken: string) {
-      const session = await repository.findValidSession(tokenHash(refreshToken));
+      const session = await sessions.findValidSession(tokenHash(refreshToken));
       if (!session) return null;
       const newRefreshToken = randomBytes(32).toString("base64url");
-      const rotated = await repository.rotateSession(
+      const rotated = await sessions.rotateSession(
         session.id,
         tokenHash(refreshToken),
         tokenHash(newRefreshToken),
@@ -76,14 +84,14 @@ export function createAuthService(repository: AuthRepository, sendResetEmail: (e
     },
 
     revokeSession(sessionId: string | undefined, refreshToken: string | undefined) {
-      if (sessionId) return repository.revokeSession({ id: sessionId });
-      if (refreshToken) return repository.revokeSession({ refreshTokenHash: tokenHash(refreshToken) });
+      if (sessionId) return sessions.revokeSession({ id: sessionId });
+      if (refreshToken) return sessions.revokeSession({ refreshTokenHash: tokenHash(refreshToken) });
       return Promise.resolve(0);
     }
   };
 }
 
-async function createSession(repository: AuthRepository, nutricionistaId: string) {
+async function createSession(repository: SessionRepository, nutricionistaId: string) {
   const refreshToken = randomBytes(32).toString("base64url");
   const session = await repository.createSession({
     nutricionistaId,

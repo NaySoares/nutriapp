@@ -3,57 +3,78 @@ import {
   type MeasurementCreateInput,
   type MeasurementUpdateInput
 } from "@nutriapp/shared";
-import type { AuthRepository } from "../repositories/authRepository.js";
+import { SessionRepository } from "../repositories/sessionRepository.js";
+import { MeasurementRepository } from "../repositories/measurementRepository.js";
+import { PatientRepository } from "../repositories/patientRepository.js";
+import { SettingsRepository } from "../repositories/settingsRepository.js";
 
-export function createMeasurementService(repository: AuthRepository) {
+type MeasurentServiceDependencies = {
+  sessions: SessionRepository;
+  measurements: MeasurementRepository;
+  patients: PatientRepository;
+  settings: SettingsRepository;
+};
+
+export function createMeasurementService({ sessions, measurements, patients, settings }: MeasurentServiceDependencies) {
   return {
     async list(sessionId: string, patientId: string) {
-      const ownerId = await repository.findSessionOwner(sessionId);
-      return ownerId ? repository.listMeasurements(ownerId, patientId) : null;
+      const ownerId = await sessions.findSessionOwner(sessionId);
+      return ownerId ? measurements.listMeasurements(ownerId, patientId) : null;
     },
     async create(sessionId: string, patientId: string, input: MeasurementCreateInput) {
-      const ownerId = await repository.findSessionOwner(sessionId);
+      const ownerId = await sessions.findSessionOwner(sessionId);
       if (!ownerId) return null;
-      const patient = await repository.findPatientOwner(ownerId, patientId);
+      const patient = await patients.findPatientOwner(ownerId, patientId);
       if (!patient) return undefined;
-      const metrics = await calculateMetrics(repository, ownerId, patient, input);
-      return repository.createMeasurement(patientId, { ...toMeasurementData(input), ...metrics });
+      const nutritionistSettings = await settings.findNutritionistSettings(ownerId);
+      if (!nutritionistSettings) return undefined;
+      const metrics = calculateMetrics(nutritionistSettings, patient, input);
+      return measurements.createMeasurement(patientId, { ...toMeasurementData(input), ...metrics });
     },
     async update(sessionId: string, measurementId: string, input: MeasurementUpdateInput) {
-      const ownerId = await repository.findSessionOwner(sessionId);
+      const ownerId = await sessions.findSessionOwner(sessionId);
       if (!ownerId) return null;
-      const existing = await repository.findMeasurement(ownerId, measurementId);
+      const existing = await measurements.findMeasurement(ownerId, measurementId);
       if (!existing) return undefined;
-      const patient = await repository.findPatientOwner(ownerId, existing.pacienteId);
+      const patient = await patients.findPatientOwner(ownerId, existing.pacienteId);
       if (!patient) return undefined;
-      const values = {
-        data: input.data ?? formatDate(existing.data),
-        pesoKg: input.pesoKg ?? Number(existing.pesoKg),
-        alturaCm: input.alturaCm ?? Number(existing.alturaCm),
-        nivelAtividade: input.nivelAtividade ?? existing.nivelAtividade,
-        circunferencias: input.circunferencias ?? existing.circunferencias ?? undefined
-      } as MeasurementCreateInput;
-      const metrics = await calculateMetrics(repository, ownerId, patient, values);
-      return repository.updateMeasurement(ownerId, measurementId, { ...toMeasurementData(values), ...metrics });
+      // const values = {
+      //   data: input.data ?? formatDate(existing.data),
+      //   pesoKg: input.pesoKg ?? Number(existing.pesoKg),
+      //   alturaCm: input.alturaCm ?? Number(existing.alturaCm),
+      //   nivelAtividade: input.nivelAtividade ?? existing.nivelAtividade,
+      //   circunferencias: input.circunferencias ?? existing.circunferencias ?? undefined
+      // } as MeasurementCreateInput;
+      // const nutritionistSettings = await settings.findNutritionistSettings(ownerId);
+      // if (!nutritionistSettings) return undefined;
+
+      return undefined;
+      // const metrics = calculateMetrics(nutritionistSettings, patient, input);
+      // return measurements.updateMeasurement(ownerId, measurementId, { ...toMeasurementData(values), ...metrics });
     },
     async remove(sessionId: string, measurementId: string) {
-      const ownerId = await repository.findSessionOwner(sessionId);
-      return ownerId ? repository.deleteMeasurement(ownerId, measurementId) : null;
+      const ownerId = await sessions.findSessionOwner(sessionId);
+      return ownerId ? measurements.deleteMeasurement(ownerId, measurementId) : null;
     }
   };
 }
 
-async function calculateMetrics(
-  repository: AuthRepository,
-  nutritionistId: string,
+function calculateMetrics(
+  nutritionistSettings: Awaited<
+    ReturnType<SettingsRepository["findNutritionistSettings"]>
+  > & {},
   patient: { dataNascimento: Date; sexo: "M" | "F" },
   input: MeasurementCreateInput
 ) {
-  const settings = await repository.findNutritionistSettings(nutritionistId);
-  if (!settings) return undefined;
-  const formula = settings.formulaPadrao;
-  const factor = settings.fatoresAtividade[input.nivelAtividade];
-  if (!factor) throw new Error(`Fator de atividade não configurado: ${input.nivelAtividade}`);
+  const formula = nutritionistSettings.formulaPadrao;
+  const factor = nutritionistSettings.fatoresAtividade[input.nivelAtividade];
+
+  if (factor === undefined) {
+    throw new Error(
+      `Fator de atividade não configurado: ${input.nivelAtividade}`
+    );
+  }
+
   return calculateNutritionalMetrics({
     pesoKg: input.pesoKg,
     alturaCm: input.alturaCm,

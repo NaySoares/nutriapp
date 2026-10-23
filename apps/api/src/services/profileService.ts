@@ -1,6 +1,8 @@
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { randomUUID } from "node:crypto";
-import type { AuthRepository } from "../repositories/authRepository.js";
+import { SessionRepository } from "../repositories/sessionRepository.js";
+import { NutritionistRepository } from "../repositories/nutritionistRepository.js";
+import { SettingsRepository } from "../repositories/settingsRepository.js";
 
 const MAX_LOGO_BYTES = 5 * 1024 * 1024;
 const allowedTypes = new Map([
@@ -39,33 +41,39 @@ export function createS3LogoStorage(client = new S3Client({ region: process.env.
   } satisfies LogoStorage;
 }
 
-export function createProfileService(repository: AuthRepository, storage: LogoStorage) {
+type ProfileServiceDependencies = {
+  sessions: SessionRepository;
+  nutritionists: NutritionistRepository;
+  settings: SettingsRepository;
+};
+
+export function createProfileService({sessions, nutritionists, settings}: ProfileServiceDependencies, storage: LogoStorage) {
   return {
     async getProfile(sessionId: string) {
-      const nutritionistId = await repository.findSessionOwner(sessionId);
-      return nutritionistId ? repository.findProfile(nutritionistId) : null;
+      const nutritionistId = await sessions.findSessionOwner(sessionId);
+      return nutritionistId ? nutritionists.findProfile(nutritionistId) : null;
     },
     async updateProfile(sessionId: string, data: { nome?: string; crn?: string | null }) {
-      const nutritionistId = await repository.findSessionOwner(sessionId);
+      const nutritionistId = await sessions.findSessionOwner(sessionId);
       if (!nutritionistId) return null;
-      return repository.updateProfile(nutritionistId, data);
+      return nutritionists.updateProfile(nutritionistId, data);
     },
     async uploadLogo(sessionId: string, upload: LogoUpload) {
-      const nutritionistId = await repository.findSessionOwner(sessionId);
+      const nutritionistId = await sessions.findSessionOwner(sessionId);
       if (!nutritionistId) return null;
       const logoPath = await storage.upload({ ...upload, nutritionistId });
-      return repository.updateProfile(nutritionistId, { logoPath });
+      return nutritionists.updateProfile(nutritionistId, { logoPath });
     },
     async getSettings(sessionId: string) {
-      const nutritionistId = await repository.findSessionOwner(sessionId);
-      return nutritionistId ? repository.findSettings(nutritionistId) : null;
+      const nutritionistId = await sessions.findSessionOwner(sessionId);
+      return nutritionistId ? settings.findSettings(nutritionistId) : null;
     },
     async updateSettings(sessionId: string, data: {
       formulaPadrao: "mifflin" | "harris_benedict";
       fatoresAtividade: Record<string, number>;
     }) {
-      const nutritionistId = await repository.findSessionOwner(sessionId);
-      return nutritionistId ? repository.updateSettings(nutritionistId, data) : null;
+      const nutritionistId = await sessions.findSessionOwner(sessionId);
+      return nutritionistId ? settings.updateSettings(nutritionistId, data) : null;
     }
   };
 }

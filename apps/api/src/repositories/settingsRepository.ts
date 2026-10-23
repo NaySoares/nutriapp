@@ -1,6 +1,8 @@
+
+import type { PrismaClient } from "@prisma/client";
 import { DEFAULT_ACTIVITY_FACTORS } from "@nutriapp/shared";
-import type { AuthPrisma } from "../types/auth.js";
-import { asSettingsClient } from "./prismaClientsRepository.js";
+
+type Db = Pick<PrismaClient, "nutricionista">;
 
 export type Formula = "mifflin" | "harris_benedict";
 
@@ -11,43 +13,72 @@ export type NutritionistSettings = {
 
 export type SettingsRepository = {
   /** Retorna os fatores exatamente como estão salvos (sem aplicar os padrões). */
-  findNutritionistSettings: (id: string) => Promise<NutritionistSettings | null>;
+  findNutritionistSettings: (
+    id: string
+  ) => Promise<NutritionistSettings | null>;
+
   /** Retorna os fatores salvos mesclados sobre DEFAULT_ACTIVITY_FACTORS. */
   findSettings: (id: string) => Promise<NutritionistSettings | null>;
-  updateSettings: (id: string, data: NutritionistSettings) => Promise<NutritionistSettings>;
+
+  updateSettings: (
+    id: string,
+    data: NutritionistSettings
+  ) => Promise<NutritionistSettings>;
 };
 
-const settingsSelect = { formulaPadrao: true, fatoresAtividade: true } as const;
+const settingsSelect = {
+  formulaPadrao: true,
+  fatoresAtividade: true,
+} as const;
 
-export function createSettingsRepository(prisma: AuthPrisma): SettingsRepository {
-  const client = asSettingsClient(prisma);
-
+export function createSettingsRepository(
+  prisma: Db
+): SettingsRepository {
   return {
-    findNutritionistSettings: (id) =>
-      client.nutricionista.findUnique({ where: { id }, select: settingsSelect }).then(
-        (settings) =>
-          settings && {
-            formulaPadrao: settings.formulaPadrao,
-            fatoresAtividade: settings.fatoresAtividade as Record<string, number>,
-          }
-      ),
+    findNutritionistSettings: async (id) => {
+      const settings = await prisma.nutricionista.findUnique({
+        where: { id },
+        select: settingsSelect,
+      });
 
-    findSettings: (id) =>
-      client.nutricionista.findUnique({ where: { id }, select: settingsSelect }).then(
-        (settings) =>
-          settings && {
-            formulaPadrao: settings.formulaPadrao,
-            fatoresAtividade: {
-              ...DEFAULT_ACTIVITY_FACTORS,
-              ...(settings.fatoresAtividade as Record<string, number>),
-            },
-          }
-      ),
+      if (!settings) return null;
 
-    updateSettings: (id, data) =>
-      client.nutricionista.update({ where: { id }, data, select: settingsSelect }).then((settings) => ({
+      return {
         formulaPadrao: settings.formulaPadrao,
-        fatoresAtividade: settings.fatoresAtividade as Record<string, number>,
-      })),
+        fatoresAtividade:
+          settings.fatoresAtividade as Record<string, number>,
+      };
+    },
+
+    findSettings: async (id) => {
+      const settings = await prisma.nutricionista.findUnique({
+        where: { id },
+        select: settingsSelect,
+      });
+
+      if (!settings) return null;
+
+      return {
+        formulaPadrao: settings.formulaPadrao,
+        fatoresAtividade: {
+          ...DEFAULT_ACTIVITY_FACTORS,
+          ...(settings.fatoresAtividade as Record<string, number>),
+        },
+      };
+    },
+
+    updateSettings: async (id, data) => {
+      const settings = await prisma.nutricionista.update({
+        where: { id },
+        data,
+        select: settingsSelect,
+      });
+
+      return {
+        formulaPadrao: settings.formulaPadrao,
+        fatoresAtividade:
+          settings.fatoresAtividade as Record<string, number>,
+      };
+    },
   };
 }

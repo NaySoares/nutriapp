@@ -1,7 +1,13 @@
-import type { AuthPrisma } from "../types/auth.js";
 import { PatientRecord, PatientSelect } from "@nutriapp/shared";
+import type { PrismaClient } from "@prisma/client";
+
+type Db = Pick<PrismaClient, "paciente">;
 
 export type PatientRepository = {
+  findPatientOwner: (
+    nutritionistId: string,
+    patientId: string
+  ) => Promise<{ id: string; dataNascimento: Date; sexo: "M" | "F" } | null>;
   createPatient: (
     nutritionistId: string,
     data: {
@@ -41,8 +47,30 @@ const patientSelect: PatientSelect = {
   atualizadoEm: true,
 };
 
-export function createPatientRepository(prisma: AuthPrisma): PatientRepository {
+const ownerSelect = {
+  id: true,
+  dataNascimento: true,
+  sexo: true,
+} as const;
+
+export function createPatientRepository(prisma: Db): PatientRepository {
+
+  const findPatientOwner: PatientRepository["findPatientOwner"] = (
+    nutritionistId,
+    patientId
+  ) =>
+    prisma.paciente.findFirst({
+      where: {
+        id: patientId,
+        nutricionistaId: nutritionistId,
+      },
+      select: ownerSelect,
+    });
+
+
   return {
+    findPatientOwner,
+
     createPatient: (nutritionistId, data) =>
       prisma.paciente.create({
         data: { nutricionistaId: nutritionistId, ...data },
