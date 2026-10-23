@@ -17,6 +17,7 @@ import {
   UserRound,
   SlidersHorizontal,
   RotateCcw,
+  FileText,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useHeaderStore } from '../../../stores/header-store';
@@ -27,6 +28,8 @@ import { toast } from 'sonner';
 import { AppointmentRecord } from '@nutriapp/shared';
 import { getInitials } from '../../../utils/name';
 import { convertDateFromApi, DAYS, DAYS_SHORT, getWeekDates } from '../../../utils/date';
+import { Button } from '../../../components/ui/button';
+import { useRouter } from 'next/navigation';
 
 type AppointmentStatus =
   | 'Confirmada'
@@ -49,7 +52,6 @@ interface Appointment {
   note?: string;
   color: string;
 }
-
 
 function statusToColor(status: AppointmentStatus): string {
   switch (status) {
@@ -97,7 +99,6 @@ export default function AgendaPage() {
   const [selectedAppointment, setSelectedAppointment] =
     useState<AppointmentRecord | null>(null);
   const [notice, setNotice] = useState('');
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [newDate, setNewDate] = useState('2026-10-19');;
   const [loading, setLoading] = useState(false);
 
@@ -105,6 +106,8 @@ export default function AgendaPage() {
   const reset = useHeaderStore((state) => state.reset);
   const openModal = useModalStore((state) => state.openModal);
   const closeModal = useModalStore((state) => state.closeModal);
+
+  const router = useRouter();
 
   useEffect(() => {
     setLoading(true);
@@ -753,13 +756,22 @@ export default function AgendaPage() {
                 sobre o próximo contato.
               </p>
             </div>
-            <div className="mt-5 flex justify-end border-t border-[#edf1ed] pt-4">
-              <button
-                className="agenda-secondary"
+            <div className="mt-5 flex justify-end border-t border-[#edf1ed] pt-4 gap-2">
+              <Button
+                variant="secondary"
                 onClick={() => setSelectedAppointment(null)}
               >
                 Fechar
-              </button>
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  router.push("/app/paciente")
+                }}
+              >
+                <FileText size={14} />
+                Abrir Ficha
+              </Button>
             </div>
           </div>
         </div>

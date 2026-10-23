@@ -65,7 +65,7 @@ export default function DashboardPage() {
   );
   const [appointments, setAppointments] = useState<AppointmentRecord[]>([]);
   const [notice, setNotice] = useState('');
-
+  const [selectedDate, setSelectedDate] = useState(new Date().toLocaleDateString('en-CA'));
   const [weekOffset, setWeekOffset] = useState(0);
   const [loading, setLoading] = useState(true);
 
