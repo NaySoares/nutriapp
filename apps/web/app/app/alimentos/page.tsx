@@ -7,6 +7,10 @@ import { useModalStore } from "../../../stores/modal-store";
 import { toast } from "sonner";
 import { FormsNewFood } from "../../../components/alimentos/forms-foods";
 import { ModalDelete } from "../../../components/ui/modal";
+import { apiRequest } from "../../../lib/api";
+import { FoodRecord } from "@nutriapp/shared";
+import { FoodPage } from "../../../../../packages/shared/dist/types/food";
+import { convertDateFromApi } from "../../../utils/date";
 
 type Food = {
   id: number;
@@ -36,10 +40,12 @@ const seedFoods: Food[] = [
 const categories = ["Frutas", "Verduras e legumes", "Cereais e derivados", "Leguminosas", "Carnes e ovos", "Leites e derivados", "Óleos e gorduras", "Outros"];
 
 export default function FoodsPage() {
-  const [foods, setFoods] = useState(seedFoods);
+  const [foods, setFoods] = useState<FoodRecord[]>([]);
   const [query, setQuery] = useState("");
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 50, totalItems: 0 });
   const [category, setCategory] = useState("Todas as categorias");
   const [source, setSource] = useState("Todas as origens");
+  const [loading, setLoading] = useState(false);
 
   const setConfig = useHeaderStore((state) => state.setConfig);
   const reset = useHeaderStore((state) => state.reset);
@@ -65,20 +71,33 @@ export default function FoodsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setConfig, reset]);
 
+  useEffect(() => {
+      setLoading(true);
+      apiRequest<FoodPage>("/foods").then((response) => {
+        setPagination({ page: response.alimentos.page, pageSize: response.alimentos.pageSize, totalItems: response.alimentos.total });
+        setFoods(response.alimentos.items);
+      }).catch((reason) => {
+        toast.error(reason instanceof Error ? reason.message : "Erro ao buscar dados.");
+      }).finally(() => {
+        setLoading(false);
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
   const filtered = useMemo(() => {
     return (
-      foods.filter(f => f.name.toLocaleLowerCase("pt-BR")
+      foods.filter(f => f.nome.toLocaleLowerCase("pt-BR")
         .includes(query.toLocaleLowerCase("pt-BR")))
-        .filter(f => category === "Todas as categorias" || f.category === category)
-        .filter(f => source === "Todas as origens" || f.source === source)
-        .sort((a,b) => a.name.localeCompare(b.name,"pt-BR"))
+        .filter(f => category === "Todas as categorias" || f.grupo === category)
+        .filter(f => source === "Todas as origens" || f.fonte === source)
+        .sort((a,b) => a.nome.localeCompare(b.nome,"pt-BR"))
     );
   }, [foods, query, category, source]);
 
-  function removeFood(food: Food) {
+  function removeFood(food: FoodRecord) {
     setFoods(current => current.filter(f => f.id !== food.id));
     closeModal();
-    toast.success(`Alimento ${food.name} removido com sucesso.`);
+    toast.success(`Alimento ${food.nome} removido com sucesso.`);
   }
 
   return (
@@ -104,7 +123,7 @@ export default function FoodsPage() {
             Base atualizada
           </div>
           <div className="mt-1 text-[10px] text-[#87948b]">
-            {foods.length} alimentos cadastrados
+            {pagination.totalItems} alimentos cadastrados
           </div>
         </div>
       </div>
@@ -117,7 +136,7 @@ export default function FoodsPage() {
               Alimentos cadastrados
             </h2>
             <p className="section-subtitle">
-              Valores de referência por porção indicada · {filtered.length} resultados
+              Valores de referência por porção indicada · {filtered.length} resultados listados
             </p>
           </div>
           <label className="flex items-center gap-2 rounded-lg border border-[#e7ece7] bg-[#fbfcfb] px-3 py-2.5 text-[#98a39b] sm:w-[280px]">
@@ -203,50 +222,50 @@ export default function FoodsPage() {
               <tr key={f.id} className="group hover:bg-[#fbfdfb]">
                 <td className="px-5 py-3.5">
                   <div className="text-[12px] font-semibold text-[#304638]">
-                    {f.name}
+                    {f.nome}
                   </div>
                   <div className="mt-1 text-[10px] text-[#8a978f]">
-                    Atualizado: {f.updated}
+                    Atualizado: {convertDateFromApi(f.atualizadoEm.toString())}
                   </div>
                 </td>
                 <td className="px-4 py-3.5 text-[11px] text-[#53665a]">
-                  {f.category}
+                  {f?.grupo ?? "—"}
                 </td>
                 <td className="px-4 py-3.5 text-[11px] text-[#53665a]">
-                  {f.portion}
+                  100g
                 </td>
                 <td className="px-4 py-3.5 text-[12px] font-semibold text-[#304638]">
-                  {f.kcal}
+                  {f.energiaKcal}
                 </td>
                 <td className="px-4 py-3.5 text-[11px] text-[#53665a]">
-                  {f.protein} g
+                  {f.proteinaG} g
                 </td>
                 <td className="px-4 py-3.5 text-[11px] text-[#53665a]">
-                  {f.carbs} g
+                  {f.carboidratoG} g
                 </td>
                 <td className="px-4 py-3.5 text-[11px] text-[#53665a]">
-                  {f.fat} g
+                  {f.lipidiosG} g
                 </td>
                 <td className="px-4 py-3.5">
-                  <span className={`pill ${f.source==="API"?"bg-[#edf2fa] text-[#5576a3]":f.source==="Manual"?"bg-[#e9f5ed] text-[#287653]":"bg-[#fff5e6] text-[#a8752c]"}`}>
-                    {f.source}
+                  <span className={`pill ${f.fonte==="API"?"bg-[#edf2fa] text-[#5576a3]":f.fonte==="Manual"?"bg-[#e9f5ed] text-[#287653]":"bg-[#fff5e6] text-[#a8752c]"}`}>
+                    {f.fonte}
                   </span>
                 </td>
                 <td className="px-4 py-3.5">
                   <div className="flex gap-1">
                     <button
-                      aria-label={`Editar ${f.name}`}
+                      aria-label={`Editar ${f.nome}`}
                       onClick={()=> toast.info("Edição de alimentos não está disponível nesta demonstração.")}
                       className="rounded-lg p-2 text-[#819087] hover:bg-white hover:text-[#287653]"
                     >
                       <Pencil size={14}/>
                     </button>
                     <button
-                      aria-label={`Remover ${f.name}`}
+                      aria-label={`Remover ${f.nome}`}
                       onClick={() => openModal(
                         <ModalDelete
                           title="Remover Alimento"
-                          description={`Tem certeza que deseja remover ${f.name}?`}
+                          description={`Tem certeza que deseja remover ${f.nome}?`}
                           onConfirm={() => removeFood(f)}
                           onCancel={() => closeModal()}
                         />
@@ -272,7 +291,7 @@ export default function FoodsPage() {
         }
       </div>
       <div className="flex flex-col gap-2 border-t border-[#edf1ed] px-5 py-3.5 sm:flex-row sm:justify-between">
-        <p className="text-[10px] text-[#87948b]">Exibindo {filtered.length} de {foods.length} alimentos</p><p className="text-[10px] text-[#9aa59d]">Confira a fonte e a porção antes de usar em orientações clínicas.</p>
+        <p className="text-[10px] text-[#87948b]">Exibindo {filtered.length} de {pagination.totalItems} alimentos</p><p className="text-[10px] text-[#9aa59d]">Confira a fonte e a porção antes de usar em orientações clínicas.</p>
       </div>
     </section>
     </div>
