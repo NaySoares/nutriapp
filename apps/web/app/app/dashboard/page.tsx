@@ -6,8 +6,6 @@ import {
   ArrowUpRight,
   CalendarDays,
   Check,
-  ChevronLeft,
-  ChevronRight,
   CircleAlert,
   Clock3,
   MoreHorizontal,
@@ -25,11 +23,22 @@ import { useModalStore } from '../../../stores/modal-store';
 import { getCurrentDay, getCurrentDayWithoutYear } from '../../../utils/date';
 import { apiRequest } from '../../../lib/api';
 import { useAuthStore } from '../../../stores/auth-store';
-import { User } from '@nutriapp/shared';
+import { ATENDIMENTOS, User } from '@nutriapp/shared';
 import { getInitials } from '../../../utils/name';
 import { FormsNewAppointment } from '../../../components/app/forms-appointment';
 import { AppointmentRecord, } from "@nutriapp/shared";
+import { convertDateFromApi } from '../../../utils/date';
+import {
+  DayStrip,
+  WeekNavigatorMinimal,
+  formatDayLabel,
+  groupByDay,
+  statusStyles,
+  useWeekNavigation,
+} from '../../../components/week-calendar';
 
+const FILTERS = ['Todos', ...ATENDIMENTOS] as const;
+type Filter = (typeof FILTERS)[number];
 interface TKpiCard {
   icon: React.ReactNode;
   iconBg: string;
@@ -48,9 +57,6 @@ interface TFallowup {
   onClick: () => void;
 }
 
-type MeResponse = { nutricionista: User };
-type AppointmentsResponse = { agendamentos: AppointmentRecord[] };
-
 const clinical = [
   { label: 'Eutrofia', count: 34, color: '#2d8057', percent: 28 },
   { label: 'Sobrepeso', count: 27, color: '#78b78c', percent: 22 },
@@ -60,13 +66,11 @@ const clinical = [
 ];
 
 export default function DashboardPage() {
-  const [filter, setFilter] = useState<'Todos' | 'Particular' | 'Hospital'>(
-    'Todos',
-  );
+
+  const [filter, setFilter] = useState<Filter>('Todos');
   const [appointments, setAppointments] = useState<AppointmentRecord[]>([]);
+
   const [notice, setNotice] = useState('');
-  const [selectedDate, setSelectedDate] = useState(new Date().toLocaleDateString('en-CA'));
-  const [weekOffset, setWeekOffset] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const router = useRouter();
@@ -78,25 +82,30 @@ export default function DashboardPage() {
   const setUser = useAuthStore((state) => state.setUser);
   const user = useAuthStore((state) => state.user);
 
+  const week = useWeekNavigation();
+
+  useEffect(() => {
+    let ignore = false;
+    apiRequest<{ agendamentos: AppointmentRecord[] }>('/appointments', {
+      params: { from: week.weekDates[0], to: week.weekDates[6] },
+    })
+      .then((response) => { if (!ignore) setAppointments(response.agendamentos); })
+      .catch((reason) => toast.error(reason instanceof Error ? reason.message : 'Erro ao buscar dados.'));
+    return () => { ignore = true; };
+  }, [week.weekDates]);
+
+  const byDay = useMemo(() => groupByDay(appointments), [appointments]);
+  const dayAppointments = useMemo(
+    () => (byDay.get(week.selectedDate) ?? []).filter((a) => filter === 'Todos' || a.atendimento === filter),
+    [byDay, week.selectedDate, filter],
+  );
 
   useEffect(() => {
     setLoading(true);
-    apiRequest<MeResponse>("/me").then(({ nutricionista }) => {
+    apiRequest<{nutricionista: User }>("/me").then(({ nutricionista }) => {
       setUser(nutricionista);
     }).catch((reason) => {
       toast.error(reason instanceof Error ? reason.message : "Faça login para acessar o perfil.");
-    }).finally(() => {
-      setLoading(false);
-    });
-// eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    setLoading(true);
-    apiRequest<AppointmentsResponse>("/appointments").then((response) => {
-      setAppointments(response.agendamentos);
-    }).catch((reason) => {
-      toast.error(reason instanceof Error ? reason.message : "Erro ao buscar dados.");
     }).finally(() => {
       setLoading(false);
     });
@@ -122,25 +131,6 @@ export default function DashboardPage() {
     return reset;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setConfig, reset]);
-
-  const filteredAppointments = useMemo(
-    () =>
-      appointments.filter(
-        (a) =>
-          (filter === 'Todos' || a.atendimento === filter) &&
-          a.pacienteNome.toLowerCase(),
-      ),
-    [appointments, filter],
-  );
-
-  const weekLabel =
-    weekOffset === 0
-      ? '19 — 23 out, 2026'
-      : weekOffset > 0
-        ? '26 — 30 out, 2026'
-        : '12 — 16 out, 2026';
-
-
 
   const goTo = (href: string) => {
     router.push(href);
@@ -223,6 +213,11 @@ export default function DashboardPage() {
     )
   }
 
+  function appointmentsOnThisWeek(appointments: AppointmentRecord[]) {
+    const weekDates = week.weekDates;
+    return appointments.filter((a) => weekDates.includes(convertDateFromApi(a.data)));
+  }
+
   return (
     <div className="min-h-screen">
       <main className="main">
@@ -259,13 +254,8 @@ export default function DashboardPage() {
               icon={<CalendarDays size={17} />}
               iconBg="bg-[#e9f5ed] text-[#2d8057]"
               label="Consultas nesta semana"
-              value="18"
-              foot={
-                <>
-                  <span className="font-semibold text-[#328258]">+3</span>
-                  <span> em relação à semana passada</span>
-                </>
-              }
+              value={appointmentsOnThisWeek(appointments).length.toString()}
+              foot={<span>consulte a agenda para detalhes</span>}
             />
             <KpiCard
               icon={<Users size={17} />}
@@ -324,84 +314,48 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button
-                    className="rounded-md border border-[#e9eee9] p-1.5 text-[#78877e]"
-                    aria-label="Semana anterior"
-                    onClick={() => setWeekOffset((v) => Math.max(-1, v - 1))}
-                  >
-                    <ChevronLeft size={15} />
-                  </button>
-                  <span className="px-2 text-[10px] font-semibold text-[#637369]">
-                    {weekLabel}
-                  </span>
-                  <button
-                    className="rounded-md border border-[#e9eee9] p-1.5 text-[#78877e]"
-                    aria-label="Próxima semana"
-                    onClick={() => setWeekOffset((v) => Math.min(1, v + 1))}
-                  >
-                    <ChevronRight size={15} />
-                  </button>
+                  <WeekNavigatorMinimal
+                    rangeLabel={week.rangeLabel}
+                    onPrevious={week.goToPreviousWeek}
+                    onNext={week.goToNextWeek}
+                    onToday={week.goToToday}
+                  />
                 </div>
               </div>
-              <div className="mb-4 flex gap-1.5 overflow-x-auto pb-1">
-                {[
-                  { d: 'SEG', n: '19', active: true },
-                  { d: 'TER', n: '20' },
-                  { d: 'QUA', n: '21' },
-                  { d: 'QUI', n: '22' },
-                  { d: 'SEX', n: '23' },
-                ].map((day) => (
-                  <button
-                    key={day.d}
-                    onClick={() =>
-                      setNotice(
-                        `${day.d}, ${day.n} de outubro: agenda de demonstração selecionada.`,
-                      )
-                    }
-                    className={`min-w-[51px] flex-1 rounded-lg border px-2 py-2.5 text-center ${day.active ? 'border-[#2d8057] bg-[#eaf5ed]' : 'border-[#edf1ed] bg-white hover:bg-[#f7faf7]'}`}
-                  >
-                    <div
-                      className={`text-[9px] font-bold tracking-wide ${day.active ? 'text-[#2d8057]' : 'text-[#9aa69e]'}`}
-                    >
-                      {day.d}
-                    </div>
-                    <div
-                      className={`mt-1 text-[15px] font-bold ${day.active ? 'text-[#245c3d]' : 'text-[#516459]'}`}
-                    >
-                      {day.n}
-                    </div>
-                  </button>
-                ))}
-              </div>
+              <DayStrip
+                weekDates={week.weekDates}
+                selectedDate={week.selectedDate}
+                today={week.today}
+                onSelectDate={week.setSelectedDate}
+                hideWeekends={true}
+              />
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <div className="text-[11px] font-semibold text-[#5f7065]">
-                  {getCurrentDayWithoutYear()}
-                </div>
+                <div className="text-[11px] font-semibold text-[#5f7065]">{formatDayLabel(week.selectedDate)}</div>
                 <div className="flex gap-1">
-                  {(['Todos', 'Particular', 'Hospital'] as const).map((f) => (
+                  {FILTERS.map((f) => (
                     <button
                       key={f}
+                      type="button"
                       onClick={() => setFilter(f)}
-                      className={`rounded-md px-2 py-1.5 text-[9px] font-semibold ${filter === f ? 'bg-[#eaf5ed] text-[#2b754e]' : 'text-[#89968d] hover:bg-[#f5f8f5]'}`}
+                      className={`rounded-md px-2 py-1.5 text-[9px] font-semibold ${
+                        filter === f ? 'bg-[#eaf5ed] text-[#2b754e]' : 'text-[#89968d] hover:bg-[#f5f8f5]'
+                      }`}
                     >
                       {f}
                     </button>
                   ))}
                 </div>
               </div>
+
               <div>
-                {filteredAppointments.length ? (
-                  filteredAppointments.map((a, i) => (
-                    <div key={`${a.pacienteNome}-${a.horario}`} className="table-row">
+                {dayAppointments.length ? (
+                  dayAppointments.map((a) => (
+                    <div key={a.id} className="table-row">
                       <div className="flex min-w-0 items-center gap-2.5">
-                        <div className={`avatar alt1`}>{getInitials(a.pacienteNome)}</div>
+                        <div className="avatar alt1">{getInitials(a.pacienteNome)}</div>
                         <div className="min-w-0">
-                          <div className="truncate text-[11px] font-bold text-[#334a3b]">
-                            {a.pacienteNome}
-                          </div>
-                          <div className="mt-1 truncate text-[10px] text-[#8b978f]">
-                            {a.tipoConsulta}
-                          </div>
+                          <div className="truncate text-[11px] font-bold text-[#334a3b]">{a.pacienteNome}</div>
+                          <div className="mt-1 truncate text-[10px] text-[#8b978f]">{a.tipoConsulta}</div>
                         </div>
                       </div>
                       <div className="hide-mobile">
@@ -409,27 +363,15 @@ export default function DashboardPage() {
                           <Clock3 size={12} className="text-[#9aa69e]" />
                           {a.horario}
                         </div>
-                        <div className="mt-1 text-[9px] text-[#9aa69e]">
-                          {a.atendimento}
-                        </div>
+                        <div className="mt-1 text-[9px] text-[#9aa69e]">{a.atendimento}</div>
                       </div>
                       <div className="hide-mobile">
-                        <span
-                          className={`pill ${a.status === 'Confirmada' ? 'bg-[#eaf5ed] text-[#34774f]' : 'bg-[#fff3e4] text-[#a87534]'}`}
-                        >
-                          <span
-                            className={`h-1.5 w-1.5 rounded-full ${a.status === 'Confirmada' ? 'bg-[#4b9868]' : 'bg-[#d7a04e]'}`}
-                          />
-                          {a.status}
-                        </span>
+                        <span className={`appointment-status ${statusStyles[a.status]}`}>{a.status}</span>
                       </div>
                       <button
+                        type="button"
                         aria-label={`Opções para ${a.pacienteNome}`}
-                        onClick={() =>
-                          setNotice(
-                            `Atendimento de ${a.pacienteNome}: abra o prontuário para ver detalhes.`,
-                          )
-                        }
+                        onClick={() => setNotice(`Atendimento de ${a.pacienteNome}: abra o prontuário para ver detalhes.`)}
                         className="justify-self-end rounded-md p-1.5 text-[#9ba69e] hover:bg-[#f5f8f5]"
                       >
                         <MoreHorizontal size={17} />
@@ -438,16 +380,12 @@ export default function DashboardPage() {
                   ))
                 ) : (
                   <div className="py-9 text-center text-[12px] text-[#87948b]">
-                    Nenhum atendimento encontrado para essa busca.
+                    {filter === 'Todos'
+                      ? 'Nenhum atendimento neste dia.'
+                      : `Nenhum atendimento ${filter.toLowerCase()} neste dia.`}
                   </div>
                 )}
               </div>
-              <button
-                onClick={() => goTo('/app/agenda')}
-                className="mt-4 flex w-full items-center justify-center gap-1.5 border-t border-[#eef2ee] pt-4 text-[11px] font-bold text-[#2d8057]"
-              >
-                Ver agenda completa <ArrowRight size={13} />
-              </button>
             </div>
 
             <GraphClinical />

@@ -2,7 +2,6 @@
 
 import {
   CalendarDays,
-  ChevronLeft,
   ChevronRight,
   Clock3,
   ListFilter,
@@ -25,56 +24,21 @@ import { useModalStore } from '../../../stores/modal-store';
 import { FormsNewAppointment } from '../../../components/app/forms-appointment';
 import { apiRequest } from '../../../lib/api';
 import { toast } from 'sonner';
-import { AppointmentRecord } from '@nutriapp/shared';
+import { AppointmentRecord, AppointmentStatus } from '@nutriapp/shared';
 import { getInitials } from '../../../utils/name';
-import { convertDateFromApi, DAYS, DAYS_SHORT, getWeekDates } from '../../../utils/date';
+import { convertDateFromApi, DAYS } from '../../../utils/date';
 import { Button } from '../../../components/ui/button';
 import { useRouter } from 'next/navigation';
 
-type AppointmentStatus =
-  | 'Confirmada'
-  | 'Aguardando confirmação'
-  | 'Concluída'
-  | 'Falta'
-  | 'Cancelada';
+import {
+  WeekCalendar,
+  WeekNavigator,
+  useWeekNavigation,
+  statusStyles,
+  statusToColor,
+} from '../../../components/week-calendar';
+
 type AppointmentType = 'Particular' | 'Hospitalar';
-interface Appointment {
-  id: number;
-  patient: string;
-  initials: string;
-  date: string; // YYYY-MM-DD
-  time: string;
-  duration: number;
-  type: AppointmentType;
-  kind: string;
-  status: AppointmentStatus;
-  location: string;
-  note?: string;
-  color: string;
-}
-
-function statusToColor(status: AppointmentStatus): string {
-  switch (status) {
-    case 'Confirmada':
-      return 'sage';
-    case 'Aguardando confirmação':
-      return 'peach';
-    case 'Concluída':
-        return 'blue';
-    case 'Falta':
-      return 'lilac';
-    case 'Cancelada':
-      return 'gray';
-  }
-}
-
-const statusStyles: Record<AppointmentStatus, string> = {
-  Confirmada: 'status-confirmed',
-  'Aguardando confirmação': 'status-waiting',
-  Concluída: 'status-done',
-  Falta: 'status-missed',
-  Cancelada: 'status-cancelled',
-};
 
 const dateLabel = (date: string) =>
   new Date(`${date}T12:00:00`)
@@ -86,10 +50,10 @@ type AppointmentsResponse = {
   agendamentos: AppointmentRecord[];
 };
 
+const TODAY = new Date().toLocaleDateString('en-CA')
+
 export default function AgendaPage() {
   const [appointments, setAppointments] = useState<AppointmentRecord[]>([]);
-  const [weekOffset, setWeekOffset] = useState(0);
-  const [selectedDate, setSelectedDate] = useState(new Date().toLocaleDateString('en-CA'));
   const [view, setView] = useState<'Semana' | 'Dia'>('Semana');
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('Todos os atendimentos');
@@ -108,6 +72,9 @@ export default function AgendaPage() {
   const closeModal = useModalStore((state) => state.closeModal);
 
   const router = useRouter();
+
+  const { weekDates, selectedDate, setSelectedDate, rangeLabel, goToPreviousWeek, goToNextWeek, goToToday } =
+  useWeekNavigation();
 
   useEffect(() => {
     setLoading(true);
@@ -140,16 +107,6 @@ export default function AgendaPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setConfig, reset]);
 
-  const dates = getWeekDates(new Date().toLocaleDateString('en-CA'));
-  const weekDates = useMemo(
-    () =>
-      dates.map((date) => {
-        const base = new Date(`${date}T12:00:00`);
-        base.setDate(base.getDate() + weekOffset * 7);
-        return `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, '0')}-${String(base.getDate()).padStart(2, '0')}`;
-      }),
-    [weekOffset, dates],
-  );
 
   const filtered = useMemo(
     () =>
@@ -194,14 +151,6 @@ export default function AgendaPage() {
     setTypeFilter('Todos os atendimentos');
     setStatusFilter('Todos os status');
   }
-  function moveWeek(direction: number) {
-    setWeekOffset((current) => current + direction);
-    setSelectedDate((current) => {
-      const base = new Date(`${current}T12:00:00`);
-      base.setDate(base.getDate() + direction * 7);
-      return `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, '0')}-${String(base.getDate()).padStart(2, '0')}`;
-    });
-  }
 
   async function updateStatus(appointment: AppointmentRecord, status: AppointmentStatus) {
     setAppointments((current) =>
@@ -227,8 +176,6 @@ export default function AgendaPage() {
     setSelectedAppointment(null);
   }
 
-  const rangeLabel = `${new Date(`${weekDates[0]}T12:00:00`).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })} – ${new Date(`${weekDates[6]}T12:00:00`).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
-
   return (
     <div className="min-h-screen bg-[#f7f9f6] text-[#263a2f]">
       <main className="agenda-main">
@@ -246,39 +193,12 @@ export default function AgendaPage() {
                 espaços livres para organizar a rotina.
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                className="agenda-secondary"
-                onClick={() => {
-                  setWeekOffset(0);
-                  setSelectedDate('2026-10-19');
-                }}
-              >
-                Hoje
-              </button>
-              <div className="flex items-center rounded-lg border border-[#e4eae4] bg-white">
-                <button
-                  aria-label="Semana anterior"
-                  className="p-2.5 text-[#718278] hover:text-[#287653]"
-                  onClick={() => moveWeek(-1)}
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <button
-                  aria-label="Próxima semana"
-                  className="border-x border-[#edf1ed] px-3 py-2 text-[11px] font-semibold text-[#53665a]"
-                >
-                  {rangeLabel}
-                </button>
-                <button
-                  aria-label="Próxima semana"
-                  className="p-2.5 text-[#718278] hover:text-[#287653]"
-                  onClick={() => moveWeek(1)}
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            </div>
+            <WeekNavigator
+              rangeLabel={rangeLabel}
+              onPrevious={goToPreviousWeek}
+              onNext={goToNextWeek}
+              onToday={goToToday}
+            />
           </div>
 
           <section className="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
@@ -439,85 +359,16 @@ export default function AgendaPage() {
             </div>
 
             {view === 'Semana' ? (
-              <div className="agenda-week-scroll">
-                <div className="agenda-week-grid grid grid-cols-7 divide-x divide-[#edf1ed]">
-                  {weekDates.map((date, index) => {
-                    const dayAppointments = filtered.filter(
-                      (appointment) => convertDateFromApi(appointment.data) === date,
-                    );
-                    const isSelected = selectedDate === date;
-                    return (
-                      <div
-                        key={date}
-                        className={`min-h-[330px] ${isSelected ? 'bg-[#fbfdfb]' : 'bg-white'}`}
-                      >
-                        <button
-                          onClick={() => setSelectedDate(date)}
-                          className={`flex w-full flex-col items-center border-b px-2 py-3 transition ${isSelected ? 'border-[#cde2d2] bg-[#edf6ef]' : 'border-[#edf1ed] hover:bg-[#fafcfa]'}`}
-                        >
-                          <span
-                            className={`text-[10px] font-semibold ${isSelected ? 'text-[#287653]' : 'text-[#87948b]'}`}
-                          >
-                            {DAYS_SHORT[index]}
-                          </span>
-                          <span
-                            className={`mt-1 grid h-8 w-8 place-items-center rounded-full text-[13px] font-bold ${isSelected ? 'bg-[#287653] text-white' : 'text-[#304638]'}`}
-                          >
-                            {new Date(`${date}T12:00:00`).getDate()}
-                          </span>
-                          <span className="mt-1 text-[9px] text-[#87948b]">
-                            {dayAppointments.length}{' '}
-                            {dayAppointments.length === 1
-                              ? 'consulta'
-                              : 'consultas'}
-                          </span>
-                        </button>
-                        <div className="space-y-2 p-2">
-                          {dayAppointments.length ? (
-                            dayAppointments.map((appointment) => (
-                              <button
-                                key={appointment.id}
-                                onClick={() =>
-                                  setSelectedAppointment(appointment)
-                                }
-                                className={`appointment-card ${statusToColor(appointment.status)}`}
-                              >
-                                <div className="mb-1 text-[10px] font-bold text-[#355743]">
-                                  {appointment.horario}
-                                </div>
-                                <div className="mb-2 line-clamp-2 text-[10px] font-semibold leading-[1.45] text-[#405448]">
-                                  {appointment.pacienteNome}
-                                </div>
-                                <div className="mb-2 text-[9px] leading-[1.4] text-[#89968e]">
-                                  {appointment.tipoConsulta}
-                                </div>
-                                <span
-                                  className={`appointment-status ${statusStyles[appointment.status]}`}
-                                >
-                                  {appointment.status ===
-                                  'Aguardando confirmação'
-                                    ? 'Pendente'
-                                    : appointment.status}
-                                </span>
-                              </button>
-                            ))
-                          ) : (
-                            <button
-                              onClick={() => {
-                                toast.error('Função indisponível, use o botão de "Novo Atendimento" no topo da página.');
-                              }}
-                              className="flex min-h-[66px] w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-[#e4ebe5] text-[#a1aca5] transition hover:border-[#9fc5aa] hover:bg-[#f8fbf8] hover:text-[#287653]"
-                            >
-                              <Plus size={15} />
-                              <span className="text-[9px]">Adicionar</span>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              <WeekCalendar
+                weekDates={weekDates}
+                selectedDate={selectedDate}
+                appointments={filtered}
+                onSelectDate={setSelectedDate}
+                onSelectAppointment={setSelectedAppointment}
+                onAddAppointment={() =>
+                  toast.error('Função indisponível, use o botão de "Novo Atendimento" no topo da página.')
+                }
+              />
             ) : (
               <div className="p-4 sm:p-5">
                 <div className="mb-4 flex items-center gap-3">
