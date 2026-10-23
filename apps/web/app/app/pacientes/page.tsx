@@ -2,7 +2,6 @@
 
 import {
   ArrowDownUp,
-  Bell,
   CalendarDays,
   ChevronDown,
   ClipboardList,
@@ -15,21 +14,20 @@ import {
   Clock3,
   CheckCircle2,
   RotateCcw,
-  Eye,
   Phone,
   Mail,
   FileText,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useModalStore } from '../../../stores/modal-store';
 import { useHeaderStore } from '../../../stores/header-store';
-import { FormsNewPatient } from '../../../components/app/forms-patient';
+import { FormsNewPatient } from '../../../components/pacientes/forms-patient';
 import { apiRequest } from '../../../lib/api';
 import { toast } from 'sonner';
 import { PatientRecord } from '@nutriapp/shared';
 import { getInitials } from '../../../utils/name';
 import { useRouter } from 'next/navigation';
-import { FormsNewAppointment } from '../../../components/app/forms-appointment';
+import { FormsNewAppointment } from '../../../components/agenda/forms-appointment';
 import { Button } from '../../../components/ui/button';
 import { useAppointmentContext } from '../../../stores/appointment-store';
 

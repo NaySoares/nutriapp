@@ -21,7 +21,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { useHeaderStore } from '../../../stores/header-store';
 import { useModalStore } from '../../../stores/modal-store';
-import { FormsNewAppointment } from '../../../components/app/forms-appointment';
+import { FormsNewAppointment } from '../../../components/agenda/forms-appointment';
 import { apiRequest } from '../../../lib/api';
 import { toast } from 'sonner';
 import { AppointmentRecord, AppointmentStatus } from '@nutriapp/shared';

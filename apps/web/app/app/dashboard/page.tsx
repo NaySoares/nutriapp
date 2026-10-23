@@ -20,12 +20,12 @@ import { useHeaderStore } from '../../../stores/header-store';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useModalStore } from '../../../stores/modal-store';
-import { getCurrentDay, getCurrentDayWithoutYear } from '../../../utils/date';
+import { getCurrentDay } from '../../../utils/date';
 import { apiRequest } from '../../../lib/api';
 import { useAuthStore } from '../../../stores/auth-store';
 import { ATENDIMENTOS, User } from '@nutriapp/shared';
 import { getInitials } from '../../../utils/name';
-import { FormsNewAppointment } from '../../../components/app/forms-appointment';
+import { FormsNewAppointment } from '../../../components/agenda/forms-appointment';
 import { AppointmentRecord, } from "@nutriapp/shared";
 import { convertDateFromApi } from '../../../utils/date';
 import {
@@ -386,6 +386,12 @@ export default function DashboardPage() {
                   </div>
                 )}
               </div>
+              <button
+                onClick={() => goTo('/app/agenda')}
+                className="mt-4 flex w-full items-center justify-center gap-1.5 border-t border-[#eef2ee] pt-4 text-[11px] font-bold text-[#2d8057]"
+              >
+                Visualizar na agenda <ArrowRight size={13} />
+              </button>
             </div>
 
             <GraphClinical />
