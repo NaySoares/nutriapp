@@ -11,7 +11,17 @@ button { cursor: pointer; }
 ::selection { background: #cce9d5; }
 
 .sidebar { width: 244px; background: #fff; border-right: 1px solid var(--line); position: fixed; inset: 0 auto 0 0; display: flex; flex-direction: column; padding: 27px 16px 18px; z-index: 20; }
-.brand-mark { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; color: white; background: var(--green); }
+
+.brand-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: white;
+  background: var(--green);
+}
+
 .nav-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 13px; border-radius: 10px; font-size: 13px; font-weight: 500; color: #78867e; transition: background .15s, color .15s; text-align: left; }
 .nav-item:hover { background: #f5f8f5; color: var(--green-dark); }
 .nav-item.active { color: var(--green-dark); background: #eaf5ed; font-weight: 650; }
