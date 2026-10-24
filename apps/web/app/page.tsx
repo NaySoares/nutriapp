@@ -44,12 +44,57 @@ const features = [
 
 function FeatureIcon({ name }: { name: string }) {
   const common = "h-6 w-6";
-  if (name === "people") return <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="9" cy="8" r="3.2" /><path d="M3 20v-1.5A4.5 4.5 0 0 1 7.5 14h3A4.5 4.5 0 0 1 15 18.5V20M16 5.2a3.2 3.2 0 0 1 0 6.2M18 14.5a4.5 4.5 0 0 1 3 4.2V20" strokeLinecap="round" /></svg>;
-  if (name === "calendar") return <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><rect x="3" y="5" width="18" height="16" rx="3" /><path d="M16 3v4M8 3v4M3 10h18M8 14h3M8 17h6" strokeLinecap="round" /></svg>;
-  if (name === "plate") return <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="13" r="8" /><circle cx="12" cy="13" r="4.5" /><path d="M4 3v5M2 5.5h4M20 3v7M18 7h4" strokeLinecap="round" /></svg>;
-  if (name === "chart") return <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M3 20h18M5 16l4-4 3 2 6-7" strokeLinecap="round" strokeLinejoin="round" /><path d="M14 7h4v4" strokeLinecap="round" strokeLinejoin="round" /></svg>;
-  if (name === "activity") return <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M3 12h4l3-7 4 14 3-7h4" strokeLinecap="round" strokeLinejoin="round" /></svg>;
-  return <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><rect x="6" y="2.5" width="12" height="19" rx="2.5" /><path d="M10 5h4M10 18.5h4" strokeLinecap="round" /></svg>;
+
+  if (name === "people") {
+    return (
+      <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <circle cx="9" cy="8" r="3.2" />
+        <path d="M3 20v-1.5A4.5 4.5 0 0 1 7.5 14h3A4.5 4.5 0 0 1 15 18.5V20M16 5.2a3.2 3.2 0 0 1 0 6.2M18 14.5a4.5 4.5 0 0 1 3 4.2V20" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (name === "calendar") {
+    return (
+      <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <rect x="3" y="5" width="18" height="16" rx="3" />
+        <path d="M16 3v4M8 3v4M3 10h18M8 14h3M8 17h6" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (name === "plate") {
+    return (
+      <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <circle cx="12" cy="13" r="8" />
+        <circle cx="12" cy="13" r="4.5" />
+        <path d="M4 3v5M2 5.5h4M20 3v7M18 7h4" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (name === "chart") {
+    return (
+      <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <path d="M3 20h18M5 16l4-4 3 2 6-7" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M14 7h4v4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+
+  if (name === "activity") {
+    return (
+      <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <path d="M3 12h4l3-7 4 14 3-7h4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+      <rect x="6" y="2.5" width="12" height="19" rx="2.5" />
+      <path d="M10 5h4M10 18.5h4" strokeLinecap="round" />
+    </svg>
+  )
 }
 
 function Check() {
@@ -93,7 +138,6 @@ export default function HomePage() {
               <span className="inline-flex items-center gap-2"><Check /> Planos alimentares</span>
               <span className="inline-flex items-center gap-2"><Check /> Visão financeira</span>
             </div>
-            <p className="mt-5 text-[11px] leading-5 text-slate-400">Prévia de produto e informações comerciais demonstrativas. Os dados são fictícios.</p>
           </div>
           <div id="produto" className="scroll-mt-24">
             <ProductPreview />
@@ -145,7 +189,7 @@ export default function HomePage() {
           <div className="max-w-xl">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-800">Um fluxo mais simples</p>
             <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Do agendamento ao acompanhamento, com menos atrito.</h2>
-            <p className="mt-5 text-base leading-7 text-slate-600">O NutriApp conecta as etapas que fazem parte do trabalho do nutricionista para você gastar menos energia organizando informações e mais energia usando-as no atendimento.</p>
+            <p className="mt-5 text-base leading-7 text-slate-600">O SalgaApp conecta as etapas que fazem parte do trabalho do nutricionista para você gastar menos energia organizando informações e mais energia usando-as no atendimento.</p>
             <Link href="/precos" className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 hover:text-emerald-950">
               Compare os planos
               <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 10h12m-5-5 5 5-5 5" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -175,7 +219,7 @@ export default function HomePage() {
               <div className="max-w-2xl">
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-200">Para quem você acompanha</p>
                 <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">O cuidado continua entre uma consulta e outra.</h2>
-                <p className="mt-4 max-w-xl text-sm leading-7 text-emerald-50/80 sm:text-base">O aplicativo NutriApp é pensado para pacientes consultarem as orientações do nutricionista no dia a dia. A gestão profissional continua no site.</p>
+                <p className="mt-4 max-w-xl text-sm leading-7 text-emerald-50/80 sm:text-base">O aplicativo SalgaApp é pensado para pacientes consultarem as orientações do nutricionista no dia a dia. A gestão profissional continua no site.</p>
               </div>
               <Link href="/baixar" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-50">
                 Conhecer o app do paciente
@@ -194,9 +238,8 @@ export default function HomePage() {
           </div>
           <div className="mt-9 space-y-3">
             {[
-              { q: "O NutriApp é um aplicativo para nutricionistas?", a: "A gestão do consultório é feita pelo site, no computador ou navegador. O aplicativo móvel é destinado aos pacientes acompanhados pelo nutricionista." },
-              { q: "Posso organizar a agenda e o financeiro?", a: "A proposta do NutriApp é reunir pacientes, agenda, planos alimentares e visão financeira na mesma plataforma. Os recursos e limites comerciais desta demonstração são ilustrativos." },
-              { q: "Os preços exibidos já são oficiais?", a: "Não. Os valores e os limites dos planos nesta demonstração são fictícios e deverão ser substituídos antes da publicação comercial." },
+              { q: "O SalgaApp é um aplicativo para nutricionistas?", a: "A gestão do consultório é feita pelo site, no computador ou navegador. O aplicativo móvel é destinado aos pacientes acompanhados pelo nutricionista." },
+              { q: "Posso organizar a agenda e o financeiro?", a: "A proposta do SalgaApp é reunir pacientes, agenda, planos alimentares e visão financeira na mesma plataforma." },
             ].map((item) => (
               <details key={item.q} className="group rounded-2xl border border-slate-200 bg-white px-5 py-4 open:border-emerald-200 open:bg-emerald-50/40">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-slate-900">

@@ -113,7 +113,6 @@ export default function PricingPage() {
               );
             })}
           </div>
-          <p className="mx-auto mt-6 max-w-3xl text-center text-xs leading-5 text-slate-500">Atenção: preços, limites e recursos por plano são fictícios, usados apenas para demonstrar a página. A cobrança e a contratação ainda devem ser configuradas com os valores oficiais.</p>
         </div>
       </section>
 
@@ -123,13 +122,13 @@ export default function PricingPage() {
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-800">Sem letra miúda</p>
               <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">Um plano que acompanha sua fase.</h2>
-              <p className="mt-4 text-sm leading-7 text-slate-600">A estrutura de preços foi montada como exemplo. Antes do lançamento, ajuste valores, limites, recursos e regras de contratação ao modelo comercial definitivo.</p>
+              <p className="mt-4 text-sm leading-7 text-slate-600">Preços e recursos ideiais para cada etapa do seu negócio.</p>
             </div>
             <div className="space-y-3">
               {[
-                { q: "Posso mudar de plano depois?", a: "A experiência de troca de plano deve ser configurada quando as regras comerciais forem definidas. Nesta demonstração, os botões levam ao cadastro." },
-                { q: "O aplicativo está incluído nos planos?", a: "A proposta é que o nutricionista utilize a plataforma web e que o aplicativo móvel seja destinado aos pacientes. Os limites por plano são ilustrativos." },
-                { q: "Os valores já são os preços finais?", a: "Não. Todos os preços nesta página são fictícios e precisam ser substituídos pelos valores oficiais antes da publicação." },
+                { q: "Posso conhecer a plataforma antes de pagar?", a: "Sim! Disponibilizamos uma demonstração completa de 15 dias para que você possa testar todas as funcionalidades antes de efetuar a contratação." },
+                { q: "Posso mudar de plano depois?", a: "Sim! Todos os planos podem ser alterados ou cancelados a qualquer momentom, sem burocracia." },
+                { q: "O aplicativo está incluído nos planos?", a: "Sim! O aplicativo móvel é incluído em todos os planos. A proposta é que o nutricionista utilize a plataforma web e que o aplicativo móvel seja destinado aos pacientes. O aplicativo NÃO possui uma versão para nutricionistas." },
               ].map((item) => (
                 <details key={item.q} className="group rounded-2xl border border-slate-200 px-5 py-4 open:border-emerald-200 open:bg-emerald-50/40">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-slate-900">

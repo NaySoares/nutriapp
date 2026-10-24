@@ -27,9 +27,9 @@ export default function MarketingHeader() {
   return (
     <header className="relative z-30 border-b border-emerald-950/5 bg-[#fbfcf8]/90 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8 lg:px-10">
-        <Link href="/" className="flex items-center gap-3" aria-label="NutriApp — página inicial" onClick={() => setOpen(false)}>
+        <Link href="/" className="flex items-center gap-3" aria-label="SalgaApp — página inicial" onClick={() => setOpen(false)}>
           <BrandMark />
-          <span className="text-xl font-bold tracking-tight text-slate-900">Nutri<span className="text-emerald-700">App</span></span>
+          <span className="text-xl font-bold tracking-tight text-slate-900">Salga<span className="text-emerald-700">App</span></span>
         </Link>
 
         <nav aria-label="Navegação principal" className="hidden items-center gap-8 md:flex">

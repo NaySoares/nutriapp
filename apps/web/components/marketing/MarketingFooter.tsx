@@ -8,7 +8,7 @@ export default function MarketingFooter() {
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 md:grid-cols-[1.3fr_1fr_1fr] lg:px-10">
         <div>
           <Link href="/" className="text-xl font-bold tracking-tight text-slate-900">
-            Nutri<span className="text-emerald-700">App</span>
+            Salga<span className="text-emerald-700">App</span>
           </Link>
           <p className="mt-3 max-w-sm text-sm leading-6 text-slate-600">
             Mais organização para a rotina do nutricionista. Mais clareza para o acompanhamento do paciente.
@@ -31,9 +31,11 @@ export default function MarketingFooter() {
         </div>
       </div>
       <div className="border-t border-slate-200/80">
-        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-5 text-xs leading-5 text-slate-500 sm:px-8 md:flex-row md:items-center md:justify-between lg:px-10">
-          <span>© {new Date().getFullYear()} NutriApp. Todos os direitos reservados.</span>
-          <span>Preços, limites e telas apresentados neste protótipo são fictícios e ilustrativos.</span>
+        <div className="mx-auto flex flex-col items-center gap-2 px-5 py-5 text-xs leading-5 text-slate-500 sm:px-8 md:items-center md:justify-between lg:px-10">
+          <Link href="/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-800 font-semibold">
+            Feito por AxiosLab
+          </Link>
+          <span>© {new Date().getFullYear()} SalgaApp. Todos os direitos reservados.</span>
         </div>
       </div>
     </footer>

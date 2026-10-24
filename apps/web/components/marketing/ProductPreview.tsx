@@ -1,3 +1,5 @@
+import { getCurrentDay } from "../../utils/date";
+
 function TinyBars() {
   const heights = [34, 48, 39, 62, 47, 76, 54, 69, 84, 60, 73, 92];
   return (
@@ -16,10 +18,10 @@ export default function ProductPreview() {
       <div className="relative overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_28px_90px_-38px_rgba(15,70,49,0.38)]">
         <div className="flex items-center justify-between border-b border-slate-100 bg-white px-5 py-4">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-700 text-xs font-bold text-white">N</span>
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-700 text-xs font-bold text-white">S</span>
             <div>
-              <p className="text-xs font-bold text-slate-900">NutriApp <span className="font-normal text-slate-400">/ Visão geral</span></p>
-              <p className="mt-0.5 text-[10px] text-slate-500">Quarta-feira, 21 de outubro</p>
+              <p className="text-xs font-bold text-slate-900">SalgaApp <span className="font-normal text-slate-400">/ Visão geral</span></p>
+              <p className="mt-0.5 text-[10px] text-slate-500">{getCurrentDay()}</p>
             </div>
           </div>
           <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-800">Demonstração</span>
