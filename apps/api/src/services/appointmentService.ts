@@ -20,54 +20,70 @@ export function createAppointmentService({sessions, appointments, patients}: App
     async create(sessionId: string, input: AppointmentCreateInput) {
       const ownerId = await sessions.findSessionOwner(sessionId);
       if (!ownerId) return null;
-      const patientId = input.pacienteId;
 
       const dataAppointment = {
         pacienteNome: input.paciente,
+        contato: input.contato,
         data: input.data,
         horario: input.horario,
         duracao: input.duracao,
         atendimento: input.atendimento,
         tipoConsulta: input.tipoConsulta,
         local: input.local,
-        note: input?.note,
-      }
+        note: input.note,
+      };
 
-      // se não tem ID é um paciente novo
-      if (patientId === undefined) {
-        const newPatient = await patients.createPatient(ownerId, {
-          nome: input.paciente,
-          dataNascimento: new Date(),
-          sexo: "M",
-          contato: input.contato,
-        });
+      // Se informou um paciente, valida o vínculo com o nutricionista
+      if (input.pacienteId) {
+        const patient = await patients.findPatientOwner(
+          ownerId,
+          input.pacienteId
+        );
 
-        if (!newPatient) return undefined;
-
-        const patient = await patients.findPatientOwner(ownerId, newPatient.id);
         if (!patient) return undefined;
 
-        return appointments.createAppointment(ownerId, newPatient.id, { ...dataAppointment });
+        return appointments.createAppointment(ownerId, patient.id, {
+          ...dataAppointment,
+          pacienteNome: patient.nome,
+          contato: patient.contato,
+        });
       }
 
-      if (typeof patientId !== "string") {
-        return undefined;
-      }
-
-      const patient = await patients.findPatientOwner(ownerId, input.pacienteId as string);
-      if (!patient) return undefined;
-      return appointments.createAppointment(ownerId, patient.id, { ...dataAppointment });
+      // Sem paciente cadastrado: cria somente o agendamento.
+      // O paciente será cadastrado e vinculado antes da consulta ser realizada.
+      return appointments.createAppointment(ownerId, null, dataAppointment);
     },
 
-    async update(sessionId: string, appointmentId: string, input: AppointmentUpdateInput) {
+    async update(
+      sessionId: string,
+      appointmentId: string,
+      input: AppointmentUpdateInput
+    ) {
       const ownerId = await sessions.findSessionOwner(sessionId);
       if (!ownerId) return null;
 
       const existing = await appointments.findAppointment(ownerId, appointmentId);
       if (!existing) return undefined;
 
-      const patient = await patients.findPatientOwner(ownerId, existing.pacienteId);
-      if (!patient) return undefined;
+      // Só valida um paciente se o agendamento já tiver um vínculo.
+      if (existing.pacienteId) {
+        const patient = await patients.findPatientOwner(
+          ownerId,
+          existing.pacienteId
+        );
+
+        if (!patient) return undefined;
+      }
+
+      // Valida um novo paciente quando o campo é enviado com UUID.
+      if (input.pacienteId) {
+        const patient = await patients.findPatientOwner(
+          ownerId,
+          input.pacienteId
+        );
+
+        if (!patient) return undefined;
+      }
 
       const values = {
         data: input.data ?? existing.data,
@@ -78,10 +94,18 @@ export function createAppointmentService({sessions, appointments, patients}: App
         local: input.local ?? existing.local,
         note: input.note ?? existing.note,
         status: input.status ?? existing.status,
-      } as AppointmentUpdateInput;
+        ...(input.pacienteId !== undefined
+          ? { pacienteId: input.pacienteId }
+          : {}),
+      };
 
-      return appointments.updateAppointment(ownerId, appointmentId, values);
+      return appointments.updateAppointment(
+        ownerId,
+        appointmentId,
+        values
+      );
     },
+
     async remove(sessionId: string, appointmentId: string) {
       const ownerId = await sessions.findSessionOwner(sessionId);
       return ownerId ? appointments.deleteAppointment(ownerId, appointmentId) : null;

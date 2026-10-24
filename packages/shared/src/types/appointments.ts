@@ -2,22 +2,59 @@ import { z } from "zod";
 
 // duplicado por causa da circular dependency entre appointments.ts e index.ts
 export const sexSchema = z.enum(["M", "F"]);
-export const ATENDIMENTOS = ["Particular", "Hospitalar"] as const;
+export const ATENDIMENTOS = [
+  "particular",
+  "hospitalar",
+] as const;
+
 export const TIPOS_CONSULTA = [
-  "Consulta de retorno",
-  "Avaliação nutricional",
-  "Acompanhamento",
-  "Revisão do plano",
-  "Primeira consulta",
+  "consulta_de_retorno",
+  "avaliacao_nutricional",
+  "acompanhamento",
+  "revisao_de_plano",
+  "primeira_consulta",
 ] as const;
-export const LOCAIS = ["Consultório", "Online", "Hospital"] as const;
+
+export const LOCAIS = [
+  "consultorio",
+  "online",
+  "hospital",
+] as const;
+
 export const STATUS_AGENDAMENTO = [
-  "Confirmada",
-  "Aguardando confirmação",
-  "Concluída",
-  "Falta",
-  "Cancelada",
+  "confirmada",
+  "aguardando_confirmacao",
+  "concluida",
+  "falta",
+  "cancelada",
 ] as const;
+
+export const ATENDIMENTOS_LABELS = {
+  particular: "Particular",
+  hospitalar: "Hospitalar",
+} as const;
+
+export const TIPOS_CONSULTA_LABELS = {
+  consulta_de_retorno: "Consulta de retorno",
+  avaliacao_nutricional: "Avaliação nutricional",
+  acompanhamento: "Acompanhamento",
+  revisao_de_plano: "Revisão do plano",
+  primeira_consulta: "Primeira consulta",
+} as const;
+
+export const LOCAIS_LABELS = {
+  consultorio: "Consultório",
+  online: "Online",
+  hospital: "Hospital",
+} as const;
+
+export const STATUS_AGENDAMENTO_LABELS = {
+  confirmada: "Confirmada",
+  aguardando_confirmacao: "Aguardando confirmação",
+  concluida: "Concluída",
+  falta: "Falta",
+  cancelada: "Cancelada",
+} as const;
 
 export type AppointmentStatus = (typeof STATUS_AGENDAMENTO)[number];
 
@@ -63,7 +100,8 @@ export const appointmentCreateSchema = z.object({
   atendimento: z.enum(ATENDIMENTOS),
   tipoConsulta: z.enum(TIPOS_CONSULTA),
   local: z.enum(LOCAIS),
-  note: z.string().trim().max(500).optional(),
+  note: z.string().trim().max(500).nullable().optional(),
+  contato: z.string().trim().max(120)
 });
 
 export type AppointmentCreate = z.infer<typeof appointmentCreateSchema>;
@@ -79,8 +117,8 @@ export const AppointmentCreateInput = z.object({
   atendimento: z.enum(ATENDIMENTOS),
   tipoConsulta: z.enum(TIPOS_CONSULTA),
   local: z.enum(LOCAIS),
-  note: z.string().trim().max(500).optional(),
-  contato: z.string().trim().max(120).optional()
+  note: z.string().trim().max(500).nullable().optional(),
+  contato: z.string().trim().max(120)
 })
 
 // ---------- Update ----------

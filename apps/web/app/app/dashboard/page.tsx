@@ -23,7 +23,7 @@ import { useModalStore } from '../../../stores/modal-store';
 import { getCurrentDay } from '../../../utils/date';
 import { apiRequest } from '../../../lib/api';
 import { useAuthStore } from '../../../stores/auth-store';
-import { ATENDIMENTOS, User } from '@nutriapp/shared';
+import { ATENDIMENTOS, ATENDIMENTOS_LABELS, STATUS_AGENDAMENTO_LABELS, TIPOS_CONSULTA_LABELS, User } from '@nutriapp/shared';
 import { getInitials } from '../../../utils/name';
 import { FormsNewAppointment } from '../../../components/agenda/forms-appointment';
 import { AppointmentRecord, } from "@nutriapp/shared";
@@ -355,7 +355,7 @@ export default function DashboardPage() {
                         <div className="avatar alt1">{getInitials(a.pacienteNome)}</div>
                         <div className="min-w-0">
                           <div className="truncate text-[11px] font-bold text-[#334a3b]">{a.pacienteNome}</div>
-                          <div className="mt-1 truncate text-[10px] text-[#8b978f]">{a.tipoConsulta}</div>
+                          <div className="mt-1 truncate text-[10px] text-[#8b978f]">{TIPOS_CONSULTA_LABELS[a.tipoConsulta]}</div>
                         </div>
                       </div>
                       <div className="hide-mobile">
@@ -363,10 +363,10 @@ export default function DashboardPage() {
                           <Clock3 size={12} className="text-[#9aa69e]" />
                           {a.horario}
                         </div>
-                        <div className="mt-1 text-[9px] text-[#9aa69e]">{a.atendimento}</div>
+                        <div className="mt-1 text-[9px] text-[#9aa69e]">{ATENDIMENTOS_LABELS[a.atendimento]}</div>
                       </div>
                       <div className="hide-mobile">
-                        <span className={`appointment-status ${statusStyles[a.status]}`}>{a.status}</span>
+                        <span className={`appointment-status ${statusStyles[a.status]}`}>{STATUS_AGENDAMENTO_LABELS[a.status]}</span>
                       </div>
                       <button
                         type="button"

@@ -13,21 +13,25 @@ export function createPatientService({ sessions, patients }: PatientServiceDepen
       const nutritionistId = await sessions.findSessionOwner(sessionId);
       return nutritionistId ? patients.listPatients(nutritionistId, search, includeArchived) : null;
     },
+
     async create(sessionId: string, input: PatientCreateInput) {
       const nutritionistId = await sessions.findSessionOwner(sessionId);
       if (!nutritionistId) return null;
       return patients.createPatient(nutritionistId, toCreateData(input));
     },
+
     async get(sessionId: string, patientId: string) {
       const nutritionistId = await sessions.findSessionOwner(sessionId);
       return nutritionistId ? patients.findPatient(nutritionistId, patientId) : null;
     },
+
     async update(sessionId: string, patientId: string, input: PatientUpdateInput) {
       const nutritionistId = await sessions.findSessionOwner(sessionId);
       if (!nutritionistId) return null;
       const updated = await patients.updatePatient(nutritionistId, patientId, toUpdateData(input));
       return updated ? patients.findPatient(nutritionistId, patientId) : undefined;
     },
+
     async archive(sessionId: string, patientId: string) {
       const nutritionistId = await sessions.findSessionOwner(sessionId);
       if (!nutritionistId) return null;
@@ -45,15 +49,17 @@ function toCreateData(input: PatientCreateInput) {
 
 function toUpdateData(input: PatientUpdateInput) {
   const { dataNascimento, ...rest } = input;
-  const data: {
-    nome?: string;
-    dataNascimento?: Date;
-    sexo?: "M" | "F";
-    contato?: string | null;
-    anamnese?: string | null;
-  } = rest;
-  if (dataNascimento) data.dataNascimento = new Date(`${dataNascimento}T00:00:00.000Z`);
-  return data;
+
+  return {
+    ...rest,
+    ...(dataNascimento
+      ? {
+          dataNascimento: new Date(
+            `${dataNascimento}T00:00:00.000Z`
+          ),
+        }
+      : {}),
+  };
 }
 
 export type PatientService = ReturnType<typeof createPatientService>;

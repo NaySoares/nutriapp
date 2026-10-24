@@ -28,7 +28,7 @@ export function FormsNewPatient( { onClose, onCreated }: { onClose: () => void; 
       nome: newName.trim(),
       dataNascimento: newBirthDate,
       sexo: newSex,
-      contato: newContact?.trim() || undefined,
+      contato: newContact.trim(),
     };
 
     setLoading(true);

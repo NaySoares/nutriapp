@@ -1,22 +1,22 @@
 import type { AppointmentStatus } from '@nutriapp/shared';
 
 const STATUS_COLOR: Record<AppointmentStatus, string> = {
-  Confirmada: 'sage',
-  'Aguardando confirmação': 'peach',
-  Concluída: 'blue',
-  Falta: 'lilac',
-  Cancelada: 'gray',
+  confirmada: 'sage',
+  aguardando_confirmacao: 'peach',
+  concluida: 'blue',
+  falta: 'lilac',
+  cancelada: 'gray',
 };
 
 export const statusStyles: Record<AppointmentStatus, string> = {
-  Confirmada: 'status-confirmed',
-  'Aguardando confirmação': 'status-waiting',
-  Concluída: 'status-done',
-  Falta: 'status-missed',
-  Cancelada: 'status-cancelled',
+  confirmada: 'status-confirmed',
+  aguardando_confirmacao: 'status-waiting',
+  concluida: 'status-done',
+  falta: 'status-missed',
+  cancelada: 'status-cancelled',
 };
 
 export const statusToColor = (status: AppointmentStatus) => STATUS_COLOR[status];
 
 export const statusShortLabel = (status: AppointmentStatus) =>
-  status === 'Aguardando confirmação' ? 'Pendente' : status;
+  status === 'aguardando_confirmacao' ? 'Pendente' : status;

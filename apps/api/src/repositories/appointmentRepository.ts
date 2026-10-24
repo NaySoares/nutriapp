@@ -13,7 +13,7 @@ export type AppointmentFilters = {
 type AppointmentSlot = Pick<AppointmentCreate, "data" | "horario" | "duracao">;
 
 export type AppointmentRepository = {
-  createAppointment: (nutritionistId: string, patientId: string, data: AppointmentCreate) => Promise<AppointmentRecord>;
+  createAppointment: (nutritionistId: string, patientId: string | null, data: AppointmentCreate) => Promise<AppointmentRecord>;
   listAppointments: (nutritionistId: string, filters?: AppointmentFilters) => Promise<AppointmentRecord[]>;
   findAppointment: (nutritionistId: string, appointmentId: string) => Promise<AppointmentRecord | null>;
   updateAppointment: (
@@ -61,7 +61,7 @@ const appointmentSelect: AppointmentSelect = {
   atualizadoEm: true,
 };
 
-const INITIAL_STATUS: AppointmentStatus = "Aguardando confirmação";
+const INITIAL_STATUS: AppointmentStatus = "aguardando_confirmacao";
 
 const toMinutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
 
@@ -81,12 +81,17 @@ export function createAppointmentRepository(prisma: Db): AppointmentRepository {
           ...data,
           data: new Date(`${data.data}T00:00:00.000Z`),
           nutricionista: {
-            connect: { id: nutritionistId }
+            connect: { id: nutritionistId },
           },
-          paciente: {
-            connect: { id: patientId },
-          },
-          status: INITIAL_STATUS },
+          ...(patientId
+            ? {
+                paciente: {
+                  connect: { id: patientId },
+                },
+              }
+            : {}),
+          status: INITIAL_STATUS,
+        },
         select: appointmentSelect,
       }),
 

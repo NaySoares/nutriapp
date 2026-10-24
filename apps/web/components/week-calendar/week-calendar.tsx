@@ -2,7 +2,7 @@
 
 import { Plus } from 'lucide-react';
 import { useMemo } from 'react';
-import type { AppointmentRecord } from '@nutriapp/shared';
+import { type AppointmentRecord, STATUS_AGENDAMENTO_LABELS, TIPOS_CONSULTA_LABELS } from '@nutriapp/shared';
 import { DAYS_SHORT } from '../../utils/date';
 import { statusShortLabel, statusStyles, statusToColor } from './appointment-status';
 import { groupByDay } from './appointments-by-day';
@@ -33,9 +33,9 @@ function AppointmentCard({ appointment, onClick }: { appointment: WeekCalendarIt
       <div className="mb-2 line-clamp-2 text-[10px] font-semibold leading-[1.45] text-[#405448]">
         {appointment.pacienteNome}
       </div>
-      <div className="mb-2 text-[9px] leading-[1.4] text-[#89968e]">{appointment.tipoConsulta}</div>
+      <div className="mb-2 text-[9px] leading-[1.4] text-[#89968e]">{TIPOS_CONSULTA_LABELS[appointment.tipoConsulta]}</div>
       <span className={`appointment-status ${statusStyles[appointment.status]}`}>
-        {statusShortLabel(appointment.status)}
+        {STATUS_AGENDAMENTO_LABELS[(appointment.status)]}
       </span>
     </button>
   );

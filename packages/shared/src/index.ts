@@ -103,7 +103,7 @@ export type {
 // appointment types
 export type { AppointmentRecord, AppointmentStatus } from "./types/appointments.js";
 export { AppointmentCreateInput, AppointmentUpdateInput, AppointmentCreate, AppointmentUpdate, appointmentIdSchema, appointmentUpdateSchema } from "./types/appointments.js";
-export { LOCAIS, ATENDIMENTOS, TIPOS_CONSULTA, STATUS_AGENDAMENTO } from "./types/appointments.js";
+export { LOCAIS, LOCAIS_LABELS, ATENDIMENTOS, ATENDIMENTOS_LABELS, TIPOS_CONSULTA, TIPOS_CONSULTA_LABELS, STATUS_AGENDAMENTO, STATUS_AGENDAMENTO_LABELS } from "./types/appointments.js";
 
 // patient types
 export type { PatientCreateInput, PatientUpdateInput, PatientSelect, PatientRecord } from "./types/patient.js";

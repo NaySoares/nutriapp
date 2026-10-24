@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { apiRequest } from "../../lib/api";
-import { ATENDIMENTOS, TIPOS_CONSULTA, LOCAIS, Sex } from "@nutriapp/shared";
+import { ATENDIMENTOS, TIPOS_CONSULTA, LOCAIS, Sex, ATENDIMENTOS_LABELS, TIPOS_CONSULTA_LABELS, LOCAIS_LABELS } from "@nutriapp/shared";
 import { isDateInPast } from "../../utils/date";
 import { useAppointmentContext } from "../../stores/appointment-store";
 
@@ -28,9 +28,9 @@ export function FormsNewAppointment( { onClose, onCreated }: { onClose: () => vo
   const [newName, setNewName] = useState<string>('');
   const [newDate, setNewDate] = useState(() => new Date().toLocaleDateString('en-CA')); // YYYY-MM-DD
   const [newDuration, setNewDuration] = useState<string>('45');
-  const [newType, setNewType] = useState<Atendimento>('Particular');
-  const [newKind, setNewKind] = useState<TipoConsulta>('Consulta de retorno');
-  const [newLocation, setNewLocation] = useState<Local>('Consultório');
+  const [newType, setNewType] = useState<Atendimento>('particular');
+  const [newKind, setNewKind] = useState<TipoConsulta>('consulta_de_retorno');
+  const [newLocation, setNewLocation] = useState<Local>('consultorio');
   const [newTime, setNewTime] = useState('15:00');
   const [newBirthDate, setNewBirthDate] = useState(() => new Date().toLocaleDateString('en-CA')); // YYYY-MM-DD
   const [newSex, setNewSex] = useState<Sex>('M');
@@ -230,8 +230,8 @@ export function FormsNewAppointment( { onClose, onCreated }: { onClose: () => vo
               }
               className="agenda-select w-full"
             >
-              <option>Particular</option>
-              <option>Hospitalar</option>
+              <option value="particular">{ATENDIMENTOS_LABELS.particular}</option>
+              <option value="hospitalar">{ATENDIMENTOS_LABELS.hospitalar}</option>
             </select>
           </label>
         </div>
@@ -245,11 +245,11 @@ export function FormsNewAppointment( { onClose, onCreated }: { onClose: () => vo
             onChange={(event) => setNewKind(event.target.value as TipoConsulta)}
             className="agenda-select w-full"
           >
-            <option>Consulta de retorno</option>
-            <option>Avaliação nutricional</option>
-            <option>Acompanhamento</option>
-            <option>Revisão do plano</option>
-            <option>Primeira consulta</option>
+            <option value="consulta_de_retorno">{TIPOS_CONSULTA_LABELS.consulta_de_retorno}</option>
+            <option value="avaliacao_nutricional">{TIPOS_CONSULTA_LABELS.avaliacao_nutricional}</option>
+            <option value="acompanhamento">{TIPOS_CONSULTA_LABELS.acompanhamento}</option>
+            <option value="revisao_de_plano">{TIPOS_CONSULTA_LABELS.revisao_de_plano}</option>
+            <option value="primeira_consulta">{TIPOS_CONSULTA_LABELS.primeira_consulta}</option>
           </select>
         </label>
         <label className="block">
@@ -262,9 +262,9 @@ export function FormsNewAppointment( { onClose, onCreated }: { onClose: () => vo
             onChange={(event) => setNewLocation(event.target.value as Local)}
             className="agenda-select w-full"
           >
-            <option>Consultório</option>
-            <option>Online</option>
-            <option>Hospital</option>
+            <option value="consultorio">{LOCAIS_LABELS.consultorio}</option>
+            <option value="online">{LOCAIS_LABELS.online}</option>
+            <option value="hospital">{LOCAIS_LABELS.hospital}</option>
           </select>
         </label>
         <p className="rounded-lg bg-[#f6f9f6] p-3 text-[10px] leading-4 text-[#7d8b83]">

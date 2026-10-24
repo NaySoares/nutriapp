@@ -24,7 +24,7 @@ import { useModalStore } from '../../../stores/modal-store';
 import { FormsNewAppointment } from '../../../components/agenda/forms-appointment';
 import { apiRequest } from '../../../lib/api';
 import { toast } from 'sonner';
-import { AppointmentRecord, AppointmentStatus } from '@nutriapp/shared';
+import { AppointmentRecord, AppointmentStatus, STATUS_AGENDAMENTO_LABELS, TIPOS_CONSULTA_LABELS, LOCAIS_LABELS } from '@nutriapp/shared';
 import { getInitials } from '../../../utils/name';
 import { convertDateFromApi, DAYS } from '../../../utils/date';
 import { Button } from '../../../components/ui/button';
@@ -133,13 +133,13 @@ export default function AgendaPage() {
     .sort((a, b) => a.horario.localeCompare(b.horario));
   const weekCount = filtered.length;
   const confirmedCount = filtered.filter(
-    (appointment) => appointment.status === 'Confirmada',
+    (appointment) => appointment.status === 'confirmada',
   ).length;
   const pendingCount = filtered.filter(
-    (appointment) => appointment.status === 'Aguardando confirmação',
+    (appointment) => appointment.status === 'aguardando_confirmacao',
   ).length;
   const missedCount = filtered.filter(
-    (appointment) => appointment.status === 'Falta',
+    (appointment) => appointment.status === 'falta',
   ).length;
   const hasFilters =
     query.trim() !== '' ||
@@ -418,17 +418,17 @@ export default function AgendaPage() {
                             {appointment.pacienteNome}
                           </div>
                           <div className="mt-1 text-[10px] text-[#87948b]">
-                            {appointment.tipoConsulta} · {appointment.duracao} min
+                            {TIPOS_CONSULTA_LABELS[appointment.tipoConsulta]} · {appointment.duracao} min
                           </div>
                           <div className="mt-1 flex items-center gap-1 text-[10px] text-[#87948b]">
                             <MapPin size={11} />
-                            {appointment.local}
+                            {LOCAIS_LABELS[appointment.local]}
                           </div>
                         </div>
                         <span
                           className={`appointment-status hidden sm:inline-flex ${statusStyles[appointment.status]}`}
                         >
-                          {appointment.status}
+                          {STATUS_AGENDAMENTO_LABELS[appointment.status]}
                         </span>
                         <ChevronRight size={15} className="text-[#9ba69e]" />
                       </button>
@@ -528,7 +528,7 @@ export default function AgendaPage() {
                     {selectedAppointment.pacienteNome}
                   </h2>
                   <p className="mt-1 text-[11px] text-[#87948b]">
-                    {selectedAppointment.tipoConsulta}
+                    {TIPOS_CONSULTA_LABELS[selectedAppointment.tipoConsulta]}
                   </p>
                 </div>
               </div>
@@ -558,24 +558,24 @@ export default function AgendaPage() {
                 minutos
               </div>
               <div className="flex items-center gap-2 text-[12px] text-[#53665a]">
-                {selectedAppointment.local === 'Online' ? (
+                {selectedAppointment.local === 'online' ? (
                   <Video size={15} className="text-[#7f9885]" />
-                ) : selectedAppointment.local === 'Hospital' ? (
+                ) : selectedAppointment.local === 'hospital' ? (
                   <Hospital size={15} className="text-[#7f9885]" />
                 ) : (
                   <MapPin size={15} className="text-[#7f9885]" />
                 )}
-                {selectedAppointment.local}
+                {LOCAIS_LABELS[selectedAppointment.local]}
               </div>
               <div className="flex items-center gap-2 text-[12px] text-[#53665a]">
                 <UserRound size={15} className="text-[#7f9885]" />
-                Atendimento {selectedAppointment.tipoConsulta.toLowerCase()}
+                Atendimento {TIPOS_CONSULTA_LABELS[selectedAppointment.tipoConsulta]}
               </div>
               <div className="pt-1">
                 <span
                   className={`appointment-status ${statusStyles[selectedAppointment.status]}`}
                 >
-                  {selectedAppointment.status}
+                  {STATUS_AGENDAMENTO_LABELS[selectedAppointment.status]}
                 </span>
               </div>
             </div>
@@ -586,19 +586,19 @@ export default function AgendaPage() {
               <div className="flex flex-wrap gap-2">
                 {(
                   [
-                    'Confirmada',
-                    'Concluída',
-                    'Falta',
-                    'Cancelada',
+                    'confirmada',
+                    'concluida',
+                    'falta',
+                    'cancelada',
                   ] as AppointmentStatus[]
                 ).map((status) => (
                   <button
                     key={status}
                     onClick={() => updateStatus(selectedAppointment, status)}
                     disabled={selectedAppointment.status === status}
-                    className={`rounded-lg border px-3 py-2 text-[10px] font-semibold transition disabled:cursor-default disabled:opacity-45 ${status === 'Falta' ? 'border-[#f0d6d0] text-[#b65c50] hover:bg-[#fff5f2]' : 'border-[#e4eae4] text-[#53665a] hover:bg-[#f5f8f5]'}`}
+                    className={`rounded-lg border px-3 py-2 text-[10px] font-semibold transition disabled:cursor-default disabled:opacity-45 ${status === 'falta' ? 'border-[#f0d6d0] text-[#b65c50] hover:bg-[#fff5f2]' : 'border-[#e4eae4] text-[#53665a] hover:bg-[#f5f8f5]'}`}
                   >
-                    {status}
+                    {STATUS_AGENDAMENTO_LABELS[status]}
                   </button>
                 ))}
               </div>

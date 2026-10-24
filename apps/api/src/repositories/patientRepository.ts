@@ -1,20 +1,25 @@
 import { PatientRecord, PatientSelect } from "@nutriapp/shared";
-import type { PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 
 type Db = Pick<PrismaClient, "paciente">;
+
+type PatientOwner = Prisma.PacienteGetPayload<{
+  select: typeof ownerSelect;
+}>;
+
 
 export type PatientRepository = {
   findPatientOwner: (
     nutritionistId: string,
     patientId: string
-  ) => Promise<{ id: string; dataNascimento: Date; sexo: "M" | "F" } | null>;
+  ) => Promise<PatientOwner | null>;
   createPatient: (
     nutritionistId: string,
     data: {
       nome: string;
       dataNascimento: Date;
       sexo: "M" | "F";
-      contato?: string;
+      contato: string;
       anamnese?: string;
     }
   ) => Promise<PatientRecord>;
@@ -27,7 +32,7 @@ export type PatientRepository = {
       nome?: string;
       dataNascimento?: Date;
       sexo?: "M" | "F";
-      contato?: string | null;
+      contato?: string;
       anamnese?: string | null;
     }
   ) => Promise<boolean>;
@@ -49,9 +54,11 @@ const patientSelect: PatientSelect = {
 
 const ownerSelect = {
   id: true,
+  nome: true,
+  contato: true,
   dataNascimento: true,
   sexo: true,
-} as const;
+} satisfies Prisma.PacienteSelect;
 
 export function createPatientRepository(prisma: Db): PatientRepository {
 

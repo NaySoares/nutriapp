@@ -3,17 +3,19 @@ import { z } from "zod";
 export const sexSchema = z.enum(["M", "F"]);
 
 export const patientCreateSchema = z.object({
-  nome: z.string().trim().min(1).max(120),
+  nome: z.string().trim().min(1, "Informe o nome.").max(120),
   dataNascimento: z.string().date(),
   sexo: sexSchema,
-  contato: z.string().trim().max(120).optional(),
-  anamnese: z.string().max(10000).optional()
+  contato: z.string().trim().min(1, "Informe o contato.").max(120),
+  anamnese: z.string().max(10000).optional(),
 });
 
-export const patientUpdateSchema = patientCreateSchema.partial().refine(
-  (value) => Object.keys(value).length > 0,
-  { message: "Informe ao menos um campo para atualizar." }
-);
+export const patientUpdateSchema = patientCreateSchema
+  .partial()
+  .refine(
+    (value) => Object.keys(value).length > 0,
+    { message: "Informe ao menos um campo para atualizar." }
+  );
 
 export type PatientSelect = {
   id: true;
@@ -34,7 +36,7 @@ export type PatientRecord = {
   nome: string;
   dataNascimento: Date;
   sexo: "M" | "F";
-  contato: string | null;
+  contato: string;
   anamnese: string | null;
   arquivadoEm: Date | null;
   criadoEm: Date;
