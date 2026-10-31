@@ -106,7 +106,7 @@ export { AppointmentCreateInput, AppointmentUpdateInput, AppointmentCreate, Appo
 export { LOCAIS, LOCAIS_LABELS, ATENDIMENTOS, ATENDIMENTOS_LABELS, TIPOS_CONSULTA, TIPOS_CONSULTA_LABELS, STATUS_AGENDAMENTO, STATUS_AGENDAMENTO_LABELS } from "./types/appointments.js";
 
 // patient types
-export type { PatientCreateInput, PatientUpdateInput, PatientSelect, PatientRecord } from "./types/patient.js";
+export type { PatientPage, PatientFilters, PatientCreateInput, PatientUpdateInput, PatientSelect, PatientRecord } from "./types/patient.js";
 export { patientIdSchema, patientUpdateSchema, patientCreateSchema } from "./types/patient.js";
 
 // food types

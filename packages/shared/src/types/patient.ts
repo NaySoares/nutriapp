@@ -70,6 +70,20 @@ export type PatientRecord = {
   atualizadoEm: Date;
 };
 
+// no front existe um objeto do tipo { pacientes: PatientPage }
+export type PatientPage = {
+  items: PatientRecord[];
+  total: number;
+  page: number;
+  pageSize: number
+};
+
+export type PatientFilters = {
+  q?: string;
+  page?: number; // começa em 1
+  pageSize?: number; // padrão 50, máximo 100
+};
+
 export const patientIdSchema = z.string().uuid();
 
 export type PatientCreateInput = z.infer<typeof patientCreateSchema>;

@@ -2,13 +2,17 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import { foodIdSchema, foodUpdateSchema, foodCreateSchema } from "@nutriapp/shared";
 import { requireSession } from "../middleware/authenticate.js";
 import type { FoodService } from "../services/foodService.js";
+import { FoodFilters } from "../repositories/foodRepository.js";
+import { FonteAlimento } from "@prisma/client/wasm";
 
 export function createFoodController(service: FoodService) {
   return {
     list: async (request: FastifyRequest, reply: FastifyReply) => {
       const sessionId = requireSession(request);
 
-      const foods = await service.list(sessionId);
+      const filters = toFilter(request.query)
+      const foods = await service.list(sessionId, filters);
+
       if (!foods) return unauthorized(reply);
       return reply.send({ alimentos: foods });
     },
@@ -61,4 +65,16 @@ function notFound(reply: FastifyReply) {
 }
 function invalidInput(reply: FastifyReply, detalhes: unknown) {
   return reply.status(400).send({ codigo: "VALIDACAO_INVALIDA", mensagem: "Os dados enviados são inválidos.", detalhes });
+}
+
+function toFilter(filters: unknown): FoodFilters {
+  if (!filters || typeof filters !== "object") return {};
+  const f = filters as Record<string, unknown>;
+  const result: FoodFilters = {};
+  if (typeof f.q === "string") result.q = f.q;
+  if (typeof f.fonte === "string") result.fonte = f.fonte as FonteAlimento;
+  if (typeof f.grupo === "string") result.grupo = f.grupo;
+  if (typeof f.page === "string" && !isNaN(parseInt(f.page))) result.page = parseInt(f.page);
+  if (typeof f.pageSize === "string" && !isNaN(parseInt(f.pageSize))) result.pageSize = parseInt(f.pageSize);
+  return result;
 }

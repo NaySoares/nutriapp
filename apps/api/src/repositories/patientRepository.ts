@@ -1,49 +1,9 @@
-import { PatientRecord, PatientSelect } from "@nutriapp/shared";
+import { PatientCreateInput, PatientUpdateInput, PatientRecord, PatientSelect, PatientPage, PatientFilters} from "@nutriapp/shared";
 import type { Prisma, PrismaClient } from "@prisma/client";
 
 type Db = Pick<PrismaClient, "paciente">;
 
-type PatientOwner = Prisma.PacienteGetPayload<{
-  select: typeof ownerSelect;
-}>;
-
-
-export type PatientRepository = {
-  findPatientOwner: (
-    nutritionistId: string,
-    patientId: string
-  ) => Promise<PatientOwner | null>;
-  createPatient: (
-    nutritionistId: string,
-    data: {
-      nome: string;
-      dataNascimento: Date;
-      sexo: "M" | "F";
-      email?: string;
-      telefone?: string;
-      contato: string;
-      anamnese?: string;
-      status: string;
-    }
-  ) => Promise<PatientRecord>;
-  listPatients: (nutritionistId: string, search?: string, includeArchived?: boolean) => Promise<PatientRecord[]>;
-  findPatient: (nutritionistId: string, patientId: string) => Promise<PatientRecord | null>;
-  updatePatient: (
-    nutritionistId: string,
-    patientId: string,
-    data: {
-      nome?: string;
-      dataNascimento?: Date;
-      sexo?: "M" | "F";
-      email?: string;
-      telefone?: string;
-      contato?: string;
-      anamnese?: string | null;
-      status?: string;
-    }
-  ) => Promise<boolean>;
-  archivePatient: (nutritionistId: string, patientId: string) => Promise<boolean>;
-};
+export type PatientRepository = ReturnType<typeof createPatientRepository>;
 
 const patientSelect: PatientSelect = {
   id: true,
@@ -70,13 +30,26 @@ const ownerSelect = {
   status: true,
 } satisfies Prisma.PacienteSelect;
 
-export function createPatientRepository(prisma: Db): PatientRepository {
+type Row = Prisma.PacienteGetPayload<{ select: typeof patientSelect }>;
 
-  const findPatientOwner: PatientRepository["findPatientOwner"] = (
-    nutritionistId,
-    patientId
+const toRecord = (row: Row): PatientRecord => ({
+  ...row,
+  anamnese: row.anamnese ?? null,
+  email: row.email ?? null,
+  telefone: row.telefone ?? null,
+  arquivadoEm: row.arquivadoEm ?? null,
+});
+
+const DEFAULT_PAGE_SIZE = 50;
+const MAX_PAGE_SIZE = 100;
+
+export function createPatientRepository(db: Db) {
+
+  const findPatientOwner = async (
+    nutritionistId: string,
+    patientId: string
   ) =>
-    prisma.paciente.findFirst({
+    db.paciente.findFirst({
       where: {
         id: patientId,
         nutricionistaId: nutritionistId,
@@ -88,40 +61,53 @@ export function createPatientRepository(prisma: Db): PatientRepository {
   return {
     findPatientOwner,
 
-    createPatient: (nutritionistId, data) =>
-      prisma.paciente.create({
+    createPatient: (nutritionistId: string, data: PatientCreateInput) =>
+      db.paciente.create({
         data: { nutricionistaId: nutritionistId, ...data },
         select: patientSelect,
-      }),
+    }),
 
-    listPatients: (nutritionistId, search, includeArchived = false) =>
-      prisma.paciente.findMany({
-        where: {
+    async listPatients(nutritionistId: string, includeArchived = false, filters: PatientFilters): Promise<PatientPage> {
+      const pageSize = Math.min(Math.max(filters.pageSize ?? DEFAULT_PAGE_SIZE, 1), MAX_PAGE_SIZE);
+      const page = Math.max(filters.page ?? 1, 1);
+
+      const where: Prisma.PacienteWhereInput = {
           nutricionistaId: nutritionistId,
           arquivadoEm: includeArchived ? undefined : null,
-          ...(search ? { nome: { contains: search, mode: "insensitive" } } : {}),
-        },
-        orderBy: { nome: "asc" },
-        select: patientSelect,
-      }),
+          ...(filters.q ? { nome: { contains: filters.q, mode: "insensitive" } } : {}),
+      };
 
-    findPatient: (nutritionistId, patientId) =>
-      prisma.paciente.findFirst({
+      const [rows, total] = await Promise.all([
+        db.paciente.findMany({
+          where,
+          orderBy: [{ nome: "asc" }, {id: "asc" }],
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+          select: patientSelect,
+        }),
+        db.paciente.count({ where }),
+      ]);
+
+      return { items: rows.map(toRecord), total, page, pageSize };
+    },
+
+    findPatient: (nutritionistId: string, patientId: string) =>
+      db.paciente.findFirst({
         where: { id: patientId, nutricionistaId: nutritionistId },
         select: patientSelect,
       }),
 
-    updatePatient: async (nutritionistId, patientId, data) =>
+    updatePatient: async (nutritionistId: string, patientId: string, data: Partial<PatientUpdateInput>) =>
       (
-        await prisma.paciente.updateMany({
+        await db.paciente.updateMany({
           where: { id: patientId, nutricionistaId: nutritionistId, arquivadoEm: null },
           data,
         })
       ).count === 1,
 
-    archivePatient: async (nutritionistId, patientId) =>
+    archivePatient: async (nutritionistId: string, patientId: string) =>
       (
-        await prisma.paciente.updateMany({
+        await db.paciente.updateMany({
           where: { id: patientId, nutricionistaId: nutritionistId, arquivadoEm: null },
           data: { arquivadoEm: new Date() },
         })

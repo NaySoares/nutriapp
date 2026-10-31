@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { patientCreateSchema, patientIdSchema, patientUpdateSchema } from "@nutriapp/shared";
+import { patientCreateSchema, patientIdSchema, patientUpdateSchema, PatientFilters } from "@nutriapp/shared";
 import type { PatientService } from "../services/patientService.js";
 import { requireSession } from "../middleware/authenticate.js";
 
@@ -8,8 +8,9 @@ export function createPatientController(service: PatientService) {
     list: async (request: FastifyRequest, reply: FastifyReply) => {
       const sessionId = requireSession(request);
 
-      const query = request.query as { q?: string; incluirArquivados?: string };
-      const patients = await service.list(sessionId, query.q?.trim(), query.incluirArquivados === "true");
+      const query = request.query as { incluirArquivados?: string, filters?: PatientFilters };
+      const patients = await service.list(sessionId, query.incluirArquivados === "true", query.filters || {});
+
       if (!patients) return unauthorized(reply);
 
       return reply.send({ pacientes: patients });

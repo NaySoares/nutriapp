@@ -1,4 +1,4 @@
-import type { PatientCreateInput, PatientUpdateInput } from "@nutriapp/shared";
+import type { PatientCreateInput, PatientFilters, PatientUpdateInput } from "@nutriapp/shared";
 import { SessionRepository } from "../repositories/sessionRepository.js";
 import { PatientRepository } from "../repositories/patientRepository.js";
 
@@ -9,15 +9,17 @@ type PatientServiceDependencies = {
 
 export function createPatientService({ sessions, patients }: PatientServiceDependencies) {
   return {
-    async list(sessionId: string, search?: string, includeArchived = false) {
+    async list(sessionId: string, includeArchived = false, filters: PatientFilters) {
       const nutritionistId = await sessions.findSessionOwner(sessionId);
-      return nutritionistId ? patients.listPatients(nutritionistId, search, includeArchived) : null;
+      if (!nutritionistId) return null;
+
+      return patients.listPatients(nutritionistId, includeArchived, filters);
     },
 
     async create(sessionId: string, input: PatientCreateInput) {
       const nutritionistId = await sessions.findSessionOwner(sessionId);
       if (!nutritionistId) return null;
-      return patients.createPatient(nutritionistId, toCreateData(input));
+      return patients.createPatient(nutritionistId, input);
     },
 
     async get(sessionId: string, patientId: string) {
@@ -28,7 +30,7 @@ export function createPatientService({ sessions, patients }: PatientServiceDepen
     async update(sessionId: string, patientId: string, input: PatientUpdateInput) {
       const nutritionistId = await sessions.findSessionOwner(sessionId);
       if (!nutritionistId) return null;
-      const updated = await patients.updatePatient(nutritionistId, patientId, toUpdateData(input));
+      const updated = await patients.updatePatient(nutritionistId, patientId, input);
       return updated ? patients.findPatient(nutritionistId, patientId) : undefined;
     },
 
@@ -37,28 +39,6 @@ export function createPatientService({ sessions, patients }: PatientServiceDepen
       if (!nutritionistId) return null;
       return (await patients.archivePatient(nutritionistId, patientId)) || undefined;
     }
-  };
-}
-
-function toCreateData(input: PatientCreateInput) {
-  return {
-    ...input,
-    dataNascimento: new Date(`${input.dataNascimento}T00:00:00.000Z`)
-  };
-}
-
-function toUpdateData(input: PatientUpdateInput) {
-  const { dataNascimento, ...rest } = input;
-
-  return {
-    ...rest,
-    ...(dataNascimento
-      ? {
-          dataNascimento: new Date(
-            `${dataNascimento}T00:00:00.000Z`
-          ),
-        }
-      : {}),
   };
 }
 

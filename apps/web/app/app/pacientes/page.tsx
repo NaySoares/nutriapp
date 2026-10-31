@@ -26,14 +26,15 @@ import { useHeaderStore } from '../../../stores/header-store';
 import { FormsNewPatient } from '../../../components/pacientes/forms-patient';
 import { apiRequest } from '../../../lib/api';
 import { toast } from 'sonner';
-import { PatientRecord } from '@nutriapp/shared';
+import { PatientRecord, PatientPage } from '@nutriapp/shared';
 import { getInitials } from '../../../utils/name';
 import { useRouter } from 'next/navigation';
 import { FormsNewAppointment } from '../../../components/agenda/forms-appointment';
 import { Button } from '../../../components/ui/button';
 import { useAppointmentContext } from '../../../stores/appointment-store';
+import { TablePagination } from '../../../components/ui/table/table-pagination';
 
-type PatientsResponse = { pacientes: PatientRecord[] };
+type PatientsResponse = { pacientes: PatientPage };
 
 export default function PatientsPage() {
   const [patients, setPatients] = useState<PatientRecord[]>([]);
@@ -47,6 +48,7 @@ export default function PatientsPage() {
   const [selectedPatient, setSelectedPatient] = useState<PatientRecord | null>(null);
   const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 10, totalItems: 0 });
 
   const setConfig = useHeaderStore((state) => state.setConfig);
   const reset = useHeaderStore((state) => state.reset);
@@ -76,7 +78,8 @@ export default function PatientsPage() {
   useEffect(() => {
     setLoading(true);
     apiRequest<PatientsResponse>("/patients").then((response) => {
-      setPatients(response.pacientes);
+      setPagination({ page: response.pacientes.page, pageSize: response.pacientes.pageSize, totalItems: response.pacientes.total });
+      setPatients(response.pacientes.items);
     }).catch((reason) => {
       toast.error(reason instanceof Error ? reason.message : "Erro ao buscar dados.");
     }).finally(() => {
@@ -84,6 +87,20 @@ export default function PatientsPage() {
     });
 // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function loadPatients(page: number) {
+    const response = await apiRequest<{ pacientes: PatientPage }>(
+      `/patients?page=${page}&pageSize=${pagination.pageSize}`
+    );
+
+    setPatients(response.pacientes.items);
+
+    setPagination({
+      page: response.pacientes.page,
+      pageSize: response.pacientes.pageSize,
+      totalItems: response.pacientes.total,
+    });
+  }
 
   const router = useRouter();
 
@@ -246,8 +263,8 @@ export default function PatientsPage() {
                 <div>
                   <h2 className="section-title">Lista de pacientes</h2>
                   <p className="section-subtitle">
-                    {filteredPatients.length}{' '}
-                    {filteredPatients.length === 1 ? 'resultado' : 'resultados'}
+                    {pagination.totalItems}{' '}
+                    {pagination.totalItems === 1 ? 'resultado' : 'resultados'}
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -442,23 +459,8 @@ export default function PatientsPage() {
                 </div>
               )}
             </div>
-            <div className="flex flex-col gap-2 border-t border-[#edf1ed] px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-[10px] text-[#87948b]">
-                Exibindo{' '}
-                <span className="font-semibold text-[#53665a]">
-                  {filteredPatients.length}
-                </span>{' '}
-                de{' '}
-                <span className="font-semibold text-[#53665a]">
-                  {patients.length}
-                </span>{' '}
-                pacientes
-              </p>
-              <p className="text-[10px] text-[#9aa59d]">
-                Os dados clínicos são demonstrativos e não representam
-                diagnóstico.
-              </p>
-            </div>
+            {/* Footer com paginação */}
+            <TablePagination pagination={pagination} onPageChange={loadPatients} />
           </section>
         </div>
       </main>

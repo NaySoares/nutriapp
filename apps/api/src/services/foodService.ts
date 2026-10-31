@@ -1,6 +1,6 @@
 import type { FoodCreateInput, FoodUpdateInput } from "@nutriapp/shared";
 import type { SessionRepository } from "../repositories/sessionRepository.js";
-import type { FoodRepository } from "../repositories/foodRepository.js";
+import type { FoodFilters, FoodRepository } from "../repositories/foodRepository.js";
 import { FonteAlimento } from "@prisma/client";
 
 type FoodServiceDependencies = {
@@ -17,11 +17,11 @@ export function createFoodService({
   foods,
 }: FoodServiceDependencies) {
   return {
-    async list(sessionId: string) {
+    async list(sessionId: string, filters: FoodFilters) {
       const ownerId = await sessions.findSessionOwner(sessionId);
       if (!ownerId) return null;
 
-      return foods.list();
+      return foods.list(filters);
     },
 
     async create(sessionId: string, input: FoodCreateInput) {

@@ -11,31 +11,7 @@ import { apiRequest } from "../../../lib/api";
 import { FoodRecord } from "@nutriapp/shared";
 import { FoodPage } from "../../../../../packages/shared/dist/types/food";
 import { convertDateFromApi } from "../../../utils/date";
-
-type Food = {
-  id: number;
-  name: string;
-  category: string;
-  portion: string;
-  kcal: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  fiber: number;
-  source: "Manual" | "Importação CSV" | "API";
-  updated: string;
-};
-
-const seedFoods: Food[] = [
-  { id: 1, name: "Aveia em flocos", category: "Cereais e derivados", portion: "100 g", kcal: 394, protein: 13.9, carbs: 66.6, fat: 8.5, fiber: 9.1, source: "API", updated: "19 out, 2026" },
-  { id: 2, name: "Banana-prata", category: "Frutas", portion: "100 g", kcal: 98, protein: 1.3, carbs: 26, fat: 0.1, fiber: 2, source: "API", updated: "19 out, 2026" },
-  { id: 3, name: "Peito de frango grelhado", category: "Carnes e ovos", portion: "100 g", kcal: 159, protein: 32, carbs: 0, fat: 2.5, fiber: 0, source: "Importação CSV", updated: "17 out, 2026" },
-  { id: 4, name: "Arroz integral cozido", category: "Cereais e derivados", portion: "100 g", kcal: 124, protein: 2.6, carbs: 25.8, fat: 1, fiber: 2.7, source: "Manual", updated: "16 out, 2026" },
-  { id: 5, name: "Ovo de galinha cozido", category: "Carnes e ovos", portion: "1 unidade (50 g)", kcal: 77, protein: 6.3, carbs: 0.6, fat: 5.3, fiber: 0, source: "API", updated: "15 out, 2026" },
-  { id: 6, name: "Iogurte natural", category: "Leites e derivados", portion: "170 g", kcal: 104, protein: 6, carbs: 8, fat: 5, fiber: 0, source: "Manual", updated: "14 out, 2026" },
-  { id: 7, name: "Abacate", category: "Frutas", portion: "100 g", kcal: 96, protein: 1.2, carbs: 6, fat: 8.4, fiber: 6.3, source: "API", updated: "12 out, 2026" },
-  { id: 8, name: "Feijão carioca cozido", category: "Leguminosas", portion: "100 g", kcal: 76, protein: 4.8, carbs: 13.6, fat: 0.5, fiber: 8.5, source: "Importação CSV", updated: "10 out, 2026" },
-];
+import { TablePagination } from "../../../components/ui/table/table-pagination";
 
 const categories = ["Frutas", "Verduras e legumes", "Cereais e derivados", "Leguminosas", "Carnes e ovos", "Leites e derivados", "Óleos e gorduras", "Outros"];
 
@@ -44,7 +20,6 @@ export default function FoodsPage() {
   const [query, setQuery] = useState("");
   const [pagination, setPagination] = useState({ page: 1, pageSize: 50, totalItems: 0 });
   const [category, setCategory] = useState("Todas as categorias");
-  const [source, setSource] = useState("Todas as origens");
   const [loading, setLoading] = useState(false);
 
   const setConfig = useHeaderStore((state) => state.setConfig);
@@ -72,27 +47,40 @@ export default function FoodsPage() {
   }, [setConfig, reset]);
 
   useEffect(() => {
-      setLoading(true);
-      apiRequest<FoodPage>("/foods").then((response) => {
-        setPagination({ page: response.alimentos.page, pageSize: response.alimentos.pageSize, totalItems: response.alimentos.total });
-        setFoods(response.alimentos.items);
-      }).catch((reason) => {
-        toast.error(reason instanceof Error ? reason.message : "Erro ao buscar dados.");
-      }).finally(() => {
-        setLoading(false);
-      });
+    setLoading(true);
+    apiRequest<FoodPage>("/foods").then((response) => {
+      setPagination({ page: response.alimentos.page, pageSize: response.alimentos.pageSize, totalItems: response.alimentos.total });
+      setFoods(response.alimentos.items);
+    }).catch((reason) => {
+      toast.error(reason instanceof Error ? reason.message : "Erro ao buscar dados.");
+    }).finally(() => {
+      setLoading(false);
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+  }, []);
+
+  async function loadFoods(page: number) {
+    const response = await apiRequest<FoodPage>(
+      `/foods?page=${page}&pageSize=${pagination.pageSize}`
+    );
+
+    setFoods(response.alimentos.items);
+
+    setPagination({
+      page: response.alimentos.page,
+      pageSize: response.alimentos.pageSize,
+      totalItems: response.alimentos.total,
+    });
+  }
 
   const filtered = useMemo(() => {
     return (
       foods.filter(f => f.nome.toLocaleLowerCase("pt-BR")
         .includes(query.toLocaleLowerCase("pt-BR")))
         .filter(f => category === "Todas as categorias" || f.grupo === category)
-        .filter(f => source === "Todas as origens" || f.fonte === source)
         .sort((a,b) => a.nome.localeCompare(b.nome,"pt-BR"))
     );
-  }, [foods, query, category, source]);
+  }, [foods, query, category]);
 
   function removeFood(food: FoodRecord) {
     setFoods(current => current.filter(f => f.id !== food.id));
@@ -163,21 +151,10 @@ export default function FoodsPage() {
             <option>Todas as categorias</option>
             {categories.map(c=><option key={c}>{c}</option>)}
           </select>
-          <select
-            value={source}
-            onChange={e=>setSource(e.target.value)}
-            className="rounded-lg border border-[#e5ebe6] bg-white px-3 py-2 text-[11px] text-[#53665a] outline-none"
-          >
-            <option>Todas as origens</option>
-            <option>Manual</option>
-            <option>Importação CSV</option>
-            <option>API</option>
-          </select>
 
-          {(query||category!=="Todas as categorias"||source!=="Todas as origens") &&
+          {(query||category!=="Todas as categorias") &&
           <button
-            onClick={()=>{setQuery("");setCategory("Todas as categorias");
-            setSource("Todas as origens")}}
+            onClick={()=>{setQuery("");setCategory("Todas as categorias")}}
             className="text-[11px] font-semibold text-[#287653]"
           >
             Limpar filtros
@@ -290,9 +267,8 @@ export default function FoodsPage() {
           </div>
         }
       </div>
-      <div className="flex flex-col gap-2 border-t border-[#edf1ed] px-5 py-3.5 sm:flex-row sm:justify-between">
-        <p className="text-[10px] text-[#87948b]">Exibindo {filtered.length} de {pagination.totalItems} alimentos</p><p className="text-[10px] text-[#9aa59d]">Confira a fonte e a porção antes de usar em orientações clínicas.</p>
-      </div>
+      {/* Footer com paginação */}
+      <TablePagination pagination={pagination} onPageChange={loadFoods} />
     </section>
     </div>
   </main>
