@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Filter, Pencil, Plus, Search, Trash2, X, Database } from "lucide-react";
 import { useHeaderStore } from "../../../stores/header-store";
 import { useModalStore } from "../../../stores/modal-store";
@@ -12,6 +12,7 @@ import { FoodRecord } from "@nutriapp/shared";
 import { FoodPage } from "../../../../../packages/shared/dist/types/food";
 import { convertDateFromApi } from "../../../utils/date";
 import { TablePagination } from "../../../components/ui/table/table-pagination";
+import { useKeyboardShortcut } from "../../../hooks/use-keyboard-shortcut";
 
 const categories = ["Frutas", "Verduras e legumes", "Cereais e derivados", "Leguminosas", "Carnes e ovos", "Leites e derivados", "Óleos e gorduras", "Outros"];
 
@@ -38,6 +39,9 @@ export default function FoodsPage() {
         >
           <Plus size={15} />
           Adicionar alimento
+          <kbd className="hidden rounded border text-nowrap border-[#9ba69e] bg-transparent px-1.5 py-0.5 text-[9px] text-[#9ba69e] md:inline">
+            Ctrl N
+          </kbd>
         </button>
       )
     });
@@ -58,6 +62,12 @@ export default function FoodsPage() {
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleOpenShortcuts = useCallback(() => {
+    openModal(<FormsNewFood onClose={() => { closeModal(); }} />);
+  }, [openModal, closeModal]);
+
+  useKeyboardShortcut("n", handleOpenShortcuts);
 
   async function loadFoods(page: number) {
     const response = await apiRequest<FoodPage>(
@@ -242,7 +252,7 @@ export default function FoodsPage() {
                       onClick={() => openModal(
                         <ModalDelete
                           title="Remover Alimento"
-                          description={`Tem certeza que deseja remover ${f.nome}?`}
+                          description={`Tem certeza que deseja remover "${f.nome}"?`}
                           onConfirm={() => removeFood(f)}
                           onCancel={() => closeModal()}
                         />
