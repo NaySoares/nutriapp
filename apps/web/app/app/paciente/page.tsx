@@ -4,7 +4,6 @@ import {
   Activity,
   AlertTriangle,
   ArrowDownRight,
-  Bell,
   CalendarDays,
   Check,
   CheckCircle2,
@@ -44,8 +43,16 @@ import { useAuthStore } from '../../../stores/auth-store';
 import { getInitials } from '../../../utils/name';
 import { usePatientStore } from '../../../stores/patient-store';
 import { useSearchParams } from 'next/navigation';
+import { PatientRecord } from '@nutriapp/shared';
+import { calculateAge, calculateAgeByDate } from '../../../utils/date';
 
 type Tab = 'Resumo' | 'Anamnese' | 'Antropometria' | 'Plano alimentar';
+const tabs: Tab[] =[
+  'Resumo',
+  'Anamnese',
+  'Antropometria',
+  'Plano alimentar',
+]
 interface Food {
   id: number;
   name: string;
@@ -212,6 +219,17 @@ const nutrition = (foods: Food[]) =>
     { kcal: 0, protein: 0, carbs: 0, fat: 0 },
   );
 
+const patientData = {
+  name: 'teste',
+  birthday: '14/06/1997',
+  sex: 'Feminino',
+  email: 'mariana.costa@email.com',
+  phone: '(91) 98812-3401',
+  target: 'Ganho de massa muscular',
+  routine: 'Musculação',
+  profession: 'Analista de sistemas',
+}
+
 export default function PatientDetailPage() {
   const [tab, setTab] = useState<Tab>('Resumo');
   const [notice, setNotice] = useState('');
@@ -259,10 +277,14 @@ export default function PatientDetailPage() {
     thigh: 22,
     calf: 13,
   });
+  const [sleep, setSleep] = useState(7);
+  const [water, setWater] = useState(2.0);
   const [boneDiameter, setBoneDiameter] = useState({ wrist: 5.8, femur: 9.4 });
-  const [patient, setPatient] = useState();
+  const [patient, setPatient] = useState<PatientRecord>();
   const setConfig = useHeaderStore((state) => state.setConfig);
   const reset = useHeaderStore((state) => state.reset);
+
+  const [loading, setLoading] = useState(false);
 
   const openModal = useModalStore((state) => state.openModal);
   const closeModal = useModalStore((state) => state.closeModal);
@@ -270,7 +292,6 @@ export default function PatientDetailPage() {
   const user = useAuthStore((state) => state.user);
 
   const patientId = useSearchParams()?.get('id');
-  console.log('patientId', patientId);
 
   useEffect(() => {
     setConfig({
@@ -303,6 +324,18 @@ export default function PatientDetailPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setConfig, reset]);
 
+  useEffect(() => {
+    // privateApp.get("/patients/:id", patients.get);
+    setLoading(true);
+    apiRequest<{patient: PatientRecord}>(`/patients/${patientId}`).then((response) => {
+      setPatient(response.patient);
+    }).catch((reason) => {
+      toast.error(reason instanceof Error ? reason.message : "Erro ao buscar dados.");
+    }).finally(() => {
+      setLoading(false);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const total = useMemo(
     () => nutrition(meals.flatMap((meal) => meal.foods)),
     [meals],
@@ -468,6 +501,12 @@ export default function PatientDetailPage() {
     );
   }
 
+  function getSexExtense(sex: string) {
+    if (sex.toLowerCase() === 'masculino') return 'Masculino';
+    if (sex.toLowerCase() === 'feminino') return 'Feminino';
+    return 'Sexo não informado';
+  }
+
   return (
     <div className="min-h-screen bg-[#f7f9f7] text-[#24352b]">
       <main className="main">
@@ -479,102 +518,104 @@ export default function PatientDetailPage() {
             <ChevronRight size={13} />
             <span className="text-[#3e5547]">Elienai Soares</span>
           </div>
+
           <section className="panel p-4 mb-5 overflow-hidden">
-            <div className="flex flex-col gap-5 p-5 md:flex-row md:items-center md:justify-between md:p-6">
-              <div className="flex items-start gap-4">
-                <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-[#e0eee2] text-[18px] font-bold text-[#36734f]">
-                  ES
-                </div>
-                <div>
-                  <div className="mb-1 flex flex-wrap items-center gap-2">
-                    <h1 className="text-[22px] font-bold tracking-[-.7px]">
-                      Elienai Soares
-                    </h1>
-                    <span className="pill pill-success">Paciente ativa</span>
-                    <span className="pill">Particular</span>
+            {loading ? (
+              <div className="flex h-32 items-center justify-center text-[13px] text-[#65766b]">
+                Carregando dados do paciente...
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col gap-5 p-5 md:flex-row md:items-center md:justify-between md:p-6">
+                <div className="flex items-start gap-4">
+                  <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-[#e0eee2] text-[18px] font-bold text-[#36734f]">
+                    {getInitials(patient?.nome || 'Paciente não identificado')}
                   </div>
-                  <p className="text-[12px] text-[#7c8b81]">
-                    29 anos · Feminino · Desde 12 mar, 2026 · ID PAC-00124
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-[#65766b]">
-                    <span className="inline-flex items-center gap-1.5">
-                      <Mail size={13} />
-                      mariana.costa@email.com
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <span className="font-semibold">☎</span>(91) 98812-3401
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <CalendarDays size={13} />
-                      Próxima consulta: 23 out, 09:00
-                    </span>
+                  <div>
+                    <div className="mb-1 flex flex-wrap items-center gap-2">
+                      <h1 className="text-[22px] font-bold tracking-[-.7px]">
+                        {patient?.nome}
+                      </h1>
+                      <span className="pill pill-success">Paciente ativo</span>
+                      <span className="pill">Particular</span>
+                    </div>
+                    <p className="text-[12px] text-[#7c8b81]">
+                      {patient?.dataNascimento ? calculateAgeByDate(patient.dataNascimento) : 'Idade não informada'} anos · {getSexExtense(patientData.sex)} · Desde 12 mar, 2026
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-[#65766b]">
+                      <span className="inline-flex items-center gap-1.5">
+                        <Mail size={13} />
+                        {patientData?.email ? patientData.email : 'E-mail não informado'}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="font-semibold">☎</span>{patientData?.phone ? patientData.phone : 'Telefone não informado'}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <CalendarDays size={13} />
+                        Próxima consulta: 23 out, 09:00
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 print:hidden">
+                  <button className="btn-secondary" onClick={emailPlan}>
+                    <Mail size={14} />
+                    Enviar por e-mail
+                  </button>
+                  <button
+                    className="btn-secondary"
+                    onClick={() =>
+                      notify('Histórico de consultas aberto nesta demonstração.')
+                    }
+                  >
+                    <Clock3 size={14} />
+                    Histórico
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 border-t border-[#edf1ed] md:grid-cols-4">
+                <div className="border-b border-r border-[#edf1ed] p-4 md:border-b-0">
+                  <div className="text-[10px] text-[#87948b]">Objetivo atual</div>
+                  <div className="mt-1 text-[13px] font-bold">Ganho de massa</div>
+                  <div className="mt-1 text-[10px] text-[#7c8b81]">
+                    Revisado em 16 out
+                  </div>
+                </div>
+                <div className="border-b border-[#edf1ed] p-4 md:border-b-0 md:border-r">
+                  <div className="text-[10px] text-[#87948b]">Plano vigente</div>
+                  <div className="mt-1 text-[13px] font-bold">
+                    Hipertrofia · v2
+                  </div>
+                  <div className="mt-1 text-[10px] text-[#287653]">
+                    Em acompanhamento
+                  </div>
+                </div>
+                <div className="border-r border-[#edf1ed] p-4">
+                  <div className="text-[10px] text-[#87948b]">
+                    Última avaliação
+                  </div>
+                  <div className="mt-1 text-[13px] font-bold">16 out, 2026</div>
+                  <div className="mt-1 text-[10px] text-[#7c8b81]">Há 3 dias</div>
+                </div>
+                <div className="p-4">
+                  <div className="text-[10px] text-[#87948b]">
+                    Alertas clínicos
+                  </div>
+                  <div className="mt-1 flex items-center gap-1.5 text-[13px] font-bold text-[#a35c35]">
+                    <AlertTriangle size={14} />
+                    Alergia a leite
+                  </div>
+                  <div className="mt-1 text-[10px] text-[#7c8b81]">
+                    Considerar em todas as refeições
                   </div>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2 print:hidden">
-                <button className="btn-secondary" onClick={emailPlan}>
-                  <Mail size={14} />
-                  Enviar por e-mail
-                </button>
-                <button
-                  className="btn-secondary"
-                  onClick={() =>
-                    notify('Histórico de consultas aberto nesta demonstração.')
-                  }
-                >
-                  <Clock3 size={14} />
-                  Histórico
-                </button>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 border-t border-[#edf1ed] md:grid-cols-4">
-              <div className="border-b border-r border-[#edf1ed] p-4 md:border-b-0">
-                <div className="text-[10px] text-[#87948b]">Objetivo atual</div>
-                <div className="mt-1 text-[13px] font-bold">Ganho de massa</div>
-                <div className="mt-1 text-[10px] text-[#7c8b81]">
-                  Revisado em 16 out
-                </div>
-              </div>
-              <div className="border-b border-[#edf1ed] p-4 md:border-b-0 md:border-r">
-                <div className="text-[10px] text-[#87948b]">Plano vigente</div>
-                <div className="mt-1 text-[13px] font-bold">
-                  Hipertrofia · v2
-                </div>
-                <div className="mt-1 text-[10px] text-[#287653]">
-                  Em acompanhamento
-                </div>
-              </div>
-              <div className="border-r border-[#edf1ed] p-4">
-                <div className="text-[10px] text-[#87948b]">
-                  Última avaliação
-                </div>
-                <div className="mt-1 text-[13px] font-bold">16 out, 2026</div>
-                <div className="mt-1 text-[10px] text-[#7c8b81]">Há 3 dias</div>
-              </div>
-              <div className="p-4">
-                <div className="text-[10px] text-[#87948b]">
-                  Alertas clínicos
-                </div>
-                <div className="mt-1 flex items-center gap-1.5 text-[13px] font-bold text-[#a35c35]">
-                  <AlertTriangle size={14} />
-                  Alergia a leite
-                </div>
-                <div className="mt-1 text-[10px] text-[#7c8b81]">
-                  Considerar em todas as refeições
-                </div>
-              </div>
-            </div>
+            </>
+            )}
           </section>
 
           <div className="mb-5 flex gap-1 overflow-x-auto border-b border-[#e4ebe5] print:hidden">
-            {(
-              [
-                'Resumo',
-                'Anamnese',
-                'Antropometria',
-                'Plano alimentar',
-              ] as Tab[]
-            ).map((item) => (
+            {tabs.map((item) => (
               <button
                 key={item}
                 onClick={() => setTab(item)}
@@ -786,42 +827,42 @@ export default function PatientDetailPage() {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Field
                     label="Nome completo"
-                    value="Mariana Costa"
+                    value={patient?.nome}
                     editable={editing}
                   />
                   <Field
                     label="Data de nascimento"
-                    value="14/06/1997"
+                    value={patient?.dataNascimento}
                     editable={editing}
                   />
                   <Field
                     label="Sexo biológico (para fórmulas)"
-                    value="Feminino"
+                    value={patient?.sexo}
                     editable={editing}
                   />
                   <Field
                     label="E-mail"
-                    value="mariana.costa@email.com"
+                    value={patient?.email}
                     editable={editing}
                   />
                   <Field
                     label="Telefone"
-                    value="(91) 98812-3401"
+                    value={patient?.telefone}
                     editable={editing}
                   />
                   <Field
                     label="Profissão"
-                    value="Analista de sistemas"
+                    value={patient?.profissao}
                     editable={editing}
                   />
                   <Field
                     label="Objetivo principal"
-                    value="Ganho de massa muscular"
+                    value={patient?.objetivo}
                     editable={editing}
                   />
                   <Field
                     label="Rotina de trabalho"
-                    value="Predominantemente sentada"
+                    value={patient?.rotina}
                     editable={editing}
                   />
                 </div>
@@ -831,7 +872,7 @@ export default function PatientDetailPage() {
                   </label>
                   <textarea
                     disabled={!editing}
-                    defaultValue="Prefere refeições simples e rápidas durante a semana. Costuma treinar no fim da tarde."
+                    defaultValue={patient?.anamnese}
                     className="min-h-24 w-full rounded-lg border border-[#e2e9e3] bg-white p-3 text-[12px] outline-none focus:border-[#72a883] disabled:bg-[#f8faf8]"
                   />
                 </div>
@@ -919,14 +960,18 @@ export default function PatientDetailPage() {
                         Sono e hidratação
                       </label>
                       <div className="grid grid-cols-2 gap-3">
-                        <Field
+                        <NumberField
                           label="Sono médio"
-                          value="7 h/noite"
+                          unit="h/noite"
+                          value={sleep}
+                          onChange={setSleep}
                           editable={editing}
                         />
-                        <Field
+                        <NumberField
                           label="Água por dia"
-                          value="2,0 L"
+                          unit="L"
+                          value={water}
+                          onChange={setWater}
                           editable={editing}
                         />
                       </div>
@@ -2135,7 +2180,7 @@ function Field({
   editable,
 }: {
   label: string;
-  value: string;
+  value: string | undefined;
   editable: boolean;
 }) {
   return (
@@ -2157,12 +2202,14 @@ function NumberField({
   value,
   onChange,
   step = '1',
+  editable = true,
 }: {
   label: string;
   unit: string;
   value: number;
   onChange: (value: number) => void;
   step?: string;
+  editable?: boolean;
 }) {
   return (
     <div>
@@ -2176,7 +2223,8 @@ function NumberField({
           step={step}
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="form-control pr-12"
+          disabled={!editable}
+          className="form-control pr-12 disabled:bg-[#f8faf8] disabled:text-[#617166]"
         />
         <span className="pointer-events-none absolute right-3 top-2.5 text-[10px] text-[#95a198]">
           {unit}

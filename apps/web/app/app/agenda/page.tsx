@@ -38,17 +38,11 @@ import {
   statusToColor,
 } from '../../../components/week-calendar';
 
-type AppointmentType = 'Particular' | 'Hospitalar';
-
 const dateLabel = (date: string) =>
   new Date(`${date}T12:00:00`)
     .toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
     .replace(' de ', ' ')
     .replace('.', '');
-
-type AppointmentsResponse = {
-  agendamentos: AppointmentRecord[];
-};
 
 const TODAY = new Date().toLocaleDateString('en-CA')
 
@@ -78,7 +72,7 @@ export default function AgendaPage() {
 
   useEffect(() => {
     setLoading(true);
-    apiRequest<AppointmentsResponse>("/appointments").then((response) => {
+    apiRequest<{agendamentos: AppointmentRecord[]}>("/appointments").then((response) => {
       setAppointments(response.agendamentos);
     }).catch((reason) => {
       toast.error(reason instanceof Error ? reason.message : "Erro ao buscar dados.");

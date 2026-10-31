@@ -106,8 +106,11 @@ model Paciente {
   dataNascimento  DateTime      @map("data_nascimento") @db.Date
   sexo            Sexo
   contato         String
+  email           String?
+  telefone        String?
   anamnese        String?
   arquivadoEm     DateTime?     @map("arquivado_em")
+  status          String        @default("Ativo")
   criadoEm        DateTime      @default(now()) @map("criado_em")
   atualizadoEm    DateTime      @updatedAt @map("atualizado_em")
   nutricionista   Nutricionista @relation(fields: [nutricionistaId], references: [id])

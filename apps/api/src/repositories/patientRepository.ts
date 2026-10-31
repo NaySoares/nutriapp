@@ -19,8 +19,11 @@ export type PatientRepository = {
       nome: string;
       dataNascimento: Date;
       sexo: "M" | "F";
+      email?: string;
+      telefone?: string;
       contato: string;
       anamnese?: string;
+      status: string;
     }
   ) => Promise<PatientRecord>;
   listPatients: (nutritionistId: string, search?: string, includeArchived?: boolean) => Promise<PatientRecord[]>;
@@ -32,8 +35,11 @@ export type PatientRepository = {
       nome?: string;
       dataNascimento?: Date;
       sexo?: "M" | "F";
+      email?: string;
+      telefone?: string;
       contato?: string;
       anamnese?: string | null;
+      status?: string;
     }
   ) => Promise<boolean>;
   archivePatient: (nutritionistId: string, patientId: string) => Promise<boolean>;
@@ -46,8 +52,11 @@ const patientSelect: PatientSelect = {
   dataNascimento: true,
   sexo: true,
   contato: true,
+  email: true,
+  telefone: true,
   anamnese: true,
   arquivadoEm: true,
+  status: true,
   criadoEm: true,
   atualizadoEm: true,
 };
@@ -58,6 +67,7 @@ const ownerSelect = {
   contato: true,
   dataNascimento: true,
   sexo: true,
+  status: true,
 } satisfies Prisma.PacienteSelect;
 
 export function createPatientRepository(prisma: Db): PatientRepository {

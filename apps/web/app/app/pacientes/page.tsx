@@ -17,8 +17,10 @@ import {
   Phone,
   Mail,
   FileText,
+  Eye,
+  Trash2,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useModalStore } from '../../../stores/modal-store';
 import { useHeaderStore } from '../../../stores/header-store';
 import { FormsNewPatient } from '../../../components/pacientes/forms-patient';
@@ -30,39 +32,6 @@ import { useRouter } from 'next/navigation';
 import { FormsNewAppointment } from '../../../components/agenda/forms-appointment';
 import { Button } from '../../../components/ui/button';
 import { useAppointmentContext } from '../../../stores/appointment-store';
-
-type CareType = 'Particular' | 'Hospitalar';
-type PatientStatus = 'Ativo' | 'Retorno pendente' | 'Inativo';
-type ClinicalStatus =
-  | 'Eutrofia'
-  | 'Sobrepeso'
-  | 'Obesidade'
-  | 'Baixo peso'
-  | 'Acompanhamento clínico';
-
-// const initialPatients: = [
-//   {
-//     id: 1,
-//     name: 'Mariana Costa',
-//     email: 'mariana.costa@email.com',
-//     phone: '(91) 98812-3401',
-//     initials: 'MC',
-//     care: 'Particular',
-//     clinical: 'Sobrepeso',
-//     lastVisit: '16 out, 2026',
-//     nextVisit: '23 out, 09:00',
-//     status: 'Ativo',
-//     tone: '',
-//   }
-// ];
-
-const clinicalOptions: ClinicalStatus[] = [
-  'Eutrofia',
-  'Sobrepeso',
-  'Obesidade',
-  'Baixo peso',
-  'Acompanhamento clínico',
-];
 
 type PatientsResponse = { pacientes: PatientRecord[] };
 
@@ -118,47 +87,37 @@ export default function PatientsPage() {
 
   const router = useRouter();
 
-  const filteredPatients = patients
-
-  // const filteredPatients = useMemo(() => {
-  //   const normalizedQuery = query.trim().toLocaleLowerCase('pt-BR');
-  //   return patients
-  //     .filter(
-  //       (patient) =>
-  //         !normalizedQuery ||
-  //         patient.nome.toLocaleLowerCase('pt-BR').includes(normalizedQuery),
-  //     )
+  const filteredPatients = useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase('pt-BR');
+    return patients
+      .filter(
+        (patient) =>
+          !normalizedQuery ||
+          patient.nome.toLocaleLowerCase('pt-BR').includes(normalizedQuery),
+      )
       // .filter(
       //   (patient) => careFilter === 'Todos' || patient.care === careFilter,
       // )
-      // .filter(
-      //   (patient) =>
-      //     clinicalFilter === 'Todas as condições' ||
-      //     patient.clinical === clinicalFilter,
-      // )
-      // .filter(
-      //   (patient) =>
-      //     statusFilter === 'Todos os status' || patient.status === statusFilter,
-      // )
-  //     .sort((a, b) =>
-  //       sortAZ
-  //         ? a.nome.localeCompare(b.nome, 'pt-BR')
-  //         : b.nome.localeCompare(a.nome, 'pt-BR'),
-  //     );
-  // }, [patients, query, careFilter, clinicalFilter, statusFilter, sortAZ]);
+      .filter(
+        (patient) =>
+          statusFilter === 'Todos os status' || patient.status === statusFilter,
+      )
+      .sort((a, b) =>
+        sortAZ
+          ? a.nome.localeCompare(b.nome, 'pt-BR')
+          : b.nome.localeCompare(a.nome, 'pt-BR'),
+      );
+  }, [patients, query, careFilter, clinicalFilter, statusFilter, sortAZ]);
 
-  // const activeCount = patients.filter(
-  //   (patient) => patient.status === 'Ativo',
-  // ).length;
-  // const pendingCount = patients.filter(
-  //   (patient) => patient.status === 'Retorno pendente',
-  // ).length;
+  const activeCount = patients.filter(
+    (patient) => patient.status === 'Ativo',
+  ).length;
+  const pendingCount = patients.filter(
+    (patient) => patient.status === 'Retorno pendente',
+  ).length;
   // const privateCount = patients.filter(
   //   (patient) => patient.care === 'Particular',
   // ).length;
-
-  const activeCount = 3
-  const pendingCount = 3
   const privateCount = 3
 
   const hasFilters =
@@ -286,10 +245,10 @@ export default function PatientsPage() {
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <h2 className="section-title">Lista de pacientes</h2>
-                  {/* <p className="section-subtitle">
+                  <p className="section-subtitle">
                     {filteredPatients.length}{' '}
                     {filteredPatients.length === 1 ? 'resultado' : 'resultados'}
-                  </p> */}
+                  </p>
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                   <label className="flex min-w-0 items-center gap-2 rounded-lg border border-[#e7ece7] bg-[#fbfcfb] px-3 py-2.5 text-[#98a39b] sm:w-[270px]">
@@ -330,17 +289,6 @@ export default function PatientsPage() {
                   <option value="Hospitalar">Hospitalar</option>
                 </select>
                 <select
-                  aria-label="Filtrar por condição clínica"
-                  value={clinicalFilter}
-                  onChange={(event) => setClinicalFilter(event.target.value)}
-                  className="rounded-lg border border-[#e5ebe6] bg-white px-3 py-2 text-[11px] text-[#53665a] outline-none focus:border-[#8ab69a]"
-                >
-                  <option>Todas as condições</option>
-                  {clinicalOptions.map((condition) => (
-                    <option key={condition}>{condition}</option>
-                  ))}
-                </select>
-                <select
                   aria-label="Filtrar por status"
                   value={statusFilter}
                   onChange={(event) => setStatusFilter(event.target.value)}
@@ -366,7 +314,7 @@ export default function PatientsPage() {
                   <CircleAlert size={14} className="text-[#8b9b8f]" />
                   <span>
                     Use os filtros para localizar pacientes por modalidade de
-                    atendimento, classificação registrada ou necessidade de
+                    atendimento ou necessidade de
                     acompanhamento.
                   </span>
                   <button
@@ -384,13 +332,10 @@ export default function PatientsPage() {
                   <tr className="bg-[#fafcf9] text-[10px] font-semibold uppercase tracking-[.65px] text-[#87948b]">
                     <th className="px-5 py-3">Paciente</th>
                     <th className="px-4 py-3">Atendimento</th>
-                    <th className="px-4 py-3">Classificação registrada</th>
                     <th className="px-4 py-3">Última consulta</th>
                     <th className="px-4 py-3">Próximo retorno</th>
                     <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">
-                      <span className="sr-only">Ações</span>
-                    </th>
+                    <th className="px-4 py-3"><span className="sr-only">Ações</span></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#f0f3f0]">
@@ -417,16 +362,13 @@ export default function PatientsPage() {
                           </span>
                         </button>
                       </td>
-                      {/* <td className="px-4 py-3.5">
-                        <span
-                          className={`pill ${patient.care === 'Particular' ? 'bg-[#e9f5ed] text-[#287653]' : 'bg-[#edf2fa] text-[#5576a3]'}`}
-                        >
-                          {patient.care || 'Tipo de atendimento não informado'}
-                        </span>
-                      </td>
                       <td className="px-4 py-3.5">
-                        <span className="text-[11px] text-[#53665a]">
-                          {patient.clinical || 'Condição não informada'}
+                        <span
+                          // todo: className={`pill ${patient.care === 'Particular' ? 'bg-[#e9f5ed] text-[#287653]' : 'bg-[#edf2fa] text-[#5576a3]'}`}
+                          className={`pill bg-[#e9f5ed] text-[#287653]`}
+                        >
+                          Particular
+                          {/* {patient.care || 'Tipo de atendimento não informado'} */}
                         </span>
                       </td>
                       <td className="px-4 py-3.5">
@@ -459,15 +401,22 @@ export default function PatientsPage() {
                           {patient.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-3.5 gap-1 flex justify-start">
                         <button
-                          aria-label={`Ver detalhes de ${patient.name}`}
+                          aria-label={`Ver detalhes de ${patient.nome}`}
                           onClick={() => setSelectedPatient(patient)}
                           className="rounded-lg border border-transparent p-2 text-[#819087] hover:border-[#e5ebe6] hover:bg-white hover:text-[#287653]"
                         >
                           <Eye size={15} />
                         </button>
-                      </td> */}
+                        <button
+                          aria-label={`Deletar paciente ${patient.nome}`}
+                          onClick={() => alert(`Deletar paciente ${patient.nome}`)}
+                          className="rounded-lg border border-transparent p-2 text-[#819087] hover:border-[#e5ebe6] hover:bg-white hover:text-[#b93030]"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
