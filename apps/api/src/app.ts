@@ -105,6 +105,7 @@ export function buildApp(
     privateApp.patch("/appointments/:id", appointments.update);
 
     privateApp.get("/foods", foods.list);
+    privateApp.delete("/foods/:id", foods.remove);
   });
 
 

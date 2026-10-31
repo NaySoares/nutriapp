@@ -61,7 +61,7 @@ function unauthorized(reply: FastifyReply) {
   return reply.status(401).send({ codigo: "NAO_AUTENTICADO", mensagem: "É necessário estar autenticado." });
 }
 function notFound(reply: FastifyReply) {
-  return reply.status(404).send({ codigo: "AGENDAMENTO_NAO_ENCONTRADO", mensagem: "Agendamento não encontrado." });
+  return reply.status(404).send({ codigo: "ALIMENTO_NAO_ENCONTRADO", mensagem: "Alimento não encontrado." });
 }
 function invalidInput(reply: FastifyReply, detalhes: unknown) {
   return reply.status(400).send({ codigo: "VALIDACAO_INVALIDA", mensagem: "Os dados enviados são inválidos.", detalhes });

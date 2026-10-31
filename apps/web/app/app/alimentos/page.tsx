@@ -13,6 +13,7 @@ import { FoodPage } from "../../../../../packages/shared/dist/types/food";
 import { convertDateFromApi } from "../../../utils/date";
 import { TablePagination } from "../../../components/ui/table/table-pagination";
 import { useKeyboardShortcut } from "../../../hooks/use-keyboard-shortcut";
+import page from "../refeicoes/page";
 
 const categories = ["Frutas", "Verduras e legumes", "Cereais e derivados", "Leguminosas", "Carnes e ovos", "Leites e derivados", "Óleos e gorduras", "Outros"];
 
@@ -92,7 +93,14 @@ export default function FoodsPage() {
     );
   }, [foods, query, category]);
 
-  function removeFood(food: FoodRecord) {
+  async function removeFood(food: FoodRecord) {
+    const response = await apiRequest<{ status: string }>(`/foods/${food.id}`, { method: "DELETE" });
+
+    if (!response.status || response.status !== "ok") {
+      toast.error("Erro ao remover alimento.");
+      return;
+    }
+
     setFoods(current => current.filter(f => f.id !== food.id));
     closeModal();
     toast.success(`Alimento ${food.nome} removido com sucesso.`);
