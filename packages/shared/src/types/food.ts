@@ -3,7 +3,7 @@ import { z } from "zod";
 export type FoodRecord = {
   id: string;
   fonte: string;
-  idExterno: string;
+  idExterno: string | null;
   nome: string;
   nomeBusca: string;
   grupo: string;
@@ -29,9 +29,11 @@ export type FoodPage = {
   };
 };
 
+export const FOOD_CATEGORIES = ["Frutas", "Verduras e legumes", "Cereais e derivados", "Leguminosas", "Carnes e ovos", "Leites e derivados", "Óleos e gorduras", "Outros"] as const;
+
 export const foodCreateSchema = z.object({
   fonte: z.string().trim().min(1).max(120),
-  idExterno: z.string().trim().min(1).max(120),
+  idExterno: z.string().trim().max(120).nullable().default(null),
   nome: z.string().trim().min(1).max(120),
   nomeBusca: z.string().trim().min(1).max(120),
   grupo: z.string().trim().max(120),

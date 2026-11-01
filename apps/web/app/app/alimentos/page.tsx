@@ -8,14 +8,11 @@ import { toast } from "sonner";
 import { FormsNewFood } from "../../../components/alimentos/forms-foods";
 import { ModalDelete } from "../../../components/ui/modal";
 import { apiRequest } from "../../../lib/api";
-import { FoodRecord } from "@nutriapp/shared";
+import { FoodRecord, FOOD_CATEGORIES} from "@nutriapp/shared";
 import { FoodPage } from "../../../../../packages/shared/dist/types/food";
 import { convertDateFromApi } from "../../../utils/date";
 import { TablePagination } from "../../../components/ui/table/table-pagination";
 import { useKeyboardShortcut } from "../../../hooks/use-keyboard-shortcut";
-import page from "../refeicoes/page";
-
-const categories = ["Frutas", "Verduras e legumes", "Cereais e derivados", "Leguminosas", "Carnes e ovos", "Leites e derivados", "Óleos e gorduras", "Outros"];
 
 export default function FoodsPage() {
   const [foods, setFoods] = useState<FoodRecord[]>([]);
@@ -36,7 +33,14 @@ export default function FoodsPage() {
       actions: (
         <button
           className="btn-primary"
-          onClick={() => openModal(<FormsNewFood onClose={() => { closeModal(); }} />)}
+          onClick={() => openModal(
+            <FormsNewFood
+              onClose={() => { closeModal(); }}
+              onCreated={(newFood) => {
+                setFoods(current => [newFood, ...current]);
+              }}
+            />
+          )}
         >
           <Plus size={15} />
           Adicionar alimento
@@ -106,6 +110,40 @@ export default function FoodsPage() {
     toast.success(`Alimento ${food.nome} removido com sucesso.`);
   }
 
+  // todo: mover para um componente separado e adicionar animação de loading
+  const skeletonRows = Array.from({ length: pagination.pageSize }, (_, i) => (
+    <tr key={i} className="group hover:bg-[#fbfdfb]">
+      <td className="px-5 py-3.5">
+        <div className="h-[12px] w-[200px] rounded bg-[#e4ece5]"></div>
+        <div className="mt-1 h-[10px] w-[120px] rounded bg-[#e4ece5]"></div>
+      </td>
+      <td className="px-4 py-3.5">
+        <div className="h-[11px] w-[100px] rounded bg-[#e4ece5]"></div>
+      </td>
+      <td className="px-4 py-3.5">
+        <div className="h-[11px] w-[60px] rounded bg-[#e4ece5]"></div>
+      </td>
+      <td className="px-4 py-3.5">
+        <div className="h-[12px] w-[40px] rounded bg-[#e4ece5]"></div>
+      </td>
+      <td className="px-4 py-3.5">
+        <div className="h-[11px] w-[40px] rounded bg-[#e4ece5]"></div>
+      </td>
+      <td className="px-4 py-3.5">
+        <div className="h-[11px] w-[40px] rounded bg-[#e4ece5]"></div>
+      </td>
+      <td className="px-4 py-3.5">
+        <div className="h-[11px] w-[40px] rounded bg-[#e4ece5]"></div>
+      </td>
+      <td className="px-4 py-3.5">
+        <div className="h-[11px] w-[60px] rounded bg-[#e4ece5]"></div>
+      </td>
+      <td className="px-4 py-3.5">
+        <div className="h-[11px] w-[60px] rounded bg-[#e4ece5]"></div>
+      </td>
+    </tr>
+  ));
+
   return (
   <div className="min-h-screen">
     <main className="main">
@@ -167,7 +205,7 @@ export default function FoodsPage() {
             className="rounded-lg border border-[#e5ebe6] bg-white px-3 py-2 text-[11px] text-[#53665a] outline-none"
           >
             <option>Todas as categorias</option>
-            {categories.map(c=><option key={c}>{c}</option>)}
+            {FOOD_CATEGORIES.map(c=><option key={c}>{c}</option>)}
           </select>
 
           {(query||category!=="Todas as categorias") &&
@@ -213,6 +251,8 @@ export default function FoodsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-[#f0f3f0]">
+            {loading ? skeletonRows :
+            <>
             {filtered.map(f=>
               <tr key={f.id} className="group hover:bg-[#fbfdfb]">
                 <td className="px-5 py-3.5">
@@ -250,7 +290,15 @@ export default function FoodsPage() {
                   <div className="flex gap-1">
                     <button
                       aria-label={`Editar ${f.nome}`}
-                      onClick={()=> toast.info("Edição de alimentos não está disponível nesta demonstração.")}
+                      onClick={() => openModal(
+                        <FormsNewFood
+                          data={f}
+                          onClose={() => { closeModal(); }}
+                          onCreated={(updatedFood) => {
+                            setFoods(current => current.map(f => f.id === updatedFood.id ? updatedFood : f));
+                          }}
+                        />
+                      )}
                       className="rounded-lg p-2 text-[#819087] hover:bg-white hover:text-[#287653]"
                     >
                       <Pencil size={14}/>
@@ -273,9 +321,11 @@ export default function FoodsPage() {
                 </td>
               </tr>
             )}
+            </>
+            }
           </tbody>
         </table>
-        {filtered.length===0&&
+        {loading && filtered.length === 0 &&
           <div className="px-6 py-12 text-center">
             <Search size={22} className="mx-auto mb-3 text-[#8e9c92]"/>
             <p className="text-[13px] font-semibold text-[#304638]">

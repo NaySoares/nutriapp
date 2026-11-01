@@ -105,6 +105,8 @@ export function buildApp(
     privateApp.patch("/appointments/:id", appointments.update);
 
     privateApp.get("/foods", foods.list);
+    privateApp.post("/foods", foods.create);
+    privateApp.patch("/foods/:id", foods.update);
     privateApp.delete("/foods/:id", foods.remove);
   });
 

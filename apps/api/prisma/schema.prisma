@@ -67,6 +67,7 @@ model Nutricionista {
   consentimentos   Consentimento[]
   auditorias       AuditoriaAcesso[]
   agendamentos     Agendamento[]
+  alimentos        Alimento[]
 
   @@map("nutricionistas")
 }
@@ -146,7 +147,7 @@ model Medicao {
 model Alimento {
   id           String          @id @default(uuid()) @db.Uuid
   fonte        FonteAlimento
-  idExterno    String          @map("id_externo")
+  idExterno    String?         @map("id_externo")
   nome         String
   nomeBusca    String          @map("nome_busca")
   grupo        String?
@@ -161,6 +162,9 @@ model Alimento {
   atualizadoEm DateTime        @updatedAt @map("atualizado_em")
   medidas      MedidaCaseira[]
   itensPlano   ItemPlano[]
+
+  criadoPor     String?        @map("criado_por") @db.Uuid
+  nutricionista Nutricionista? @relation(fields: [criadoPor], references: [id], onDelete: SetNull)
 
   @@unique([fonte, idExterno])
   @@index([nomeBusca])

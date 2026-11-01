@@ -1,47 +1,111 @@
-import { Check, X } from "lucide-react";
-import { useState } from "react";
+import { Check } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { FOOD_CATEGORIES, FoodRecord } from "@nutriapp/shared";
+import { apiRequest } from "../../lib/api";
 
-type Food = {
-  id: number;
-  name: string;
-  category: string;
-  portion: string;
-  kcal: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  fiber: number;
-  source: "Manual" | "Importação CSV" | "API";
-  updated: string;
+const blankFood = {
+  name: "",
+  category: FOOD_CATEGORIES[0],
+  portion: "100 g",
+  kcal: "0",
+  protein: "0",
+  carbs: "0",
+  fat: "0",
+  fiber: "0",
+  sodium: "0"
 };
 
-const blankFood = { name: "", category: "Frutas", portion: "100 g", kcal: "0", protein: "0", carbs: "0", fat: "0", fiber: "0" };
-const categories = ["Frutas", "Verduras e legumes", "Cereais e derivados", "Leguminosas", "Carnes e ovos", "Leites e derivados", "Óleos e gorduras", "Outros"];
+const labelsInput = [
+  {key:"kcal",label:"Energia (kcal)"},
+  {key:"protein",label:"Proteínas (g)"},
+  {key:"carbs",label:"Carboidratos (g)"},
+  {key:"fat",label:"Gorduras (g)"},
+  {key:"fiber",label:"Fibras (g)"},
+  {key:"sodium",label:"Sódio (mg)"},
+] as const
 
-export function FormsNewFood({ onClose, onCreated }: { onClose: () => void; onCreated?: () => void; }) {
-  const [foods, setFoods] = useState<Food[]>([]);
-  const [modal, setModal] = useState(false);
-  const [editing, setEditing] = useState<Food | null>(null);
-  const [form, setForm] = useState(blankFood);
+type FormsNewFoodProps = {
+  data?: FoodRecord;
+  onClose: () => void;
+  onCreated?: (food: FoodRecord) => void;
+};
 
-  function saveFood(e: React.FormEvent<HTMLFormElement>) {
+
+export function FormsNewFood({ data, onClose, onCreated }: FormsNewFoodProps) {
+  const [form, setForm] = useState<Record<string, string>>(blankFood);
+  const isEditing = data !== null && data !== undefined;
+
+  useEffect(() => {
+    if (!data) {
+      setForm(blankFood);
+      return;
+    }
+
+    setForm({
+      name: data.nome,
+      category: data.grupo ?? FOOD_CATEGORIES[0],
+      portion: "100 g",
+      kcal: String(data.energiaKcal),
+      protein: String(data.proteinaG),
+      carbs: String(data.carboidratoG),
+      fat: String(data.lipidiosG),
+      fiber: String(data.fibraG),
+      sodium: String(data.sodioMg),
+    });
+  }, [data]);
+
+  async function saveFood(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const food: Food = {
-      id: editing?.id ?? Date.now(),
-      name: form.name.trim(),
-      category: form.category,
-      portion: form.portion.trim() || "100 g",
-      kcal: Number(form.kcal) || 0,
-      protein: Number(form.protein) || 0,
-      carbs: Number(form.carbs) || 0,
-      fat: Number(form.fat) || 0,
-      fiber: Number(form.fiber) || 0,
-      source: editing?.source ?? "Manual",
-      updated: "Hoje"
+    if (form.name === undefined) {
+      toast.error("Informe o nome do alimento.");
+      return;
+    }
+
+    const food: FoodRecord = {
+      nome: form.name.trim(),
+      grupo: form.category as string,
+      // portion: form.portion.trim() || "100 g",
+      energiaKcal: Number(form.kcal) || 0,
+      proteinaG: Number(form.protein) || 0,
+      carboidratoG: Number(form.carbs) || 0,
+      lipidiosG: Number(form.fat) || 0,
+      fibraG: Number(form.fiber) || 0,
+      sodioMg: Number(form.sodium) || 0,
+      idExterno: isEditing ? data?.idExterno! : null,
+      fonte: isEditing ? data?.fonte! : "manual",
+      criadoEm: isEditing ? data?.criadoEm! : new Date(),
+      nomeBusca: form.name.trim().toLowerCase(),
+      id: isEditing ? data?.id! : "",
+      outros: isEditing ? data?.outros! : {},
+      atualizadoEm: new Date(),
     };
 
-    setFoods(current => editing ? current.map(f => f.id === editing.id ? food : f) : [food, ...current]); setModal(false); toast.success(editing ? "Alimento atualizado com sucesso." : "Alimento cadastrado com sucesso.");
+    if (isEditing) {
+      try {
+        const response = await apiRequest<{ alimento?: FoodRecord }>(`/foods/${food.id}`, { method: "PATCH", data: food });
+
+        onCreated?.(response.alimento!);
+        toast.success("Alimento atualizado com sucesso.");
+        onClose();
+        return;
+      } catch (error) {
+        toast.error("Erro ao atualizar alimento.");
+      }
+    }
+
+    if (!isEditing) {
+      try {
+        const response = await apiRequest<{alimento?: FoodRecord}>("/foods", { method: "POST", data: food });
+
+        onCreated?.(response.alimento!);
+        toast.success("Alimento cadastrado com sucesso.");
+        onClose();
+        return;
+      } catch (error) {
+        toast.error("Erro ao salvar alimento.");
+      }
+    }
   }
 
   return (
@@ -52,7 +116,7 @@ export function FormsNewFood({ onClose, onCreated }: { onClose: () => void; onCr
             BIBLIOTECA NUTRICIONAL
           </div>
           <h2 className="text-[20px] font-bold text-[#20352c]">
-            {editing?"Editar alimento":"Adicionar alimento"}
+            {isEditing ? "Editar alimento" : "Adicionar alimento"}
           </h2>
           <p className="mt-1 text-[11px] text-[#87948b]">Informe os valores para a porção de referência indicada.</p>
         </div>
@@ -69,7 +133,7 @@ export function FormsNewFood({ onClose, onCreated }: { onClose: () => void; onCr
             required
             autoFocus
             value={form.name}
-            onChange={e=>setForm({...form,name:e.target.value})}
+            onChange={(e) => setForm({...form, name:e.target.value})}
             placeholder="Ex.: Batata-doce cozida"
             className="w-full rounded-lg border border-[#e3eae4] px-3 py-2.5 text-[12px] outline-none focus:border-[#7fb18e]"
           />
@@ -81,10 +145,10 @@ export function FormsNewFood({ onClose, onCreated }: { onClose: () => void; onCr
             </span>
             <select
               value={form.category}
-              onChange={e=>setForm({...form,category:e.target.value})}
+              onChange={(e) => setForm({...form, category:e.target.value})}
               className="w-full rounded-lg border border-[#e3eae4] bg-white px-3 py-2.5 text-[12px]"
             >
-              {categories.map(c=><option key={c}>{c}</option>)}
+              {FOOD_CATEGORIES.map(c=><option key={c}>{c}</option>)}
             </select>
           </label>
           <label className="block">
@@ -104,7 +168,7 @@ export function FormsNewFood({ onClose, onCreated }: { onClose: () => void; onCr
             Informações nutricionais
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {([{key:"kcal",label:"Energia (kcal)"},{key:"protein",label:"Proteínas (g)"},{key:"carbs",label:"Carboidratos (g)"},{key:"fat",label:"Gorduras (g)"},{key:"fiber",label:"Fibras (g)"}] as const).map(item=>
+            {(labelsInput).map(item=>
               <label key={item.key} className="block">
                 <span className="mb-1.5 block text-[10px] text-[#87948b]">
                   {item.label}
@@ -112,7 +176,7 @@ export function FormsNewFood({ onClose, onCreated }: { onClose: () => void; onCr
                 <input
                   type="number"
                   min="0"
-                  step="0.1"
+                  step="0.01"
                   value={form[item.key]}
                   onChange={e=>setForm({...form,[item.key]:e.target.value})}
                   className="w-full rounded-lg border border-[#e3eae4] px-3 py-2.5 text-[12px] outline-none focus:border-[#7fb18e]"
@@ -130,7 +194,7 @@ export function FormsNewFood({ onClose, onCreated }: { onClose: () => void; onCr
               Cancelar
           </button>
           <button type="submit" className="btn-primary">
-            <Check size={14}/>{editing?"Salvar alterações":"Salvar alimento"}
+            <Check size={14}/>{isEditing ? "Salvar alterações" : "Salvar alimento"}
           </button>
         </div>
       </form>

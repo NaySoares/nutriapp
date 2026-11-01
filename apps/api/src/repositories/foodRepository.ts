@@ -15,7 +15,7 @@ export type FoodUpdateData = Partial<FoodCreateData>;
 export type FoodRecord = {
   id: string;
   fonte: FonteAlimento;
-  idExterno: string;
+  idExterno: string | null;
   nome: string;
   nomeBusca: string;
   grupo: string | null;
@@ -80,10 +80,10 @@ export function createFoodRepository(db: Db) {
     find,
 
     /** Pode lançar P2002 (fonte + idExterno já existem): o serviço deve responder 409. */
-    async create(data: FoodCreateData): Promise<FoodRecord> {
+    async create(data: FoodCreateData, ownerId: string): Promise<FoodRecord> {
       const { outros, ...rest } = data;
       const row = await db.alimento.create({
-        data: { ...rest, outros: toJson(outros) },
+        data: { ...rest, outros: toJson(outros), criadoPor: ownerId ?? null },
         select: foodSelect,
       });
       return toRecord(row);
@@ -102,7 +102,7 @@ export function createFoodRepository(db: Db) {
       const [rows, total] = await Promise.all([
         db.alimento.findMany({
           where,
-          orderBy: [{ nome: "asc" }, { id: "asc" }],
+          orderBy: [{ nomeBusca: "asc" }, { id: "asc" }],
           skip: (page - 1) * pageSize,
           take: pageSize,
           select: foodSelect,

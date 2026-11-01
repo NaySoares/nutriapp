@@ -111,4 +111,4 @@ export { patientIdSchema, patientUpdateSchema, patientCreateSchema } from "./typ
 
 // food types
 export type { FoodRecord, FoodCreateInput, FoodUpdateInput } from "./types/food.js";
-export { foodIdSchema, foodUpdateSchema, foodCreateSchema } from "./types/food.js";
+export { foodIdSchema, foodUpdateSchema, foodCreateSchema, FOOD_CATEGORIES } from "./types/food.js";

@@ -8,6 +8,7 @@ type FoodServiceDependencies = {
   foods: FoodRepository;
 };
 
+// não é case sensitive
 function isFonteAlimento(value: string): value is FonteAlimento {
   return Object.values(FonteAlimento).includes(value as FonteAlimento);
 }
@@ -38,7 +39,7 @@ export function createFoodService({
       return foods.create({
         ...foodData,
         fonte: foodData.fonte,
-      });
+      }, ownerId);
     },
 
     async update(
