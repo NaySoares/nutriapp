@@ -29,6 +29,7 @@ export function FormsNewPatient( { onClose, onCreated }: { onClose: () => void; 
       dataNascimento: newBirthDate,
       sexo: newSex,
       contato: newContact.trim(),
+      status: "ativo"
     };
 
     setLoading(true);
@@ -113,7 +114,7 @@ export function FormsNewPatient( { onClose, onCreated }: { onClose: () => void; 
         </div>
         <label className="block">
           <span className="mb-1.5 block text-[11px] font-semibold text-[#53665a]">
-            Contato <span className="text-[#b65c50]">*</span>
+            Contato Principal <span className="text-[#b65c50]">*</span>
           </span>
           <input
             id="appointment-contact-input"

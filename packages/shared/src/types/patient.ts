@@ -1,6 +1,11 @@
 import { z } from "zod";
 
 export const sexSchema = z.enum(["M", "F"]);
+export type Sex = z.infer<typeof sexSchema>;
+export const SEX_LABELS = {
+  M: "Masculino",
+  F: "Feminino",
+};
 
 export const ClinicalStatus = [
   'eutrofia',
@@ -22,6 +27,7 @@ export const CLINICAL_STATUS_LABELS = {
 
 export const patientCreateSchema = z.object({
   nome: z.string().trim().min(1, "Informe o nome.").max(120),
+  cpf: z.string().trim().optional(),
   dataNascimento: z.string().date(),
   sexo: sexSchema,
   contato: z.string().trim().min(1, "Informe o contato.").max(120),
@@ -40,6 +46,7 @@ export const patientUpdateSchema = patientCreateSchema
 
 export type PatientSelect = {
   id: true;
+  cpf: true;
   nutricionistaId: true;
   nome: true;
   dataNascimento: true;
@@ -56,6 +63,7 @@ export type PatientSelect = {
 
 export type PatientRecord = {
   id: string;
+  cpf: string | null;
   nutricionistaId: string;
   nome: string;
   dataNascimento: Date;
@@ -83,6 +91,34 @@ export type PatientFilters = {
   page?: number; // começa em 1
   pageSize?: number; // padrão 50, máximo 100
 };
+
+
+export const patientListQuerySchema = z.object({
+  incluirArquivados: z
+    .enum(["true", "false"])
+    .optional()
+    .default("false"),
+
+  q: z
+    .string()
+    .trim()
+    .optional(),
+
+  page: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .default(1),
+
+  pageSize: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .default(50),
+});
+
+export type PatientListQuery = z.infer<typeof patientListQuerySchema>;
 
 export const patientIdSchema = z.string().uuid();
 

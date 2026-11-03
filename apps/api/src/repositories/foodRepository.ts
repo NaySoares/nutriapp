@@ -19,6 +19,7 @@ export type FoodRecord = {
   nome: string;
   nomeBusca: string;
   grupo: string | null;
+  porcaoReferencia: number | null;
   energiaKcal: number | null;
   proteinaG: number | null;
   lipidiosG: number | null;
@@ -41,7 +42,7 @@ export type FoodFilters = {
 export type FoodPage = { items: FoodRecord[]; total: number; page: number; pageSize: number };
 
 const foodSelect = {
-  id: true, fonte: true, idExterno: true, nome: true, nomeBusca: true, grupo: true,
+  id: true, fonte: true, idExterno: true, nome: true, nomeBusca: true, grupo: true, porcaoReferencia: true,
   energiaKcal: true, proteinaG: true, lipidiosG: true, carboidratoG: true,
   fibraG: true, sodioMg: true, outros: true, criadoEm: true, atualizadoEm: true,
 } satisfies Prisma.AlimentoSelect;
@@ -52,6 +53,7 @@ const num = (value: Prisma.Decimal | null) => (value === null ? null : value.toN
 
 const toRecord = (row: Row): FoodRecord => ({
   ...row,
+  porcaoReferencia: row.porcaoReferencia,
   energiaKcal: num(row.energiaKcal),
   proteinaG: num(row.proteinaG),
   lipidiosG: num(row.lipidiosG),

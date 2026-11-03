@@ -56,6 +56,18 @@ export const STATUS_AGENDAMENTO_LABELS = {
   cancelada: "Cancelada",
 } as const;
 
+export const DURATION_APPOINTMENT = [
+  30, 45, 50, 60, 90
+] as const;
+
+export const DURATION_APPOINTMENT_LABELS = {
+  30: "30 minutos",
+  45: "45 minutos",
+  50: "50 minutos",
+  60: "1 hora",
+  90: "1 hora e meia"
+} as const;
+
 export type AppointmentStatus = (typeof STATUS_AGENDAMENTO)[number];
 
 export type AppointmentRecord = {

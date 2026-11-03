@@ -3,26 +3,27 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { FOOD_CATEGORIES, FoodRecord } from "@nutriapp/shared";
 import { apiRequest } from "../../lib/api";
+import { InputNumber, InputSelect, InputText } from "../ui/input";
 
 const blankFood = {
-  name: "",
-  category: FOOD_CATEGORIES[0],
-  portion: "100 g",
-  kcal: "0",
-  protein: "0",
-  carbs: "0",
-  fat: "0",
-  fiber: "0",
-  sodium: "0"
+  nome: "",
+  grupo: FOOD_CATEGORIES[0],
+  porcaoReferencia: 100,
+  energiaKcal: 0,
+  proteinaG: 0,
+  carboidratoG: 0,
+  lipidiosG: 0,
+  fibraG: 0,
+  sodioMg: 0
 };
 
 const labelsInput = [
-  {key:"kcal",label:"Energia (kcal)"},
-  {key:"protein",label:"Proteínas (g)"},
-  {key:"carbs",label:"Carboidratos (g)"},
-  {key:"fat",label:"Gorduras (g)"},
-  {key:"fiber",label:"Fibras (g)"},
-  {key:"sodium",label:"Sódio (mg)"},
+  {key:"energiaKcal",label:"Energia (kcal)"},
+  {key:"proteinaG",label:"Proteínas (g)"},
+  {key:"carboidratoG",label:"Carboidratos (g)"},
+  {key:"lipidiosG",label:"Gorduras (g)"},
+  {key:"fibraG",label:"Fibras (g)"},
+  {key:"sodioMg",label:"Sódio (mg)"},
 ] as const
 
 type FormsNewFoodProps = {
@@ -33,7 +34,7 @@ type FormsNewFoodProps = {
 
 
 export function FormsNewFood({ data, onClose, onCreated }: FormsNewFoodProps) {
-  const [form, setForm] = useState<Record<string, string>>(blankFood);
+  const [form, setForm] = useState<Partial<FoodRecord>>(blankFood);
   const isEditing = data !== null && data !== undefined;
 
   useEffect(() => {
@@ -43,39 +44,39 @@ export function FormsNewFood({ data, onClose, onCreated }: FormsNewFoodProps) {
     }
 
     setForm({
-      name: data.nome,
-      category: data.grupo ?? FOOD_CATEGORIES[0],
-      portion: "100 g",
-      kcal: String(data.energiaKcal),
-      protein: String(data.proteinaG),
-      carbs: String(data.carboidratoG),
-      fat: String(data.lipidiosG),
-      fiber: String(data.fibraG),
-      sodium: String(data.sodioMg),
+      nome: data.nome,
+      grupo: data.grupo ?? FOOD_CATEGORIES[0],
+      porcaoReferencia: data.porcaoReferencia,
+      energiaKcal: data.energiaKcal,
+      proteinaG: data.proteinaG,
+      carboidratoG: data.carboidratoG,
+      lipidiosG: data.lipidiosG,
+      fibraG: data.fibraG,
+      sodioMg: data.sodioMg,
     });
   }, [data]);
 
   async function saveFood(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (form.name === undefined) {
+    if (form.nome === undefined) {
       toast.error("Informe o nome do alimento.");
       return;
     }
 
     const food: FoodRecord = {
-      nome: form.name.trim(),
-      grupo: form.category as string,
-      // portion: form.portion.trim() || "100 g",
-      energiaKcal: Number(form.kcal) || 0,
-      proteinaG: Number(form.protein) || 0,
-      carboidratoG: Number(form.carbs) || 0,
-      lipidiosG: Number(form.fat) || 0,
-      fibraG: Number(form.fiber) || 0,
-      sodioMg: Number(form.sodium) || 0,
+      nome: form.nome.trim(),
+      grupo: form.grupo as string,
+      porcaoReferencia: Number(form.porcaoReferencia) || 100,
+      energiaKcal: Number(form.energiaKcal) || 0,
+      proteinaG: Number(form.proteinaG) || 0,
+      carboidratoG: Number(form.carboidratoG) || 0,
+      lipidiosG: Number(form.lipidiosG) || 0,
+      fibraG: Number(form.fibraG) || 0,
+      sodioMg: Number(form.sodioMg) || 0,
       idExterno: isEditing ? data?.idExterno! : null,
       fonte: isEditing ? data?.fonte! : "manual",
       criadoEm: isEditing ? data?.criadoEm! : new Date(),
-      nomeBusca: form.name.trim().toLowerCase(),
+      nomeBusca: form.nome.trim().toLowerCase(),
       id: isEditing ? data?.id! : "",
       outros: isEditing ? data?.outros! : {},
       atualizadoEm: new Date(),
@@ -125,43 +126,30 @@ export function FormsNewFood({ data, onClose, onCreated }: FormsNewFoodProps) {
         onSubmit={saveFood}
         className="space-y-4"
       >
-        <label className="block">
-          <span className="mb-1.5 block text-[11px] font-semibold text-[#53665a]">
-            Nome do alimento
-          </span>
-          <input
-            required
-            autoFocus
-            value={form.name}
-            onChange={(e) => setForm({...form, name:e.target.value})}
-            placeholder="Ex.: Batata-doce cozida"
-            className="w-full rounded-lg border border-[#e3eae4] px-3 py-2.5 text-[12px] outline-none focus:border-[#7fb18e]"
-          />
-        </label>
+        <InputText
+          label="Nome do alimento"
+          required
+          autoFocus
+          value={form.nome}
+          onChange={(value) => setForm({...form, nome:value})}
+          placeholder="Ex.: Batata-doce cozida"
+        />
+
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <label className="block">
-            <span className="mb-1.5 block text-[11px] font-semibold text-[#53665a]">
-              Categoria
-            </span>
-            <select
-              value={form.category}
-              onChange={(e) => setForm({...form, category:e.target.value})}
-              className="w-full rounded-lg border border-[#e3eae4] bg-white px-3 py-2.5 text-[12px]"
-            >
-              {FOOD_CATEGORIES.map(c=><option key={c}>{c}</option>)}
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-1.5 block text-[11px] font-semibold text-[#53665a]">
-              Porção de referência
-            </span>
-            <input
-              value={form.portion}
-              onChange={e=>setForm({...form,portion:e.target.value})}
-              placeholder="100 g"
-              className="w-full rounded-lg border border-[#e3eae4] px-3 py-2.5 text-[12px] outline-none"
-            />
-          </label>
+          <InputSelect
+            label="Categoria"
+            value={form.grupo}
+            onChange={(value) => setForm({...form, grupo:value})}
+            options={FOOD_CATEGORIES.map(c => ({ value: c, label: c }))}
+          />
+          <InputNumber
+            label="Porção de referência"
+            value={form.porcaoReferencia ?? 100}
+            onChange={(value) => setForm({...form, porcaoReferencia:(value)})}
+            placeholder="100"
+            step={1}
+            unit="g"
+          />
         </div>
         <div>
           <div className="mb-2 text-[11px] font-semibold text-[#53665a]">

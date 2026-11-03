@@ -1,4 +1,4 @@
-export type Sex = "M" | "F";
+type Sex = "M" | "F";
 export type TmbFormula = "mifflin" | "harris_benedict";
 
 export type NutriCalcInput = {

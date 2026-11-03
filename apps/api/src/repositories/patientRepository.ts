@@ -7,6 +7,7 @@ export type PatientRepository = ReturnType<typeof createPatientRepository>;
 
 const patientSelect: PatientSelect = {
   id: true,
+  cpf: true,
   nutricionistaId: true,
   nome: true,
   dataNascimento: true,

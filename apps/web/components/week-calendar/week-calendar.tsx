@@ -4,7 +4,7 @@ import { Plus } from 'lucide-react';
 import { useMemo } from 'react';
 import { type AppointmentRecord, STATUS_AGENDAMENTO_LABELS, TIPOS_CONSULTA_LABELS } from '@nutriapp/shared';
 import { DAYS_SHORT } from '../../utils/date';
-import { statusShortLabel, statusStyles, statusToColor } from './appointment-status';
+import { statusStyles, statusToColor } from './appointment-status';
 import { groupByDay } from './appointments-by-day';
 
 export type WeekCalendarItem = Pick<

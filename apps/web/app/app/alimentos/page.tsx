@@ -13,6 +13,7 @@ import { FoodPage } from "../../../../../packages/shared/dist/types/food";
 import { convertDateFromApi } from "../../../utils/date";
 import { TablePagination } from "../../../components/ui/table/table-pagination";
 import { useKeyboardShortcut } from "../../../hooks/use-keyboard-shortcut";
+import { ShortcutLabel } from "../../../components/ui/label";
 
 export default function FoodsPage() {
   const [foods, setFoods] = useState<FoodRecord[]>([]);
@@ -44,9 +45,7 @@ export default function FoodsPage() {
         >
           <Plus size={15} />
           Adicionar alimento
-          <kbd className="hidden rounded border text-nowrap border-[#9ba69e] bg-transparent px-1.5 py-0.5 text-[9px] text-[#9ba69e] md:inline">
-            Ctrl N
-          </kbd>
+          <ShortcutLabel label="Ctrl N" />
         </button>
       )
     });
@@ -267,7 +266,7 @@ export default function FoodsPage() {
                   {f?.grupo ?? "—"}
                 </td>
                 <td className="px-4 py-3.5 text-[11px] text-[#53665a]">
-                  100g
+                  {f.porcaoReferencia} g
                 </td>
                 <td className="px-4 py-3.5 text-[12px] font-semibold text-[#304638]">
                   {f.energiaKcal}

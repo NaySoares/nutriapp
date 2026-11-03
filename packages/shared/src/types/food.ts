@@ -7,6 +7,7 @@ export type FoodRecord = {
   nome: string;
   nomeBusca: string;
   grupo: string;
+  porcaoReferencia: number;
   energiaKcal: number;
   proteinaG: number;
   lipidiosG: number;
@@ -37,6 +38,7 @@ export const foodCreateSchema = z.object({
   nome: z.string().trim().min(1).max(120),
   nomeBusca: z.string().trim().min(1).max(120),
   grupo: z.string().trim().max(120),
+  porcaoReferencia: z.number(),
   energiaKcal: z.number(),
   proteinaG: z.number(),
   lipidiosG: z.number(),

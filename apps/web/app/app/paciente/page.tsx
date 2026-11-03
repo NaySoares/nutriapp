@@ -44,7 +44,7 @@ import { getInitials } from '../../../utils/name';
 import { usePatientStore } from '../../../stores/patient-store';
 import { useSearchParams } from 'next/navigation';
 import { PatientRecord } from '@nutriapp/shared';
-import { calculateAge, calculateAgeByDate } from '../../../utils/date';
+import { calculateAgeByDate } from '../../../utils/date';
 
 type Tab = 'Resumo' | 'Anamnese' | 'Antropometria' | 'Plano alimentar';
 const tabs: Tab[] =[

@@ -96,18 +96,18 @@ export type {
   GetInput,
   NutriCalcInput,
   NutritionalMetrics,
-  Sex,
   TmbFormula
 } from "./nutri-calc/index.js";
 
 // appointment types
 export type { AppointmentRecord, AppointmentStatus } from "./types/appointments.js";
 export { AppointmentCreateInput, AppointmentUpdateInput, AppointmentCreate, AppointmentUpdate, appointmentIdSchema, appointmentUpdateSchema } from "./types/appointments.js";
-export { LOCAIS, LOCAIS_LABELS, ATENDIMENTOS, ATENDIMENTOS_LABELS, TIPOS_CONSULTA, TIPOS_CONSULTA_LABELS, STATUS_AGENDAMENTO, STATUS_AGENDAMENTO_LABELS } from "./types/appointments.js";
+export { LOCAIS, LOCAIS_LABELS, ATENDIMENTOS, ATENDIMENTOS_LABELS, TIPOS_CONSULTA, TIPOS_CONSULTA_LABELS, STATUS_AGENDAMENTO, STATUS_AGENDAMENTO_LABELS, DURATION_APPOINTMENT, DURATION_APPOINTMENT_LABELS } from "./types/appointments.js";
 
 // patient types
-export type { PatientPage, PatientFilters, PatientCreateInput, PatientUpdateInput, PatientSelect, PatientRecord } from "./types/patient.js";
-export { patientIdSchema, patientUpdateSchema, patientCreateSchema } from "./types/patient.js";
+export type { Sex, PatientPage, PatientFilters, PatientCreateInput, PatientUpdateInput, PatientSelect, PatientRecord, PatientListQuery } from "./types/patient.js";
+export { patientIdSchema, patientUpdateSchema, patientCreateSchema, patientListQuerySchema, sexSchema } from "./types/patient.js";
+export { SEX_LABELS } from "./types/patient.js";
 
 // food types
 export type { FoodRecord, FoodCreateInput, FoodUpdateInput } from "./types/food.js";

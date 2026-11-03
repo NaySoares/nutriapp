@@ -20,7 +20,7 @@ import {
   Eye,
   Trash2,
 } from 'lucide-react';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useModalStore } from '../../../stores/modal-store';
 import { useHeaderStore } from '../../../stores/header-store';
 import { FormsNewPatient } from '../../../components/pacientes/forms-patient';
@@ -33,6 +33,8 @@ import { FormsNewAppointment } from '../../../components/agenda/forms-appointmen
 import { Button } from '../../../components/ui/button';
 import { useAppointmentContext } from '../../../stores/appointment-store';
 import { TablePagination } from '../../../components/ui/table/table-pagination';
+import { ShortcutLabel } from '../../../components/ui/label';
+import { useKeyboardShortcut } from '../../../hooks/use-keyboard-shortcut';
 
 type PatientsResponse = { pacientes: PatientPage };
 
@@ -67,6 +69,7 @@ export default function PatientsPage() {
         >
           <Plus size={15} />
           Novo Paciente
+          <ShortcutLabel label="Ctrl N" />
         </button>
       )
     });
@@ -161,6 +164,12 @@ export default function PatientsPage() {
     setNotice(`Retorno de ${patient.nome} marcado para acompanhamento.`);
     window.setTimeout(() => setNotice(''), 3500);
   }
+
+  const handleOpenShortcuts = useCallback(() => {
+      openModal(<FormsNewAppointment onClose={() => { closeModal(); }} />);
+    }, [openModal, closeModal]);
+
+  useKeyboardShortcut("n", handleOpenShortcuts);
 
   return (
     <div className="min-h-screen">

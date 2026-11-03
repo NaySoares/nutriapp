@@ -1,0 +1,1 @@
+export { ShortcutLabel } from "./shortcut-label";

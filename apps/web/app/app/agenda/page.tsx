@@ -18,13 +18,13 @@ import {
   RotateCcw,
   FileText,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useHeaderStore } from '../../../stores/header-store';
 import { useModalStore } from '../../../stores/modal-store';
 import { FormsNewAppointment } from '../../../components/agenda/forms-appointment';
 import { apiRequest } from '../../../lib/api';
 import { toast } from 'sonner';
-import { AppointmentRecord, AppointmentStatus, STATUS_AGENDAMENTO_LABELS, TIPOS_CONSULTA_LABELS, LOCAIS_LABELS } from '@nutriapp/shared';
+import { AppointmentRecord, AppointmentStatus, STATUS_AGENDAMENTO_LABELS, TIPOS_CONSULTA_LABELS, LOCAIS_LABELS, AppointmentCreateInput } from '@nutriapp/shared';
 import { getInitials } from '../../../utils/name';
 import { convertDateFromApi, DAYS } from '../../../utils/date';
 import { Button } from '../../../components/ui/button';
@@ -37,6 +37,8 @@ import {
   statusStyles,
   statusToColor,
 } from '../../../components/week-calendar';
+import { useKeyboardShortcut } from '../../../hooks/use-keyboard-shortcut';
+import { ShortcutLabel } from '../../../components/ui/label';
 
 const dateLabel = (date: string) =>
   new Date(`${date}T12:00:00`)
@@ -93,6 +95,7 @@ export default function AgendaPage() {
         >
           <Plus size={15} />
           Novo atendimento
+          <ShortcutLabel label="Ctrl N" />
         </button>
       )
     });
@@ -169,6 +172,12 @@ export default function AgendaPage() {
 
     setSelectedAppointment(null);
   }
+
+  const handleOpenShortcuts = useCallback(() => {
+      openModal(<FormsNewAppointment onClose={() => { closeModal(); }} />);
+    }, [openModal, closeModal]);
+
+  useKeyboardShortcut("n", handleOpenShortcuts);
 
   return (
     <div className="min-h-screen bg-[#f7f9f6] text-[#263a2f]">
@@ -359,8 +368,9 @@ export default function AgendaPage() {
                 appointments={filtered}
                 onSelectDate={setSelectedDate}
                 onSelectAppointment={setSelectedAppointment}
-                onAddAppointment={() =>
-                  toast.error('Função indisponível, use o botão de "Novo Atendimento" no topo da página.')
+                onAddAppointment={(date) => {
+                  openModal(<FormsNewAppointment data={{data: date} as AppointmentCreateInput} onClose={() => { closeModal(); }} />)
+                  }
                 }
               />
             ) : (
