@@ -97,7 +97,7 @@ export function FormsNewAppointment( { data, onClose, onCreated }: FormsNewAppoi
     e.preventDefault();
     if (!newName.trim() || loading) return;
 
-    if (isDateInPast(newDate)) {
+    if (isDateInPast(newDate, newTime)) {
       toast.error("Só são permitidos agendamentos para datas futuras.");
       return;
     }
