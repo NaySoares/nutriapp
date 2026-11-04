@@ -91,7 +91,13 @@ export default function AgendaPage() {
       actions: (
         <button
           className="btn-primary"
-          onClick={() => openModal(<FormsNewAppointment onClose={() => { closeModal(); }} />)}
+          onClick={() => openModal(
+            <FormsNewAppointment
+              onClose={() => { closeModal(); }}
+              onCreated={(newAppointment) => {
+                setAppointments(current => [newAppointment, ...current]);
+              }}
+            />)}
         >
           <Plus size={15} />
           Novo atendimento
@@ -369,7 +375,14 @@ export default function AgendaPage() {
                 onSelectDate={setSelectedDate}
                 onSelectAppointment={setSelectedAppointment}
                 onAddAppointment={(date) => {
-                  openModal(<FormsNewAppointment data={{data: date} as AppointmentCreateInput} onClose={() => { closeModal(); }} />)
+                  openModal(
+                    <FormsNewAppointment
+                      data={{data: date} as AppointmentCreateInput}
+                      onClose={() => { closeModal();}}
+                      onCreated={(newAppointment) => {
+                        setAppointments(current => [newAppointment, ...current]);
+                      }}
+                    />)
                   }
                 }
               />

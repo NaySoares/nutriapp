@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { apiRequest } from "../../lib/api";
-import { ATENDIMENTOS, TIPOS_CONSULTA, LOCAIS, Sex, ATENDIMENTOS_LABELS, TIPOS_CONSULTA_LABELS, LOCAIS_LABELS, AppointmentCreateInput, PatientRecord, PatientPage, DURATION_APPOINTMENT_LABELS, DURATION_APPOINTMENT } from "@nutriapp/shared";
+import { ATENDIMENTOS, TIPOS_CONSULTA, LOCAIS, Sex, ATENDIMENTOS_LABELS, TIPOS_CONSULTA_LABELS, LOCAIS_LABELS, AppointmentCreateInput, PatientRecord, PatientPage, DURATION_APPOINTMENT_LABELS, DURATION_APPOINTMENT, AppointmentRecord } from "@nutriapp/shared";
 import { isDateInPast } from "../../utils/date";
 import { useAppointmentContext } from "../../stores/appointment-store";
 import { Autocomplete } from "../ui/autocomplete";
@@ -29,7 +29,7 @@ type NewAppointmentPayload = {
 type FormsNewAppointmentProps = {
   data?: AppointmentCreateInput;
   onClose: () => void;
-  onCreated?: (appointment: AppointmentCreateInput) => void;
+  onCreated?: (appointment: AppointmentRecord) => void;
 };
 
 export function FormsNewAppointment( { data, onClose, onCreated }: FormsNewAppointmentProps) {
@@ -117,7 +117,9 @@ export function FormsNewAppointment( { data, onClose, onCreated }: FormsNewAppoi
 
     setLoading(true);
     try {
-      await apiRequest("/appointments", { method: "POST", data: payload });
+      const response = await apiRequest<{ agendamento: AppointmentRecord }>("/appointments", { method: "POST", data: payload });
+
+      onCreated?.(response.agendamento!);
       toast.success("Atendimento agendado com sucesso.");
       clearPatient();
       onClose();

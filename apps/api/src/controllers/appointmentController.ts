@@ -22,13 +22,14 @@ export function createAppointmentController(service: AppointmentService) {
 
       if (!patient.success) return invalidInput(reply, { paciente: "Paciente não informado" });
       if (!input.success) return invalidInput(reply, input.error.flatten());
+      console.log("Creating appointment with input:", input.data);
+      const result = await service.create(sessionId, input.data);
 
-      const appointment = await service.create(sessionId, input.data);
+      if (!result.success) {
+        return sendErrorReply(result, reply);
+      }
 
-      if (!appointment) return unauthorized(reply);
-      if (appointment === undefined) return notFound(reply);
-
-      return reply.status(201).send({ agendamento: appointment });
+      return reply.status(201).send({ agendamento: result.data });
     },
 
     update: async (request: FastifyRequest, reply: FastifyReply) => {
@@ -64,4 +65,23 @@ function notFound(reply: FastifyReply) {
 }
 function invalidInput(reply: FastifyReply, detalhes: unknown) {
   return reply.status(400).send({ codigo: "VALIDACAO_INVALIDA", mensagem: "Os dados enviados são inválidos.", detalhes });
+}
+function conflict(reply: FastifyReply) {
+  return reply.status(409).send({ codigo: "CONFLITO_AGENDAMENTO", mensagem: "Já existe um agendamento para o mesmo horário." });
+}
+function patientNotFound(reply: FastifyReply) {
+  return reply.status(404).send({ codigo: "PACIENTE_NAO_ENCONTRADO", mensagem: "Paciente não encontrado ou não pertence a este nutricionista." });
+}
+
+function sendErrorReply(result: { success: false; reason: string }, reply: FastifyReply) {
+  switch (result.reason) {
+    case "UNAUTHORIZED":
+      return unauthorized(reply);
+    case "SCHEDULE_CONFLICT":
+      return conflict(reply);
+    case "PATIENT_NOT_FOUND":
+      return patientNotFound(reply);
+    default:
+      return invalidInput(reply, { erro: "Erro ao criar agendamento" });
+  }
 }

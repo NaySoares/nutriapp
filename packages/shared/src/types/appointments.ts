@@ -151,3 +151,10 @@ export const appointmentIdSchema = z.string().uuid();
 
 export type AppointmentCreateInput = z.infer<typeof AppointmentCreateInput>;
 export type AppointmentUpdateInput = z.infer<typeof appointmentUpdateSchema>;
+
+
+export type CreateAppointmentResult =
+  | { success: true; data: AppointmentRecord }
+  | { success: false; reason: "UNAUTHORIZED" }
+  | { success: false; reason: "SCHEDULE_CONFLICT" }
+  | { success: false; reason: "PATIENT_NOT_FOUND" };

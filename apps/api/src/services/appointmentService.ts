@@ -1,4 +1,4 @@
-import type { AppointmentCreateInput, AppointmentUpdateInput, } from "@nutriapp/shared";
+import type { AppointmentCreateInput, AppointmentUpdateInput, CreateAppointmentResult } from "@nutriapp/shared";
 import { SessionRepository } from "../repositories/sessionRepository.js";
 import { PatientRepository } from "../repositories/patientRepository.js";
 import { AppointmentRepository } from "../repositories/appointmentRepository.js";
@@ -17,9 +17,17 @@ export function createAppointmentService({sessions, appointments, patients}: App
       return ownerId ? appointments.listAppointments(ownerId) : null;
     },
 
-    async create(sessionId: string, input: AppointmentCreateInput) {
+    async create(sessionId: string, input: AppointmentCreateInput): Promise<CreateAppointmentResult> {
       const ownerId = await sessions.findSessionOwner(sessionId);
-      if (!ownerId) return null;
+      if (!ownerId) return { success: false, reason: "UNAUTHORIZED" };
+
+      const hasConflict: boolean = await appointments.findConflicts(ownerId, {
+        data: input.data,
+        horario: input.horario,
+        duracao: input.duracao,
+      }).then(conflicts => conflicts.length > 0);
+
+      if (hasConflict) return { success: false, reason: "SCHEDULE_CONFLICT" };
 
       const dataAppointment = {
         pacienteNome: input.paciente,
@@ -40,18 +48,22 @@ export function createAppointmentService({sessions, appointments, patients}: App
           input.pacienteId
         );
 
-        if (!patient) return undefined;
+        if (!patient) return { success: false, reason: "PATIENT_NOT_FOUND" };
 
-        return appointments.createAppointment(ownerId, patient.id, {
+        const appointment = await appointments.createAppointment(ownerId, patient.id, {
           ...dataAppointment,
           pacienteNome: patient.nome,
           contato: patient.contato,
         });
+
+        return { success: true, data: appointment };
       }
 
       // Sem paciente cadastrado: cria somente o agendamento.
       // O paciente será cadastrado e vinculado antes da consulta ser realizada.
-      return appointments.createAppointment(ownerId, null, dataAppointment);
+      const appointment = await appointments.createAppointment(ownerId, null, dataAppointment);
+
+      return { success: true, data: appointment };
     },
 
     async update(

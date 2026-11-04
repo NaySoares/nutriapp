@@ -130,8 +130,8 @@ export function createAppointmentRepository(prisma: Db): AppointmentRepository {
       const sameDay = await client.agendamento.findMany({
         where: {
           nutricionistaId: nutritionistId,
-          data: slot.data,
-          status: { not: "Cancelada" },
+          data: new Date(`${slot.data}T00:00:00.000Z`),
+          status: { not: "cancelada" },
           ...(excludeAppointmentId ? { id: { not: excludeAppointmentId } } : {}),
         },
         orderBy: [{ horario: "asc" }],
