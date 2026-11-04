@@ -6,7 +6,6 @@ import { useHeaderStore } from "../../../stores/header-store";
 import { useModalStore } from "../../../stores/modal-store";
 import { toast } from "sonner";
 import { FormsNewFood } from "../../../components/alimentos/forms-foods";
-import { ModalDelete } from "../../../components/ui/modal";
 import { apiRequest } from "../../../lib/api";
 import { FoodRecord, FOOD_CATEGORIES} from "@nutriapp/shared";
 import { FoodPage } from "../../../../../packages/shared/dist/types/food";
@@ -14,6 +13,7 @@ import { convertDateFromApi } from "../../../utils/date";
 import { TablePagination } from "../../../components/ui/table/table-pagination";
 import { useKeyboardShortcut } from "../../../hooks/use-keyboard-shortcut";
 import { ShortcutLabel } from "../../../components/ui/label";
+import { ModalDelete } from "../../../components/ui/modal";
 
 export default function FoodsPage() {
   const [foods, setFoods] = useState<FoodRecord[]>([]);

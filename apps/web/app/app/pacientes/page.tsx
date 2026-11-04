@@ -65,7 +65,7 @@ export default function PatientsPage() {
       actions: (
         <button
           className="btn-primary"
-          onClick={() => openModal(<FormsNewPatient onClose={() => { closeModal(); }} />)}
+          onClick={() => openModal(<FormsNewPatient onClose={() => { closeModal(); }} />, "side")}
         >
           <Plus size={15} />
           Novo Paciente

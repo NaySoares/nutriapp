@@ -206,7 +206,6 @@ export function FormsNewAppointment( { data, onClose, onCreated }: FormsNewAppoi
           />
           <InputSex
             id="appointment-sex-select"
-            label="Sexo"
             required
             disabled={!isEditable}
             value={newSex}

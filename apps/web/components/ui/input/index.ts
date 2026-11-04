@@ -5,3 +5,5 @@ export { InputTime } from "./input-time";
 export { LabelInput } from "./label-input";
 export { InputSelect } from "./input-select";
 export { InputNumber } from "./input-number";
+export { InputCPF } from "./input-cpf";
+export { InputPhone } from "./input-phone";
