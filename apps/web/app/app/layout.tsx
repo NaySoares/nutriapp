@@ -6,8 +6,7 @@ import { useState } from "react";
 import { HeaderApp } from "../../components/layout/header";
 import { Toaster } from "sonner";
 import { AuthBoundary } from "../../components/auth-boundary";
-import { Modal } from "../../components/ui/modal";
-import { SideModal } from "../../components/ui/modal";
+import { ModalHost } from "../../components/ui/modal/modal-host";
 
 export default function AppLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -23,8 +22,7 @@ export default function AppLayout({ children }: Readonly<{ children: React.React
       <body>
         <AuthBoundary>
           <Toaster position="top-right" richColors />
-          <Modal />
-          <SideModal />
+          <ModalHost />
 
           <div className="min-h-screen">
             <SideBar open={sidebarOpen} onClose={() => setSidebarOpen(!sidebarOpen)} />
