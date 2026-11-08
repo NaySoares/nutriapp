@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Phone, Mail } from "lucide-react";
+import { Plus, Mail } from "lucide-react";
 import { apiRequest } from "../../lib/api";
 import { PatientCreateInput, Sex } from "@nutriapp/shared";
 import { isDateInFuture } from "../../utils/date";
-import { Tooltip } from "../ui/tooltip";
 import { InputCPF, InputDate, InputPhone, InputSex, InputText } from "../ui/input";
 
 export function FormsNewPatient( { onClose, onCreated }: { onClose: () => void; onCreated?: () => void; }) {

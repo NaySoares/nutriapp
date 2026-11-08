@@ -7,7 +7,7 @@ export const SEX_LABELS = {
   F: "Feminino",
 };
 
-export const ClinicalStatus = [
+export const CLINICAL_STATUS = [
   'eutrofia',
   'sobrepeso',
   'obesidade_nv1',
@@ -25,6 +25,22 @@ export const CLINICAL_STATUS_LABELS = {
   baixo_peso: "Baixo Peso",
 }
 
+export const PATIENT_STATUS = [
+  "ativo",
+  "retorno_pendente",
+  "inativo"
+] as const;
+
+export const patientStatusSchema = z.enum(PATIENT_STATUS);
+
+export const PATIENT_STATUS_LABELS = {
+  ativo: "Ativo",
+  retorno_pendente: "Retorno Pendente",
+  inativo: "Inativo"
+}
+
+export type PatientStatus = (typeof PATIENT_STATUS)[keyof typeof PATIENT_STATUS];
+
 export const patientCreateSchema = z.object({
   nome: z.string().trim().min(1, "Informe o nome.").max(120),
   cpf: z.string().trim().optional(),
@@ -34,7 +50,7 @@ export const patientCreateSchema = z.object({
   email: z.string().email("Informe um email válido.").optional(),
   telefone: z.string().max(20).optional(),
   anamnese: z.string().max(10000).optional(),
-  status: z.string().max(100),
+  status: patientStatusSchema,
 });
 
 export const patientUpdateSchema = patientCreateSchema
@@ -73,7 +89,7 @@ export type PatientRecord = {
   telefone: string | null;
   anamnese: string | null;
   arquivadoEm: Date | null;
-  status: string;
+  status: PatientStatus;
   criadoEm: Date;
   atualizadoEm: Date;
 };

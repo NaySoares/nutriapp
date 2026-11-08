@@ -99,16 +99,23 @@ export type {
   TmbFormula
 } from "./nutri-calc/index.js";
 
+export const DEFAULT_PAGE_SIZE = 50;
+export const MAX_PAGE_SIZE = 100;
+
 // appointment types
 export type { CreateAppointmentResult, AppointmentRecord, AppointmentStatus } from "./types/appointments.js";
 export { AppointmentCreateInput, AppointmentUpdateInput, AppointmentCreate, AppointmentUpdate, appointmentIdSchema, appointmentUpdateSchema } from "./types/appointments.js";
 export { LOCAIS, LOCAIS_LABELS, ATENDIMENTOS, ATENDIMENTOS_LABELS, TIPOS_CONSULTA, TIPOS_CONSULTA_LABELS, STATUS_AGENDAMENTO, STATUS_AGENDAMENTO_LABELS, DURATION_APPOINTMENT, DURATION_APPOINTMENT_LABELS } from "./types/appointments.js";
 
 // patient types
-export type { Sex, PatientPage, PatientFilters, PatientCreateInput, PatientUpdateInput, PatientSelect, PatientRecord, PatientListQuery } from "./types/patient.js";
+export type { Sex, PatientPage, PatientFilters, PatientCreateInput, PatientUpdateInput, PatientSelect, PatientRecord, PatientListQuery, PatientStatus } from "./types/patient.js";
 export { patientIdSchema, patientUpdateSchema, patientCreateSchema, patientListQuerySchema, sexSchema } from "./types/patient.js";
-export { SEX_LABELS } from "./types/patient.js";
+export { SEX_LABELS, PATIENT_STATUS, PATIENT_STATUS_LABELS } from "./types/patient.js";
 
 // food types
 export type { FoodRecord, FoodCreateInput, FoodUpdateInput } from "./types/food.js";
 export { foodIdSchema, foodUpdateSchema, foodCreateSchema, FOOD_CATEGORIES } from "./types/food.js";
+
+// meal types
+export type { MealCreate, MealUpdate, ItemMealCreate, ItemMealUpdate, MealIdSchema, TypeMeal, MealPage, ItemsMealRecord, MealListData } from "./types/meal.js";
+export { TYPE_MEAL, TYPE_MEAL_LABELS, ItemMealCreateSchema, ItemMealUpdateSchema, MealCreateSchema, MealUpdateSchema, mealIdSchema, CreateMealResult, ListMealResult, UpdateMealResult, DeleteMealResult, MealRecord } from "./types/meal.js";

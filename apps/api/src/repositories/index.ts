@@ -9,6 +9,7 @@ import { createMeasurementRepository } from "./measurementRepository";
 import { createSettingsRepository } from "./settingsRepository";
 import { createAppointmentRepository } from "./appointmentRepository";
 import { createFoodRepository } from "./foodRepository";
+import { createMealRepository } from "./mealRepository";
 
 export function createRepositories(prisma: PrismaClient) {
   return {
@@ -20,5 +21,6 @@ export function createRepositories(prisma: PrismaClient) {
     settings: createSettingsRepository(prisma),
     appointments: createAppointmentRepository(prisma),
     foods: createFoodRepository(prisma),
+    meals: createMealRepository(prisma),
   };
 }

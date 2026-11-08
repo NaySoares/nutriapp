@@ -19,6 +19,8 @@ import { createFoodService } from "./services/foodService.js";
 import { createFoodController } from "./controllers/foodController.js";
 import { authenticate } from "./middleware/authenticate.js";
 import { createRepositories } from "./repositories/index.js";
+import { createMealService } from "./services/mealService.js";
+import { createMealController } from "./controllers/mealController.js";
 
 export function buildApp(
   prisma = new PrismaClient(),
@@ -69,6 +71,11 @@ export function buildApp(
     foods: repositories.foods,
   }));
 
+  const meals = createMealController(createMealService({
+    sessions: repositories.sessions,
+    meals: repositories.meals,
+  }));
+
   // Rotas Públicas
   app.get("/health", async () => healthResponseSchema.parse({ status: "ok", service: "api" }));
 
@@ -108,6 +115,11 @@ export function buildApp(
     privateApp.post("/foods", foods.create);
     privateApp.patch("/foods/:id", foods.update);
     privateApp.delete("/foods/:id", foods.remove);
+
+    privateApp.get("/meals", meals.list);
+    privateApp.post("/meals", meals.create);
+    privateApp.patch("/meals/:id", meals.update);
+    privateApp.delete("/meals/:id", meals.remove);
   });
 
 

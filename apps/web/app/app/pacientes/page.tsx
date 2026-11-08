@@ -166,7 +166,7 @@ export default function PatientsPage() {
   }
 
   const handleOpenShortcuts = useCallback(() => {
-      openModal(<FormsNewAppointment onClose={() => { closeModal(); }} />);
+      openModal(<FormsNewPatient onClose={() => { closeModal(); }} />, "side");
     }, [openModal, closeModal]);
 
   useKeyboardShortcut("n", handleOpenShortcuts);

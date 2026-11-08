@@ -31,7 +31,6 @@ export function getCurrentDayWithoutYear() {
 }
 
 export function isDateInPast(dateString: string, time?: string): boolean {
-  // esse método não considera o horário
   const today = new Date();
   const inputDate = new Date(dateString);
 
@@ -56,12 +55,14 @@ export function isDateInFuture(dateString: string): boolean {
   return inputDate > today;
 }
 
-export function convertDateFromApi(dateString: string | undefined): string {
-  // Recebe 2026-10-22T00:00:00.000Z e devolve 2026-10-22
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  return date.toISOString().slice(0, 10);
+export function convertDateFromApi(date: Date | undefined): string {
+  // Recebe 2026-10-22T00:00:00.000Z e devolve 22/10/2026
+  if (!date) return "";
+  const newDate = new Date(date);
+  // return newDate.toISOString().slice(0, 10); -> devolve 2026-10-22
+  return newDate.toLocaleDateString("pt-BR");
 }
+
 
 export function calculateAge(birthDateString: string): number {
   const [day, month, year] = birthDateString.split("/").map(Number);

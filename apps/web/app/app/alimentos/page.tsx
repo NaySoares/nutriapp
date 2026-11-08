@@ -259,7 +259,7 @@ export default function FoodsPage() {
                     {f.nome}
                   </div>
                   <div className="mt-1 text-[10px] text-[#8a978f]">
-                    Atualizado: {convertDateFromApi(f.atualizadoEm.toString())}
+                    Atualizado: {convertDateFromApi(f.atualizadoEm)}
                   </div>
                 </td>
                 <td className="px-4 py-3.5 text-[11px] text-[#53665a]">
@@ -334,7 +334,6 @@ export default function FoodsPage() {
           </div>
         }
       </div>
-      {/* Footer com paginação */}
       <TablePagination pagination={pagination} onPageChange={loadFoods} />
     </section>
     </div>

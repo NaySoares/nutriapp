@@ -14,7 +14,7 @@ const navGroups = [
       { label: "Pacientes", icon: Users, href: "/app/pacientes" },
       { label: "Agenda", icon: CalendarDays, href: "/app/agenda" },
       { label: "Alimentos", icon: Apple, href: "/app/alimentos" },
-      { label: "Refeições", icon: Utensils, href: "/app/refeicoes", disabled: true },
+      { label: "Refeições", icon: Utensils, href: "/app/refeicoes" },
       { label: "Planos alimentares", icon: FileUser, href: "/app/planos", disabled: true }
     ]
   },

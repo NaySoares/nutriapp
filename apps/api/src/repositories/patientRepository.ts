@@ -1,4 +1,4 @@
-import { PatientCreateInput, PatientUpdateInput, PatientRecord, PatientSelect, PatientPage, PatientFilters} from "@nutriapp/shared";
+import { PatientCreateInput, PatientUpdateInput, PatientRecord, PatientSelect, PatientPage, PatientFilters, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE} from "@nutriapp/shared";
 import type { Prisma, PrismaClient } from "@prisma/client";
 
 type Db = Pick<PrismaClient, "paciente">;
@@ -40,9 +40,6 @@ const toRecord = (row: Row): PatientRecord => ({
   telefone: row.telefone ?? null,
   arquivadoEm: row.arquivadoEm ?? null,
 });
-
-const DEFAULT_PAGE_SIZE = 50;
-const MAX_PAGE_SIZE = 100;
 
 export function createPatientRepository(db: Db) {
 

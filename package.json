@@ -7,7 +7,9 @@
     "dev": "pnpm --parallel --filter @nutriapp/api --filter @nutriapp/web dev",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "shared": "pnpm --filter @nutriapp/shared build",
+    "web": "pnpm --filter @nutriapp/web dev"
   },
   "dependencies": {
     "lucide-react": "^0.468.0"

@@ -1,5 +1,6 @@
 import { Prisma, type FonteAlimento, type PrismaClient } from "@prisma/client";
 import type { FoodCreateInput } from "@nutriapp/shared";
+import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from "@nutriapp/shared";
 
 type Db = Pick<PrismaClient, "alimento">;
 
@@ -66,9 +67,6 @@ const toRecord = (row: Row): FoodRecord => ({
 // undefined = não mexe; null = grava NULL no banco; objeto = grava o JSON
 const toJson = (value: Record<string, unknown> | null | undefined) =>
   value === undefined ? undefined : value === null ? Prisma.DbNull : (value as Prisma.InputJsonValue);
-
-const DEFAULT_PAGE_SIZE = 50;
-const MAX_PAGE_SIZE = 100;
 
 export type FoodRepository = ReturnType<typeof createFoodRepository>;
 

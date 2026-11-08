@@ -18,9 +18,13 @@ function DefaultModal({
   onClose: () => void;
 }) {
   return (
-    <div
+    <motion.div
       className="fixed inset-0 flex items-center justify-center bg-black/50 p-4"
       style={{ zIndex }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
       aria-hidden={!isTopModal}
       onMouseDown={(event) => {
         if (
@@ -32,8 +36,16 @@ function DefaultModal({
         }
       }}
     >
-      <div
+      <motion.div
         role="dialog"
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{
+          type: "tween",
+          duration: 0.3,
+          ease: [0.22, 1, 0.36, 1],
+        }}
         aria-modal={isTopModal}
         aria-label={modal.options.title}
         className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-4 shadow-xl"
@@ -53,8 +65,8 @@ function DefaultModal({
         </button>
 
         {modal.content}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
