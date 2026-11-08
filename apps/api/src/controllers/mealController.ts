@@ -48,10 +48,10 @@ export function createMealController(service: MealService) {
       const sessionId = requireSession(request);
       const id = mealIdSchema.safeParse((request.params as { id?: string }).id);
 
-      if (!id.success) return notFound(reply);
+      if (!id.success) return sendErrorReply({success: false, reason: "NOT_FOUND"}, reply);
 
       const result = await service.remove(sessionId, id.data);
-      if (!result.success) return notFound(reply);
+      if (!result.success) return sendErrorReply(result, reply);
 
       return reply.send({ status: "ok" });
     }

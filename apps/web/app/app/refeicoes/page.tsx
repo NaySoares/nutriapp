@@ -23,9 +23,10 @@ import { toast } from 'sonner';
 import { apiRequest } from '../../../lib/api';
 import { useKeyboardShortcut } from '../../../hooks/use-keyboard-shortcut';
 import { FormsNewMeal } from '../../../components/refeicoes/forms-meals';
-import { MealPage, MealRecord, TYPE_MEAL, TypeMeal, ItemsMealRecord, TYPE_MEAL_LABELS } from '@nutriapp/shared';
+import { MealPage, MealRecord, TYPE_MEAL, TYPE_MEAL_LABELS } from '@nutriapp/shared';
 import { convertDateFromApi } from '../../../utils/date';
 import { TablePagination } from '../../../components/ui/table/table-pagination';
+import { ModalDelete } from '../../../components/ui/modal';
 
 
 export default function MealsPage() {
@@ -113,9 +114,16 @@ export default function MealsPage() {
     alert("ediçao")
   }
 
-  function removeMeal(meal: MealRecord) {
-    if (window.confirm(`Remover ${meal.nome} desta demonstração?`))
-      setMeals((current) => current.filter((m) => m.id !== meal.id));
+  async function removeMeal(meal: MealRecord) {
+    const response = await apiRequest<{ status: string }>(`/meals/${meal.id}`, { method: "DELETE" });
+
+    if (!response.status || response.status !== "ok") {
+      return toast.error("Erro ao remover refeição.");
+    }
+
+    setMeals((current) => current.filter((m) => m.id !== meal.id));
+    closeModal();
+    toast.success(`Refeição ${meal.nome} removida com sucesso.`);
   }
 
   async function loadMeals(page: number) {
@@ -421,7 +429,14 @@ export default function MealsPage() {
                           </button>
                           <button
                             aria-label={`Remover ${m.nome}`}
-                            onClick={() => removeMeal(m)}
+                            onClick={() => openModal(
+                              <ModalDelete
+                                title="Remover Refeição"
+                                description={`Tem certeza que deseja remover "${m.nome}"?`}
+                                onConfirm={() => removeMeal(m)}
+                                onCancel={() => closeModal()}
+                              />
+                            )}
                             className="rounded-lg p-2 text-[#a0aaa2] hover:bg-white hover:text-[#b65c50]"
                           >
                             <Trash2 size={14} />
@@ -446,6 +461,9 @@ export default function MealsPage() {
                       <FormsNewMeal
                         onClose={() => { closeModal(); }}
                         onCreated={(newMeal) => {
+                          if (newMeal.tipo === TYPE_MEAL.COMPOSED) {
+                            return loadMeals(1);
+                          }
                           setMeals(current => [newMeal, ...current]);
                         }}
                       />,
